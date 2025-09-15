@@ -29,7 +29,7 @@ describe('useAuthForm', () => {
 
     it('should validate individual fields', () => {
       authForm.formData.email = 'invalid-email'
-      authForm.validateField('email')
+      authForm.validateField('email', true)
       
       expect(authForm.errors.value.email).toBe('Please enter a valid email address')
     })
@@ -72,7 +72,7 @@ describe('useAuthForm', () => {
     it('should validate confirm password field', () => {
       authForm.formData.password = 'Password123'
       authForm.formData.confirmPassword = 'DifferentPassword'
-      authForm.validateField('confirmPassword')
+      authForm.validateField('confirmPassword', true)
       
       expect(authForm.errors.value.confirmPassword).toBe('Passwords do not match')
     })

@@ -14,6 +14,10 @@ export function useAuthForm(isSignUp: boolean = false) {
   const isLoading = ref(false)
   const errors = ref<FormValidationErrors>({})
   const hasBeenSubmitted = ref(false)
+  const touchedFields = ref<Set<keyof AuthFormData>>(new Set())
+
+  // Debounce timer for real-time validation
+  let validationTimeout: NodeJS.Timeout | null = null
 
   // Computed properties
   const isValid = computed(() => {
@@ -31,9 +35,28 @@ export function useAuthForm(isSignUp: boolean = false) {
     return isValid.value
   }
 
-  const validateField = (fieldName: keyof AuthFormData) => {
-    const fieldErrors = validateAuthForm(formData, isSignUp)
-    errors.value[fieldName] = fieldErrors[fieldName]
+  const validateField = (fieldName: keyof AuthFormData, immediate: boolean = false) => {
+    touchedFields.value.add(fieldName)
+    
+    const doValidation = () => {
+      const fieldErrors = validateAuthForm(formData, isSignUp)
+      // Always update the field error, whether it's an error or undefined (cleared)
+      errors.value[fieldName] = fieldErrors[fieldName]
+    }
+    
+    if (immediate) {
+      // Immediate validation (for blur events)
+      doValidation()
+    } else {
+      // Debounced validation (for input events)
+      if (validationTimeout) {
+        clearTimeout(validationTimeout)
+      }
+      
+      validationTimeout = setTimeout(() => {
+        doValidation()
+      }, 150) // 150ms debounce for better responsiveness
+    }
   }
 
   const resetForm = () => {
@@ -44,7 +67,14 @@ export function useAuthForm(isSignUp: boolean = false) {
     }
     errors.value = {}
     hasBeenSubmitted.value = false
+    touchedFields.value.clear()
     isLoading.value = false
+    
+    // Clear any pending validation
+    if (validationTimeout) {
+      clearTimeout(validationTimeout)
+      validationTimeout = null
+    }
   }
 
   const handleSubmit = async (submitFn: (data: AuthFormData) => Promise<void>) => {
@@ -66,16 +96,26 @@ export function useAuthForm(isSignUp: boolean = false) {
     }
   }
 
+  // Cleanup function for pending timeouts
+  const cleanup = () => {
+    if (validationTimeout) {
+      clearTimeout(validationTimeout)
+      validationTimeout = null
+    }
+  }
+
   return {
     formData,
     errors,
     isLoading,
     hasBeenSubmitted,
+    touchedFields,
     isValid,
     canSubmit,
     validateForm,
     validateField,
     resetForm,
-    handleSubmit
+    handleSubmit,
+    cleanup
   }
 }

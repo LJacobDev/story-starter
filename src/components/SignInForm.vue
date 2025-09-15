@@ -18,15 +18,16 @@
             v-model="formData.email"
             type="email"
             placeholder="Enter your email"
-            :class="errors.email && hasBeenSubmitted ? 'border-destructive' : ''"
-            @blur="() => validateField('email')"
+            :class="errors.email ? 'border-destructive' : ''"
+            @blur="() => validateField('email', true)"
+            @input="() => validateField('email')"
             :aria-invalid="errors.email ? 'true' : 'false'"
             :aria-describedby="errors.email ? 'signin-email-error' : undefined"
             autocomplete="email"
             required
           />
           <div 
-            v-if="errors.email && hasBeenSubmitted"
+            v-if="errors.email"
             id="signin-email-error"
             class="text-sm text-destructive"
             role="alert"
@@ -49,15 +50,16 @@
             v-model="formData.password"
             type="password"
             placeholder="Enter your password"
-            :class="errors.password && hasBeenSubmitted ? 'border-destructive' : ''"
-            @blur="() => validateField('password')"
+            :class="errors.password ? 'border-destructive' : ''"
+            @blur="() => validateField('password', true)"
+            @input="() => validateField('password')"
             :aria-invalid="errors.password ? 'true' : 'false'"
             :aria-describedby="errors.password ? 'signin-password-error' : undefined"
             autocomplete="current-password"
             required
           />
           <div 
-            v-if="errors.password && hasBeenSubmitted"
+            v-if="errors.password"
             id="signin-password-error"
             class="text-sm text-destructive"
             role="alert"
@@ -106,6 +108,7 @@
 </template>
 
 <script setup lang="ts">
+import { onBeforeUnmount } from 'vue'
 import { useAuthForm } from '@/composables/useAuthForm'
 import Card from '@/components/ui/Card.vue'
 import CardHeader from '@/components/ui/CardHeader.vue'
@@ -131,7 +134,8 @@ const {
   isValid,
   canSubmit,
   validateField,
-  handleSubmit
+  handleSubmit,
+  cleanup
 } = useAuthForm(false) // false = sign in form
 
 // Handle form submission
@@ -142,4 +146,9 @@ const handleFormSubmit = () => {
     // emit('submit', data)
   })
 }
+
+// Cleanup on unmount
+onBeforeUnmount(() => {
+  cleanup()
+})
 </script>

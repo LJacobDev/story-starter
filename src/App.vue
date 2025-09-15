@@ -44,11 +44,11 @@ const handleAuthSuccess = (result: any) => {
           </div>
           
           <!-- Navigation -->
-          <nav class="flex items-center space-x-4">
+          <nav class="flex items-center space-x-2 sm:space-x-4">
             <button 
               @click="currentView = 'home'"
               :class="[
-                'px-4 py-2 rounded-lg font-medium transition-colors',
+                'px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base',
                 currentView === 'home' 
                   ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
                   : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
@@ -59,18 +59,18 @@ const handleAuthSuccess = (result: any) => {
             <button 
               @click="currentView = 'auth'"
               :class="[
-                'px-4 py-2 rounded-lg font-medium transition-colors',
+                'px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base',
                 currentView === 'auth' 
                   ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
                   : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
               ]"
             >
-              Authentication
+              Sign In
             </button>
             <button 
               @click="currentView = 'demo'"
               :class="[
-                'px-4 py-2 rounded-lg font-medium transition-colors',
+                'px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base',
                 currentView === 'demo' 
                   ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300'
                   : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'

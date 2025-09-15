@@ -18,15 +18,16 @@
             v-model="formData.email"
             type="email"
             placeholder="Enter your email"
-            :class="errors.email && hasBeenSubmitted ? 'border-destructive' : ''"
-            @blur="() => validateField('email')"
+            :class="errors.email ? 'border-destructive' : ''"
+            @blur="() => validateField('email', true)"
+            @input="() => validateField('email')"
             :aria-invalid="errors.email ? 'true' : 'false'"
             :aria-describedby="errors.email ? 'signup-email-error' : undefined"
             autocomplete="email"
             required
           />
           <div 
-            v-if="errors.email && hasBeenSubmitted"
+            v-if="errors.email"
             id="signup-email-error"
             class="text-sm text-destructive"
             role="alert"
@@ -49,8 +50,9 @@
             v-model="formData.password"
             type="password"
             placeholder="Enter your password"
-            :class="errors.password && hasBeenSubmitted ? 'border-destructive' : ''"
-            @blur="() => validateField('password')"
+            :class="errors.password ? 'border-destructive' : ''"
+            @blur="() => validateField('password', true)"
+            @input="() => validateField('password')"
             :aria-invalid="errors.password ? 'true' : 'false'"
             :aria-describedby="errors.password ? 'signup-password-error' : 'signup-password-help'"
             autocomplete="new-password"
@@ -63,7 +65,7 @@
             Must be at least 8 characters with uppercase, lowercase, and number
           </div>
           <div 
-            v-if="errors.password && hasBeenSubmitted"
+            v-if="errors.password"
             id="signup-password-error"
             class="text-sm text-destructive"
             role="alert"
@@ -86,15 +88,16 @@
             v-model="formData.confirmPassword"
             type="password"
             placeholder="Confirm your password"
-            :class="errors.confirmPassword && hasBeenSubmitted ? 'border-destructive' : ''"
-            @blur="() => validateField('confirmPassword')"
+            :class="errors.confirmPassword ? 'border-destructive' : ''"
+            @blur="() => validateField('confirmPassword', true)"
+            @input="() => validateField('confirmPassword')"
             :aria-invalid="errors.confirmPassword ? 'true' : 'false'"
             :aria-describedby="errors.confirmPassword ? 'signup-confirm-password-error' : undefined"
             autocomplete="new-password"
             required
           />
           <div 
-            v-if="errors.confirmPassword && hasBeenSubmitted"
+            v-if="errors.confirmPassword"
             id="signup-confirm-password-error"
             class="text-sm text-destructive"
             role="alert"
@@ -143,6 +146,7 @@
 </template>
 
 <script setup lang="ts">
+import { onBeforeUnmount } from 'vue'
 import { useAuthForm } from '@/composables/useAuthForm'
 import Card from '@/components/ui/Card.vue'
 import CardHeader from '@/components/ui/CardHeader.vue'
@@ -168,7 +172,8 @@ const {
   isValid,
   canSubmit,
   validateField,
-  handleSubmit
+  handleSubmit,
+  cleanup
 } = useAuthForm(true) // true = sign up form
 
 // Handle form submission
@@ -179,4 +184,9 @@ const handleFormSubmit = () => {
     // emit('submit', data)
   })
 }
+
+// Cleanup on unmount
+onBeforeUnmount(() => {
+  cleanup()
+})
 </script>

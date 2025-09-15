@@ -17,7 +17,7 @@ describe('App.vue', () => {
   it('has navigation tabs', () => {
     const wrapper = mount(App)
     expect(wrapper.text()).toContain('Home')
-    expect(wrapper.text()).toContain('Authentication')
+    expect(wrapper.text()).toContain('Sign In')
     expect(wrapper.text()).toContain('Demo')
   })
 
