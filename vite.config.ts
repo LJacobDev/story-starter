@@ -14,6 +14,10 @@ export default defineConfig(({ command }) => ({
   },
   test: {
     globals: true,
-    environment: 'jsdom'
+    environment: 'jsdom',
+    env: {
+      VITE_SUPABASE_URL: 'http://localhost:3000',
+      VITE_SUPABASE_ANON_KEY: 'test-key'
+    }
   }
 }))
