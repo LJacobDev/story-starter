@@ -8,20 +8,46 @@ describe('App.vue', () => {
     expect(wrapper.exists()).toBe(true)
   })
 
-  it('contains the Vite logo', () => {
+  it('contains the Story Starter branding', () => {
     const wrapper = mount(App)
-    const viteLogo = wrapper.find('img[alt="Vite logo"]')
+    expect(wrapper.text()).toContain('Story Starter')
+    expect(wrapper.text()).toContain('Welcome to Story Starter!')
+  })
+
+  it('has navigation tabs', () => {
+    const wrapper = mount(App)
+    expect(wrapper.text()).toContain('Home')
+    expect(wrapper.text()).toContain('Authentication')
+    expect(wrapper.text()).toContain('Demo')
+  })
+
+  it('shows home view by default', () => {
+    const wrapper = mount(App)
+    expect(wrapper.text()).toContain('Welcome to Story Starter!')
+    expect(wrapper.text()).toContain('Create amazing stories with AI assistance')
+    expect(wrapper.text()).toContain('Get Started Now')
+  })
+
+  it('contains Vite and Vue logos in demo view', async () => {
+    const wrapper = mount(App)
+    
+    // Click the Demo button to switch views
+    const demoButton = wrapper.find('button:nth-of-type(3)') // Demo is the 3rd button
+    await demoButton.trigger('click')
+    await wrapper.vm.$nextTick()
+    
+    const viteLogo = wrapper.find('img[alt="Vite"]')
+    const vueLogo = wrapper.find('img[alt="Vue"]')
+    
     expect(viteLogo.exists()).toBe(true)
-  })
-
-  it('contains the Vue logo', () => {
-    const wrapper = mount(App)
-    const vueLogo = wrapper.find('img[alt="Vue logo"]')
     expect(vueLogo.exists()).toBe(true)
+    expect(wrapper.text()).toContain('Vite + Vue')
   })
 
-  it('renders the HelloWorld component', () => {
+  it('has feature cards on home view', () => {
     const wrapper = mount(App)
-    expect(wrapper.html()).toContain('Vite + Vue')
+    expect(wrapper.text()).toContain('AI-Powered Writing')
+    expect(wrapper.text()).toContain('Story Library')
+    expect(wrapper.text()).toContain('Multiple Formats')
   })
 })
