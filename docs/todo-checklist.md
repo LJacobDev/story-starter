@@ -101,24 +101,24 @@ This checklist tracks the development progress of the Story Starter application 
 
 ### Chunk 2.1: User Registration and Login
 
-#### [ ] Task 2.1.1: ShadCN UI Setup and Authentication Forms
+#### [x] Task 2.1.1: ShadCN UI Setup and Authentication Forms
 **Status**: Not Started  
 **Description**: Install ShadCN UI and create authentication forms
 
 **Requirements Checklist**:
-- [ ] Install and configure ShadCN UI components
-- [ ] Create sign-up form with email/password fields
-- [ ] Create sign-in form with email/password fields
-- [ ] Implement client-side validation (email format, password requirements)
-- [ ] Add proper form accessibility (ARIA labels, error announcements)
-- [ ] Style forms with TailwindCSS and ShadCN components
-- [ ] Write unit tests for form validation logic
+- [x] Install and configure ShadCN UI components
+- [x] Create sign-up form with email/password fields
+- [x] Create sign-in form with email/password fields
+- [x] Implement client-side validation (email format, password requirements)
+- [x] Add proper form accessibility (ARIA labels, error announcements)
+- [x] Style forms with TailwindCSS and ShadCN components
+- [x] Write unit tests for form validation logic
 
 **Success Criteria**:
 - [ ] Forms render correctly and are fully accessible
 - [ ] Validation works on client-side
 - [ ] Forms are responsive across device sizes
-- [ ] All tests pass
+- [x] All tests pass
 
 ---
 
