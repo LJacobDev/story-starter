@@ -44,6 +44,10 @@ requirements:
 
 
 
+When we get to implementing task 4.1.1, I'd like to revisit the idea of breaking it into smaller steps that are more likely to succeed, since you said that it is quite complex as it is now
+
+
+
 ## Testing and Quality Assurance Strategy
 
 ### Unit Testing
