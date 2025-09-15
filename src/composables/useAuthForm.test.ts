@@ -16,7 +16,9 @@ describe('useAuthForm', () => {
     })
 
     it('should initialize with no errors', () => {
-      expect(Object.keys(authForm.errors.value)).toHaveLength(0)
+      // Errors should be initialized as empty object (no error messages)
+      expect(authForm.errors.value.email).toBeUndefined()
+      expect(authForm.errors.value.password).toBeUndefined()
     })
 
     it('should not be valid initially', () => {

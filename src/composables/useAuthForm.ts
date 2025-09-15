@@ -38,24 +38,29 @@ export function useAuthForm(isSignUp: boolean = false) {
   const validateField = (fieldName: keyof AuthFormData, immediate: boolean = false) => {
     touchedFields.value.add(fieldName)
     
-    const doValidation = () => {
-      const fieldErrors = validateAuthForm(formData, isSignUp)
-      // Always update the field error, whether it's an error or undefined (cleared)
-      errors.value[fieldName] = fieldErrors[fieldName]
+    const performValidation = () => {
+      const allErrors = validateAuthForm(formData, isSignUp)
+      const fieldError = allErrors[fieldName]
+      
+      // Update the specific field error
+      errors.value = {
+        ...errors.value,
+        [fieldName]: fieldError || null
+      }
     }
     
     if (immediate) {
-      // Immediate validation (for blur events)
-      doValidation()
+      // Immediate validation for blur events
+      performValidation()
     } else {
-      // Debounced validation (for input events)
+      // Debounced validation for input events
       if (validationTimeout) {
         clearTimeout(validationTimeout)
       }
       
       validationTimeout = setTimeout(() => {
-        doValidation()
-      }, 150) // 150ms debounce for better responsiveness
+        performValidation()
+      }, 200)
     }
   }
 
