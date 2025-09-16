@@ -7,6 +7,13 @@ import vueLogo from '@/assets/vue.svg'
 // Authentication
 const { user, isAuthenticated, signOut, loading } = useAuth()
 
+// Environment variables for debugging
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+// Test password field
+const testPassword = ref('')
+
 // Reactive state
 const count = ref(0)
 const currentView = ref<'home' | 'auth' | 'demo'>('home')
@@ -39,6 +46,29 @@ const testStatus = computed(() => {
 const handleAuthSuccess = (result: any) => {
   console.log('Authentication successful:', result)
   // The watcher above will handle the redirect
+}
+
+// Simple authentication test function
+const testAuth = async () => {
+  console.log('Testing authentication with current env variables...')
+  console.log('URL:', supabaseUrl)
+  console.log('Key exists:', !!supabaseKey)
+  
+  if (!testPassword.value) {
+    console.error('Please enter a password for testing')
+    return
+  }
+  
+  try {
+    const { signIn } = useAuth()
+    const result = await signIn({
+      email: 'ljacobdev@gmail.com',
+      password: testPassword.value
+    })
+    console.log('Auth test result:', result)
+  } catch (error) {
+    console.error('Auth test failed:', error)
+  }
 }
 
 // Handle sign out
@@ -156,6 +186,33 @@ const handleSignOut = async () => {
           <p class="text-sm text-green-700 dark:text-green-400 mt-2">
             Email verified: {{ user?.email_confirmed_at ? 'Yes' : 'Pending verification' }}
           </p>
+        </div>
+
+        <!-- Environment Debug Info & Auth Test -->
+        <div class="mb-8 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg max-w-2xl mx-auto">
+          <h3 class="text-lg font-semibold text-blue-800 dark:text-blue-300 mb-2">Environment Check & Auth Test</h3>
+          <div class="text-sm space-y-1 text-blue-700 dark:text-blue-400 mb-4">
+            <div>Supabase URL: {{ supabaseUrl ? '✅ Set' : '❌ Missing' }}</div>
+            <div>Supabase Key: {{ supabaseKey ? '✅ Set' : '❌ Missing' }}</div>
+            <div>Auth Loading: {{ loading ? 'Yes' : 'No' }}</div>
+          </div>
+          <div class="space-y-2">
+            <div>
+              <label class="block text-sm font-medium text-blue-800 dark:text-blue-300 mb-1">Test Password:</label>
+              <input 
+                v-model="testPassword"
+                type="password"
+                placeholder="Enter password to test auth"
+                class="w-full px-3 py-2 border border-blue-300 rounded-md text-sm"
+              />
+            </div>
+            <button 
+              @click="testAuth"
+              class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"
+            >
+              Test Authentication
+            </button>
+          </div>
         </div>
 
         <!-- Feature Cards -->

@@ -1,5 +1,4 @@
 import { ref, computed, onMounted } from 'vue'
-import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import type { 
   AuthState, 
@@ -118,7 +117,7 @@ export function useAuth(): AuthComposable {
         email: credentials.email, 
         hasPassword: !!credentials.password,
         supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
-        hasKey: !!import.meta.env.VITE_SUPABASE_KEY
+        hasKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY
       })
       
       const { data, error } = await supabase.auth.signInWithPassword({
