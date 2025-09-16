@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gradients for visual appeal -->
+    <linearGradient id="infrastructureGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e3a8a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="backendGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10b981;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="businessGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7c2d12;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="uiGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#581c87;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="externalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#dc2626;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f87171;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="800" fill="#f8fafc"/>
+  
+  <!-- Title -->
+  <text x="600" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#1e293b">
+    Story Starter - Project Architecture Layers
+  </text>
+  
+  <!-- Layer 1: External Services (Top) -->
+  <g id="external-layer">
+    <rect x="50" y="60" width="1100" height="80" fill="url(#externalGrad)" rx="8" opacity="0.9"/>
+    <text x="600" y="85" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">
+      External Services Layer
+    </text>
+    
+    <!-- External service boxes -->
+    <rect x="100" y="100" width="150" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="175" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">Supabase Auth</text>
+    
+    <rect x="280" y="100" width="150" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="355" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">Supabase Database</text>
+    
+    <rect x="460" y="100" width="150" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="535" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">Gemini API</text>
+    
+    <rect x="640" y="100" width="150" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="715" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">GitHub Pages</text>
+    
+    <rect x="820" y="100" width="150" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="895" y="120" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="white">Edge Functions</text>
+  </g>
+  
+  <!-- Layer 2: Infrastructure Layer -->
+  <g id="infrastructure-layer">
+    <rect x="50" y="160" width="1100" height="100" fill="url(#infrastructureGrad)" rx="8" opacity="0.9"/>
+    <text x="600" y="185" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">
+      Infrastructure &amp; Build Layer
+    </text>
+    
+    <!-- Infrastructure boxes -->
+    <rect x="100" y="200" width="120" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="160" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">Vite Build</text>
+    
+    <rect x="240" y="200" width="120" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="300" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">TypeScript</text>
+    
+    <rect x="380" y="200" width="120" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="440" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">Vitest Testing</text>
+    
+    <rect x="520" y="200" width="120" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="580" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">TailwindCSS</text>
+    
+    <rect x="660" y="200" width="120" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="720" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">GitHub Actions</text>
+    
+    <rect x="800" y="200" width="120" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="860" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">ESLint/Prettier</text>
+    
+    <rect x="940" y="200" width="120" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="1000" y="220" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">Environment</text>
+  </g>
+  
+  <!-- Layer 3: Backend/Data Layer -->
+  <g id="backend-layer">
+    <rect x="50" y="280" width="1100" height="100" fill="url(#backendGrad)" rx="8" opacity="0.9"/>
+    <text x="600" y="305" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">
+      Backend &amp; Data Layer
+    </text>
+    
+    <!-- Backend boxes -->
+    <rect x="100" y="320" width="140" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="170" y="340" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">Supabase Client</text>
+    
+    <rect x="260" y="320" width="140" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="330" y="340" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">Database Schema</text>
+    
+    <rect x="420" y="320" width="140" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="490" y="340" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">RLS Policies</text>
+    
+    <rect x="580" y="320" width="140" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="650" y="340" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">API Operations</text>
+    
+    <rect x="740" y="320" width="140" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="810" y="340" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">Type Definitions</text>
+    
+    <rect x="900" y="320" width="140" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="970" y="340" text-anchor="middle" font-family="Arial, sans-serif" font-size="11" fill="white">Error Handling</text>
+  </g>
+  
+  <!-- Layer 4: Business Logic Layer -->
+  <g id="business-layer">
+    <rect x="50" y="400" width="1100" height="120" fill="url(#businessGrad)" rx="8" opacity="0.9"/>
+    <text x="600" y="425" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">
+      Business Logic &amp; State Management Layer
+    </text>
+    
+    <!-- Business logic boxes -->
+    <rect x="80" y="445" width="130" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="145" y="465" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">useAuth Composable</text>
+    
+    <rect x="230" y="445" width="130" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="295" y="465" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">useAuthForm</text>
+    
+    <rect x="380" y="445" width="130" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="445" y="465" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Story Operations</text>
+    
+    <rect x="530" y="445" width="130" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="595" y="465" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Generation Logic</text>
+    
+    <rect x="680" y="445" width="130" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="745" y="465" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Route Guards</text>
+    
+    <rect x="830" y="445" width="130" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="895" y="465" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Validation Utils</text>
+    
+    <rect x="980" y="445" width="130" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="1045" y="465" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">State Persistence</text>
+    
+    <!-- Second row of business logic -->
+    <rect x="155" y="485" width="130" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="220" y="505" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Search &amp; Filter</text>
+    
+    <rect x="305" y="485" width="130" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="370" y="505" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Analytics Logic</text>
+    
+    <rect x="455" y="485" width="130" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="520" y="505" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Image Handling</text>
+    
+    <rect x="605" y="485" width="130" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="670" y="505" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Sharing Logic</text>
+    
+    <rect x="755" y="485" width="130" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="820" y="505" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Error Recovery</text>
+  </g>
+  
+  <!-- Layer 5: UI Components Layer -->
+  <g id="ui-layer">
+    <rect x="50" y="540" width="1100" height="120" fill="url(#uiGrad)" rx="8" opacity="0.9"/>
+    <text x="600" y="565" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">
+      UI Components &amp; Views Layer
+    </text>
+    
+    <!-- UI component boxes -->
+    <rect x="80" y="585" width="120" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="140" y="605" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">SignInForm.vue</text>
+    
+    <rect x="220" y="585" width="120" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="280" y="605" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">SignUpForm.vue</text>
+    
+    <rect x="360" y="585" width="120" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="420" y="605" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">StoryCard.vue</text>
+    
+    <rect x="500" y="585" width="120" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="560" y="605" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">StoryGrid.vue</text>
+    
+    <rect x="640" y="585" width="120" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="700" y="605" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">GenerationForm</text>
+    
+    <rect x="780" y="585" width="120" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="840" y="605" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Navigation.vue</text>
+    
+    <rect x="920" y="585" width="120" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="980" y="605" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">ShadCN UI</text>
+    
+    <!-- Second row of UI components -->
+    <rect x="150" y="625" width="120" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="210" y="645" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Layout.vue</text>
+    
+    <rect x="290" y="625" width="120" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="350" y="645" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">Modal.vue</text>
+    
+    <rect x="430" y="625" width="120" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="490" y="645" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">SearchFilter.vue</text>
+    
+    <rect x="570" y="625" width="120" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="630" y="645" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">LoadingState.vue</text>
+    
+    <rect x="710" y="625" width="120" height="30" fill="rgba(255,255,255,0.2)" rx="4"/>
+    <text x="770" y="645" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="white">ErrorState.vue</text>
+  </g>
+  
+  <!-- Flow arrows -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+     refX="0" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#64748b" />
+    </marker>
+  </defs>
+  
+  <!-- Data flow arrows -->
+  <line x1="600" y1="140" x2="600" y2="160" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="600" y1="260" x2="600" y2="280" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="600" y1="380" x2="600" y2="400" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <line x1="600" y1="520" x2="600" y2="540" stroke="#64748b" stroke-width="2" marker-end="url(#arrowhead)"/>
+  
+  <!-- Side annotations -->
+  <g id="annotations">
+    <text x="30" y="100" font-family="Arial, sans-serif" font-size="11" fill="#64748b" transform="rotate(-90, 30, 100)">
+      External Dependencies
+    </text>
+    <text x="30" y="210" font-family="Arial, sans-serif" font-size="11" fill="#64748b" transform="rotate(-90, 30, 210)">
+      Build &amp; Deploy
+    </text>
+    <text x="30" y="330" font-family="Arial, sans-serif" font-size="11" fill="#64748b" transform="rotate(-90, 30, 330)">
+      Data &amp; API
+    </text>
+    <text x="30" y="460" font-family="Arial, sans-serif" font-size="11" fill="#64748b" transform="rotate(-90, 30, 460)">
+      Business Logic
+    </text>
+    <text x="30" y="600" font-family="Arial, sans-serif" font-size="11" fill="#64748b" transform="rotate(-90, 30, 600)">
+      User Interface
+    </text>
+  </g>
+  
+  <!-- Legend -->
+  <g id="legend">
+    <rect x="50" y="680" width="1100" height="80" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1" rx="4"/>
+    <text x="600" y="700" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#334155">
+      Architecture Flow: External Services → Infrastructure → Backend → Business Logic → UI Components
+    </text>
+    
+    <text x="80" y="720" font-family="Arial, sans-serif" font-size="11" fill="#64748b">
+      Status Indicators:
+    </text>
+    <circle cx="200" cy="715" r="5" fill="#10b981"/>
+    <text x="215" y="720" font-family="Arial, sans-serif" font-size="10" fill="#64748b">Completed</text>
+    
+    <circle cx="320" cy="715" r="5" fill="#f59e0b"/>
+    <text x="335" y="720" font-family="Arial, sans-serif" font-size="10" fill="#64748b">In Progress</text>
+    
+    <circle cx="440" cy="715" r="5" fill="#ef4444"/>
+    <text x="455" y="720" font-family="Arial, sans-serif" font-size="10" fill="#64748b">Not Started</text>
+    
+    <text x="600" y="740" font-family="Arial, sans-serif" font-size="10" fill="#64748b">
+      Current State: Authentication infrastructure complete but forms non-functional | Task 2.1.2 needs rollback and refinement
+    </text>
+  </g>
+  
+  <!-- Version info -->
+  <text x="1150" y="790" text-anchor="end" font-family="Arial, sans-serif" font-size="9" fill="#94a3b8">
+    Pre-Repomix Analysis | Story Starter v0.1
+  </text>
+</svg>

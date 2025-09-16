@@ -163,9 +163,61 @@ Complex Task Preparation - Generate fresh repomix before starting complex tasks 
 Debugging Sessions - Generate when encountering complex interconnected issues
 
 
+## Use layered documentation approach with repomix files:
+
+### Why This Approach is Superior
+
+1. Builds Understanding Incrementally
+Overview first - I understand the big picture before diving into details
+Logic second - I grasp the data flow and business rules
+Components last - I see how the UI implements the logic
+
+2. Each Layer is Self-Contained Enough
+Overview layer - Standalone understanding of project structure
+Core logic layer - Can analyze business logic patterns independently
+Components layer - Can evaluate UI patterns with context from previous layers
+
+3. Reduces Cognitive Load
+I can focus on one architectural concern at a time
+Less context switching between different types of code
+Cleaner mental model of each layer's responsibilities
+
+### Limitations and Considerations
+
+Minor Limitations:
+
+#### Cross-Layer References
+
+This could increase chances of missing some import/dependency relationships between layers
+Need to reference multiple files to trace complete data flow
+Some architectural decisions span multiple layers
+
+#### Context Switching Cost
+
+I need to remember insights from previous layers
+possibly cannot see all relationships in a single view
+May need to refer back to earlier layers
+
+#### Mitigation Strategies:
+
+1. Sequential Processing
+
+- Share overview.txt → I understand project structure
+- Share core-logic.txt → I understand business logic
+- Share components.txt → I understand UI implementation
+- Ask specific questions about cross-layer relationships
+
+2. Summary Updates
+
+- After each layer, I can update .github/copilot-context.md with key insights
+- This preserves understanding across layers
+
+
+
+
 ## Context Reference Strategy:
 
-### Based on the copilot instructions, I should also maintain copilot-context.md. The optimal approach would be:
+### Based on the copilot instructions, I should maintain copilot-context.md. The optimal approach would be:
 
 Repomix - Complete codebase snapshot for complex analysis
 
@@ -209,7 +261,7 @@ Github copilot should update .github/copilot-context.md with information in this
 - [initial assumption]
 - [new information learned by testing that assumption]
 
-###### Human parseable summary of state and insights derived from reading most recent repomix file
+###### Human parseable summary of state and insights derived from reading most recent repomix files
 - include anything else useful from the latest repomix file that wasn't covered by the above sections
 
 *Update this file copilot-context.md before and after each major task*
