@@ -114,12 +114,22 @@ export function useAuth(): AuthComposable {
     try {
       authState.value.loading = true
       
+      console.log('Attempting sign in with:', { 
+        email: credentials.email, 
+        hasPassword: !!credentials.password,
+        supabaseUrl: import.meta.env.VITE_SUPABASE_URL,
+        hasKey: !!import.meta.env.VITE_SUPABASE_KEY
+      })
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password
       })
 
+      console.log('Supabase response:', { data, error })
+
       if (error) {
+        console.error('Supabase auth error:', error)
         return {
           success: false,
           error: error.message,

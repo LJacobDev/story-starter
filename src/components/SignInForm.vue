@@ -19,15 +19,16 @@
             type="email"
             placeholder="Enter your email"
             :class="errors.email ? 'border-destructive' : ''"
-            @blur="() => validateField('email', true)"
+            @blur="() => validateField('email')"
             @input="() => validateField('email')"
             :aria-invalid="errors.email ? 'true' : 'false'"
             :aria-describedby="errors.email ? 'signin-email-error' : undefined"
             autocomplete="email"
             required
           />
+          <!-- Email error - temporarily disabled for testing -->
           <div 
-            v-if="errors.email"
+            v-if="false"
             id="signin-email-error"
             class="text-sm text-destructive"
             role="alert"
@@ -51,15 +52,16 @@
             type="password"
             placeholder="Enter your password"
             :class="errors.password ? 'border-destructive' : ''"
-            @blur="() => validateField('password', true)"
+            @blur="() => validateField('password')"
             @input="() => validateField('password')"
             :aria-invalid="errors.password ? 'true' : 'false'"
             :aria-describedby="errors.password ? 'signin-password-error' : undefined"
             autocomplete="current-password"
             required
           />
+          <!-- Password error - temporarily disabled for testing -->
           <div 
-            v-if="errors.password"
+            v-if="false"
             id="signin-password-error"
             class="text-sm text-destructive"
             role="alert"
@@ -76,7 +78,8 @@
           </div>
         </div>
 
-        <div v-if="authError" class="p-3 bg-red-50 border border-red-200 rounded-md">
+        <!-- Auth error display - temporarily disabled for testing -->
+        <div v-if="false" class="p-3 bg-red-50 border border-red-200 rounded-md">
           <div class="text-sm text-red-800">
             {{ authError }}
           </div>
@@ -92,9 +95,9 @@
           <span v-else>Sign In</span>
         </Button>
 
-        <!-- Form-level errors -->
+        <!-- Form-level errors - temporarily disabled for testing -->
         <div 
-          v-if="!isValid && hasBeenSubmitted"
+          v-if="false"
           id="signin-form-errors"
           class="text-sm text-destructive"
           role="alert"
