@@ -98,49 +98,32 @@ defineEmits<{
   'switch-to-signup': []
 }>()
 
-// EXACT SAME PATTERN AS WORKING TEST AUTHENTICATION
 const email = ref('')
 const password = ref('')
 const isLoading = ref(false)
-
-// Direct useAuth import like test authentication
-const { signIn } = useAuth()
-
-// Local state for form messages
 const authError = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
 
-// EXACT SAME FUNCTION PATTERN AS TEST AUTH
+const { signIn } = useAuth()
+
 const handleSubmit = async () => {
-  console.log('Sign in form submitted - EXACT COPY of working test pattern')
-  console.log('Form data:', { email: email.value, password: password.value ? '[HIDDEN]' : 'empty' })
-  
+  console.log('SignInForm submit', { email: email.value, password: password.value ? '[HIDDEN]' : 'empty' })
   isLoading.value = true
   authError.value = null
   successMessage.value = null
-  
-  try {
-    console.log('Attempting sign in with useAuth directly (same as working test)...')
-    const result = await signIn({
-      email: email.value,
-      password: password.value
-    })
 
-    console.log('Sign in result:', { success: result.success, error: result.error })
+  try {
+    const result = await signIn({ email: email.value, password: password.value })
 
     if (result.success) {
-      successMessage.value = 'Successfully signed in! Welcome back.'
-      console.log('Sign in successful')
-      // Clear form data on success
+      successMessage.value = 'Signed in successfully.'
       email.value = ''
       password.value = ''
     } else {
-      authError.value = result.error || 'Sign in failed. Please try again.'
-      console.log('Sign in failed:', result.error)
+      authError.value = result.error || 'Sign in failed.'
     }
   } catch (error) {
-    authError.value = 'An unexpected error occurred. Please try again.'
-    console.error('Sign in error:', error)
+    authError.value = 'An unexpected error occurred.'
   } finally {
     isLoading.value = false
   }

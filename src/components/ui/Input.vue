@@ -5,6 +5,8 @@
       props.class
     )"
     v-bind="$attrs"
+    :value="modelValue"
+    @input="onInput"
   />
 </template>
 
@@ -12,8 +14,18 @@
 import { cn } from '@/lib/utils'
 
 interface InputProps {
+  modelValue?: string | number | boolean
   class?: string
 }
 
-const props = withDefaults(defineProps<InputProps>(), {})
+const props = withDefaults(defineProps<InputProps>(), { modelValue: '' })
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: string | number | boolean): void
+}>()
+
+function onInput(e: Event) {
+  const target = e.target as HTMLInputElement
+  emit('update:modelValue', target.value)
+}
 </script>
