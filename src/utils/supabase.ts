@@ -4,9 +4,26 @@ import type { Database, SupabaseResponse } from '@/types/database'
 // Environment validation
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_KEY
+const isTest = import.meta.env.MODE === 'test' || process.env.NODE_ENV === 'test'
 
 // Function to validate and create Supabase client
 function createSupabaseClient(): SupabaseClient<Database> {
+  if (isTest) {
+    // Return a minimal stub for tests to avoid requiring real env vars or network access.
+    // Tests should mock this module as needed, but having a harmless stub avoids early throws.
+    return {
+      auth: {
+        signUp: async () => ({ data: null, error: null }),
+        signInWithPassword: async () => ({ data: { user: null, session: null }, error: null }),
+        signOut: async () => ({ error: null }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+        getSession: async () => ({ data: { session: null }, error: null }),
+        resend: async () => ({ error: null }),
+        refreshSession: async () => ({ data: { session: null }, error: null })
+      }
+    } as unknown as SupabaseClient<Database>
+  }
+
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error('Missing Supabase environment variables. Please check your .env file.')
   }

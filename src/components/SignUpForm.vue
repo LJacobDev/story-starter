@@ -70,10 +70,29 @@ const successMessage = ref<string | null>(null)
 
 const { signUp } = useAuth()
 
+const emailRegex = /^\S+@\S+\.\S+$/
+
 const handleSubmit = async () => {
-  isLoading.value = true
   authError.value = null
   successMessage.value = null
+
+  // Basic client-side validation
+  if (!email.value || !emailRegex.test(email.value)) {
+    authError.value = 'Please enter a valid email address.'
+    return
+  }
+
+  if (!password.value) {
+    authError.value = 'Please enter a password.'
+    return
+  }
+
+  if (password.value !== confirmPassword.value) {
+    authError.value = 'Passwords do not match.'
+    return
+  }
+
+  isLoading.value = true
 
   try {
     const result = await signUp({ email: email.value, password: password.value })
@@ -88,7 +107,6 @@ const handleSubmit = async () => {
     }
   } catch (error) {
     authError.value = 'An unexpected error occurred.'
-    console.error('Sign up error:', error)
   } finally {
     isLoading.value = false
   }

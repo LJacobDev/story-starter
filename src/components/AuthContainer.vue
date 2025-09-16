@@ -30,7 +30,6 @@
 import { ref } from 'vue'
 import SignInForm from '@/components/SignInForm.vue'
 import SignUpForm from '@/components/SignUpForm.vue'
-import type { AuthFormData } from '@/utils/validation'
 
 // Form state
 const currentForm = ref<'signin' | 'signup'>('signin')
@@ -44,13 +43,13 @@ const switchToSignIn = () => {
   currentForm.value = 'signin'
 }
 
-// Handle form submissions (will be enhanced with actual auth in next prompt)
-const handleSignIn = (data: AuthFormData) => {
-  console.log('Sign in submitted:', data)
+// Handle form submissions (left minimal for now)
+const handleSignIn = () => {
+  // submission handled inside SignInForm directly
 }
 
-const handleSignUp = (data: AuthFormData) => {
-  console.log('Sign up submitted:', data)
+const handleSignUp = () => {
+  // submission handled inside SignUpForm directly
 }
 </script>
 

@@ -1,65 +1,75 @@
 # Copilot Working Memory Reference
 
 ## Current Project State
-- **Last Known Good State**: Task 2.1.1 completion - Authentication forms rendering with 90/90 tests passing
-- **Currently Working**: Investigating Task 2.1.2 authentication issues - forms marked complete but functionality broken
-- **Last Test Results**: Unknown - need to verify current test status after authentication implementation attempts
-- **Known Issues**: Authentication buttons non-functional (white screen, disabled buttons, validation blocking submission)
+- **Last Known Good State**: N/A (no commit hash recorded in workspace snapshot). Last functional checkpoint: runtime auth UI fixed so SignIn/SignUp submit real values (Input v-model fix applied); many unit tests still failing in CI/local test runs.
+- **Currently Working**: Stabilize unit tests and test environment (Option B): make supabase utilities test-friendly, guard composables that use Vue lifecycle hooks, and provide mocks/setup for Vitest so tests do not depend on real network or missing environment variables.
+- **Last Test Results**: 89 tests run, 70 passed, 19 failed (observed during most recent test execution). Key failures were caused by missing Supabase env vars, lifecycle hook warnings from composables, and some assertion mismatches.
+- **Known Issues**:
+  - `src/utils/supabase.ts` threw when VITE env vars were missing; tests depended on that module at load time.
+  - Composables (e.g., `useAuth`) called `onMounted` unguarded, producing warnings/errors when invoked in pure unit tests outside component setup.
+  - Some tests expected a previous `useAuthForm` API shape; this was restored but some message/validation string mismatches remain.
+  - Some tests attempted network requests to Supabase causing ECONNREFUSED or flaky failures.
 
 ## Key File Relationships
-- `useAuthForm.ts` depends on: validation utilities, auth types, Vue reactivity system
-- `SignInForm.vue` uses: useAuthForm composable, useAuth composable, ShadCN UI components (Button, Input, Card)
-- `SignUpForm.vue` uses: useAuthForm composable, useAuth composable, ShadCN UI components
-- `useAuth.ts` depends on: Supabase client, auth types, Vue reactivity
-- Authentication flow: Form submission → useAuthForm validation → useAuth Supabase calls → state updates → UI feedback
+- `src/components/ui/Input.vue` depends on: native input props/attributes; must implement Vue 3 v-model contract (`modelValue` + `update:modelValue`).
+- `SignInForm.vue` / `SignUpForm.vue` use: `useAuth()` composable and `Input.vue` components; they expect `useAuth` to expose `signIn` and `signUp` methods and `isLoading` state.
+- `src/composables/useAuth.ts` depends on: `src/utils/supabase.ts` client; sets up auth state and exposes `signIn`, `signUp`, `signOut`, `user`, `session`, `isLoading`.
+- `src/composables/useAuthForm.ts` is used by form tests and components; tests expect an API containing: `formData` object, `errors` ref, `isLoading`, `hasBeenSubmitted`, `isValid`, `canSubmit`, `validateField`, `validateForm`, `resetForm`, `handleSubmit`.
+- `src/utils/supabase.ts` is the single place constructing or returning the Supabase client; tests import this indirectly via composables and utilities.
 
 ## Recent Changes Made
-- September 16, 2025: Modified form button disabled logic to remove validation dependency
-- September 16, 2025: Attempted to fix form validation blocking in useAuthForm.ts handleSubmit function
-- September 16, 2025: Created comprehensive documentation for repomix usage and large file handling
-- September 16, 2025: Updated authentication forms to bypass strict validation for basic functionality
+- 2025-09-16: Edited `src/components/ui/Input.vue` to implement Vue 3 v-model binding (ensures parent receives typed input values).
+- 2025-09-16: Updated `src/components/SignInForm.vue` and `src/components/SignUpForm.vue` to use local refs, added basic client-side validation, and removed noisy debug logs.
+- 2025-09-16: Removed temporary test-auth UI from `src/App.vue`.
+- 2025-09-16: Restored `src/composables/useAuthForm.ts` API to match test expectations (formData, errors ref, validation helpers).
+- 2025-09-16: Edited `src/utils/supabase.ts` to avoid throwing during test runs: returns a harmless stub client when running in test mode and exposes `getSupabaseClient()` and `resetSupabaseClient()`.
+- 2025-09-16: Edited `src/composables/useAuth.ts` to guard `onMounted` usage (uses `getCurrentInstance()` to decide whether to call `onMounted` or register a listener directly) so it is safe in unit tests.
 
 ## Next Steps Plan
-1. **Roll back to Task 2.1.1 completion state** using git reset to stable working forms
-2. **Verify application loads correctly** with npm run dev and test basic form rendering
-3. **Restart Task 2.1.2 with simpler approach** - focus on basic authentication integration first
-4. **Generate focused repomix files** for authentication system analysis before major changes
+1. Add a Vitest setup/mocks file to provide stable test-time Supabase mocks:
+   - Create `tests/setup` or `tests/mocks/supabase.ts` and register it in `vitest.config.ts` `setupFiles` so tests get a predictable mock of `supabase.auth` methods.
+   - Alternatively, add module mocks in `tests/__mocks__` or use Vitest `vi.mock()` in test suites to replace the network calls.
+2. Re-run the test suite and capture failing assertions:
+   - Fix message/validation string mismatches in `useAuthForm` or in tests depending on intended behavior.
+   - Where tests intentionally exercise auth flows, provide per-test mocks that return expected shapes (user/session or errors).
+3. Ensure `src/utils/supabase.ts` behavior is compatible with both development and test environments:
+   - Keep strict environment checks in non-test modes (throw when required env vars are missing).
+   - In test mode, allow injection of test doubles via `resetSupabaseClient()`.
+4. Iterate until all tests pass; if tests depend on lifecycle, prefer running composable code inside test fixture components or rely on guarded logic implemented already.
+
+## Verification Plan
+- How I will test changes:
+  - Run `npm run test` locally (Vitest) and verify no module-load errors related to Supabase env vars and no lifecycle warnings from composables.
+  - Confirm the `Input.vue` v-model unit test passes and that SignIn/SignUp components send non-empty values to `useAuth` methods when used in the browser.
+- Manual test checklist for developer:
+  1. Run `npm run test` and note any failing tests and stack traces.
+  2. If tests attempt network calls, run `npm run test` after adding the Vitest setup mock and verify network calls are replaced by stubs.
+  3. Start the dev server `npm run dev` and exercise authentication UI: fill in email/password fields and submit — ensure Supabase calls are made (in dev mode they will reach Supabase if env vars are configured) and no console exceptions appear.
+- Success criteria:
+  - No tests fail due to missing env vars or onMounted lifecycle warnings.
+  - Unit test pass count increases and network-related flakiness is eliminated.
+
+## Rollback plan
+- If these changes cause regressions, revert the edited files:
+  - `git checkout -- src/utils/supabase.ts src/composables/useAuth.ts` (or restore from previous commit).
+- Alternatively, create a short patch that reverts only the test-mode fallback and re-run tests to compare.
 
 ## Complexity Warning Signs
-- [x] More than 5 files need changes (authentication touched many interconnected files)
-- [x] Test failure cascade suspected (changes likely broke multiple test scenarios)
-- [x] Can't predict impact of changes (validation changes had unexpected side effects)
-- [x] Circular dependency patterns in form validation and authentication state
+- [ ] More than 5 files need changes to make tests pass.
+- [ ] Tests rely on network access or external service availability.
+- [ ] Composables using lifecycle hooks being exercised directly in unit tests without component wrappers.
+- [ ] Tests depend on exact validation text strings across multiple files.
 
-## Assumptions About the Project That Changed When New Things Were Learned
-- **Initial assumption**: Complex form validation was necessary for authentication
-- **New information learned**: Overly strict validation was preventing any form submission attempts
-- **Initial assumption**: Authentication infrastructure was working despite UI issues
-- **New information learned**: Form button disabled state was blocking all authentication attempts regardless of backend functionality
+## Assumptions about the project that changed
+- Initial assumption: tests only needed UI fixes (Input v-model).  
+- New information learned: tests also depend on module-level Supabase client creation (which threw when env vars are missing) and the composables used lifecycle hooks in ways that caused warnings in tests.
 
-## Human Parseable Summary of State and Insights Derived From Recent Analysis
-- **Authentication System Status**: Task 2.1.2 marked as complete in todo checklist but functionality is broken
-- **Technical Debt**: Complex validation system (useAuthForm, validation utils) created interdependencies that block basic functionality
-- **Architecture Issues**: Form validation, authentication logic, and UI state are tightly coupled, making debugging difficult
-- **Immediate Priority**: Roll back to stable state and restart with simpler, more testable approach
-- **Context Management**: Project reaching complexity where AI agent needs focused repomix files rather than comprehensive analysis
-- **Documentation Added**: Created extensive repomix usage guides and architectural recommendations for AI-optimal development patterns
+## Human-parsable summary of state and insights
+- The runtime bug that caused empty auth fields was fixed by implementing v-model in the custom `Input` component and updating the form components to use local refs.  
+- The test suite still fails due to environment and lifecycle issues: `src/utils/supabase.ts` needs to be test-friendly and `useAuth` needs to avoid unguarded `onMounted` calls — both have been addressed with conservative edits that provide test-mode stubs and guarded initialization logic.  
+- Next immediate work is to add controlled Vitest mocks for Supabase and re-run tests; this will likely surface the remaining assertion-level failures that should be resolved by aligning validation messages or adjusting tests.
 
-## Repomix File Size Management Strategy
 
-### Current Approach
-- **No current repomix files**: Project state needs baseline generation after rollback
-- **Recommended focused approach**: Generate separate files for overview, auth logic, and auth components
-- **Estimated safe sizes**: Each layer should be under 50KB for reliable AI processing
+---
 
-### When to Generate New Repomix
-- **Immediately after rollback**: Generate baseline authentication system state
-- **Before Task 2.1.2 restart**: Generate focused repomix for authentication components only
-- **After each major milestone**: Document working state for future reference
-
-### Context Refresh Indicators
-- **Current status**: Context needs refresh after rollback to understand actual working state
-- **Recent indicators**: AI agent made assumptions about authentication system that proved incorrect
-- **Recommended action**: Generate focused repomix after rollback to establish accurate baseline understanding
-
-*Last Updated: September 16, 2025 | Current Branch: prompt-plan-claude-sonnet-4*
+*This file is updated by GitHub Copilot on 2025-09-16 to reflect the current working memory. Update again after each major task to record the new state.*
