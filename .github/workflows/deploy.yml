@@ -43,8 +43,11 @@ jobs:
       - name: Verify required VITE_* secrets are present
         run: |
           echo "Checking VITE_* presence (will not print values)"
-          if [ -z "${VITE_SUPABASE_URL:-}" ] || [ -z "${VITE_SUPABASE_KEY:-}" ]; then
-            echo "::error::Missing required VITE_* secrets (VITE_SUPABASE_URL or VITE_SUPABASE_KEY)"; exit 1
+          if [ -z "${VITE_SUPABASE_URL:-}" ]; then
+            echo "::error::Missing required VITE_* secrets (VITE_SUPABASE_URL)"; exit 1
+          fi
+          if [ -z "${VITE_SUPABASE_KEY:-}" ]; then
+            echo "::error::Missing required VITE_* secrets (VITE_SUPABASE_KEY)"; exit 1
           fi
           echo "Secrets present (ok)"        
         
