@@ -173,43 +173,73 @@ Copilot-context.md - High-level project state, relationships, and recent changes
 
 Combined approach - Use repomix for deep understanding, context.md for ongoing state tracking
 
+if the repomix file is too large to see all of it at once, or process in context all at once, STOP, and STATE THAT THIS HAS OCCURRED so that the developer can make a smaller file and give you that instead
 
 Github copilot should update .github/copilot-context.md with information in this format:
 
-# Copilot Working Memory Reference
+#### Copilot Working Memory Reference
 
-## Current Project State
+###### Current Project State
 - **Last Known Good State**: [Commit hash and description]
 - **Currently Working**: [What we're implementing now]
 - **Last Test Results**: [Pass/fail count and key issues]
 - **Known Issues**: [List of problems we're aware of]
 
-## Key File Relationships
+###### Key File Relationships
 - `useAuthForm.ts` depends on: [list dependencies]
 - `SignInForm.vue` uses: [list what it imports/uses]  
 - Authentication flow: [trace the data flow]
 
-## Recent Changes Made
+###### Recent Changes Made
 - [Date]: Modified [files] to [do what]
 - [Date]: Fixed [issue] by [method]
 
-## Next Steps Plan
+###### Next Steps Plan
 1. [Specific next action]
 2. [How to verify it worked]
 3. [What to do if it fails]
 
-## Complexity Warning Signs
+###### Complexity Warning Signs
 - [ ] More than 5 files need changes
 - [ ] Circular dependencies detected
 - [ ] Test failure cascade (one change breaks multiple tests)
 - [ ] Can't predict impact of changes
 
-## assumptions about the project that changed when new things were learned
+###### assumptions about the project that changed when new things were learned
 - [initial assumption]
 - [new information learned by testing that assumption]
 
-## Human parseable summary of state and insights derived from reading most recent repomix file
+###### Human parseable summary of state and insights derived from reading most recent repomix file
 - include anything else useful from the latest repomix file that wasn't covered by the above sections
 
 *Update this file copilot-context.md before and after each major task*
 *the developer will look at the diffs on this file and make edits and corrections*
+
+
+
+### Repomix File Size Management Strategy to use when a repomix file would be too large
+
+#### Current Approach
+- **Core repomix**: [file size] covering [specific areas]
+- **Focused repomix files**: [list of targeted files and their purposes]
+- **Missing from context**: [areas not covered in current repomix]
+
+#### When to Generate New Repomix
+- File count in src/ exceeds 50 files
+- a repomix file approaches 100KB
+- Working on new major feature (generate focused repomix of all the parts that could be related to that feature but nothing that is certainly not related to that feature)
+
+### Context Refresh Indicators
+- Copilot references files that don't exist
+- Copilot misses obvious dependencies
+- Copilot suggests changes that conflict with existing patterns
+- if copilot notices any of these happen, or if the developer tells copilot that this has just occured, prompt the developer to perform a context refresh, and verify that it successfully refreshed it
+
+
+
+
+
+
+
+
+
