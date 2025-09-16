@@ -12,6 +12,8 @@ I might do multiple version of this app, using one or another prompt plan, to se
 
 The purpose of doing this project is to get practice with agentic coding, to stress test what it's able to do, and to get familiar with its strength and limitations.  
 
-The code and tests are not being deeply scrutinized in this project, and the main concern is with getting the high level functionality and appearance to work.  
+The code and tests are not being deeply scrutinized in this project, and the main concern is with getting the high level functionality and appearance to work.
+
+Some of the commits will have unusually long commit messages, but to help with better tracking the thoughts at each step.
 
 Next I will want to iterate on this kind of project again to start focusing on code organization and quality.

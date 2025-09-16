@@ -1,0 +1,394 @@
+This file is a merged representation of a subset of the codebase, containing specifically included files, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Only files matching these patterns are included: package.json, tsconfig.json, vite.config.ts, vitest.config.ts, src/types/**, src/lib/**, src/router/**
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+package.json
+src/lib/supabase.ts
+src/lib/utils.ts
+src/types/auth.ts
+src/types/database.ts
+src/types/env.d.ts
+src/types/index.ts
+tsconfig.json
+vite.config.ts
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="src/lib/supabase.ts">
+import { createClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/database'
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables. Please check your .env file.')
+}
+
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+    flowType: 'pkce'
+  }
+})
+
+export default supabase
+</file>
+
+<file path="src/types/auth.ts">
+import type { User, Session } from '@supabase/supabase-js'
+import type { ComputedRef } from 'vue'
+
+export interface AuthState {
+  user: User | null
+  session: Session | null
+  loading: boolean
+  initialized: boolean
+}
+
+export interface AuthCredentials {
+  email: string
+  password: string
+}
+
+export interface SignUpCredentials extends AuthCredentials {
+  confirmPassword?: string
+}
+
+export interface AuthResponse {
+  success: boolean
+  error: string | null
+  user?: User | null
+  needsVerification?: boolean
+}
+
+export interface AuthComposable {
+  // State
+  user: ComputedRef<User | null>
+  session: ComputedRef<Session | null>
+  loading: ComputedRef<boolean>
+  initialized: ComputedRef<boolean>
+  isAuthenticated: ComputedRef<boolean>
+  
+  // Methods
+  signUp: (credentials: SignUpCredentials) => Promise<AuthResponse>
+  signIn: (credentials: AuthCredentials) => Promise<AuthResponse>
+  signOut: () => Promise<AuthResponse>
+  refreshSession: () => Promise<void>
+  resendEmailVerification: (email: string) => Promise<AuthResponse>
+}
+</file>
+
+<file path="src/types/database.ts">
+// Database table interfaces based on the created schema
+
+export interface StoryStarterProfile {
+  id: string
+  email?: string
+  feedback?: Record<string, any>
+  story_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface StoryStarterStory {
+  id: string
+  user_id: string
+  title: string
+  content: string
+  story_type: string
+  is_private: boolean
+  image_url?: string
+  genre?: string
+  description?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface StoryStarterAnalytic {
+  id: string
+  user_id: string
+  event_type: string
+  event_data?: Record<string, any>
+  timestamp: string
+}
+
+// Insert and Update types for each table
+export type ProfileInsert = Omit<StoryStarterProfile, 'id' | 'created_at' | 'updated_at'>
+export type ProfileUpdate = Partial<Omit<StoryStarterProfile, 'id' | 'created_at' | 'updated_at'>>
+
+export type StoryInsert = Omit<StoryStarterStory, 'id' | 'created_at' | 'updated_at'>
+export type StoryUpdate = Partial<Omit<StoryStarterStory, 'id' | 'created_at' | 'updated_at'>>
+
+export type AnalyticInsert = Omit<StoryStarterAnalytic, 'id' | 'timestamp'>
+export type AnalyticUpdate = Partial<Omit<StoryStarterAnalytic, 'id' | 'timestamp'>>
+
+// Database interface for Supabase typing
+export interface Database {
+  public: {
+    Tables: {
+      story_starter_profiles: {
+        Row: StoryStarterProfile
+        Insert: ProfileInsert
+        Update: ProfileUpdate
+      }
+      story_starter_stories: {
+        Row: StoryStarterStory
+        Insert: StoryInsert
+        Update: StoryUpdate
+      }
+      story_starter_analytics: {
+        Row: StoryStarterAnalytic
+        Insert: AnalyticInsert
+        Update: AnalyticUpdate
+      }
+    }
+  }
+}
+
+// Response wrapper type for consistent error handling
+export interface SupabaseResponse<T> {
+  data: T | null
+  error: string | null
+  success: boolean
+}
+</file>
+
+<file path="src/types/env.d.ts">
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+  readonly VITE_SUPABASE_URL: string
+  readonly VITE_SUPABASE_ANON_KEY: string
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv
+}
+</file>
+
+<file path="src/types/index.ts">
+// Database table interfaces
+export interface User {
+  id: string
+  email: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Story {
+  id: string
+  user_id: string
+  title: string
+  content: string
+  story_type: string
+  is_private: boolean
+  image_url?: string
+  genre?: string
+  description?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Profile {
+  id: string
+  email?: string
+  feedback?: string
+  story_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface AnalyticsEvent {
+  id: string
+  user_id: string
+  event_type: string
+  event_data?: Record<string, any>
+  timestamp: string
+}
+
+// UI/Form interfaces
+export interface StoryFormData {
+  title: string
+  description: string
+  story_type: string
+  characters: Character[]
+  themes: string[]
+  plot_points: string[]
+  is_private: boolean
+  image_url?: string
+}
+
+export interface Character {
+  name: string
+  role: string
+  description: string
+}
+
+// API Response interfaces
+export interface ApiResponse<T = any> {
+  data?: T
+  error?: string
+  message?: string
+}
+
+// Story generation interfaces
+export interface GenerationRequest {
+  story_type: string
+  characters: Character[]
+  themes: string[]
+  plot_points: string[]
+  tone?: string
+  creativity_level?: number
+}
+
+export interface GenerationResponse {
+  title: string
+  content: string
+  genre?: string
+  description?: string
+}
+</file>
+
+<file path="src/lib/utils.ts">
+import type { ClassValue } from "clsx"
+import { clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+</file>
+
+<file path="tsconfig.json">
+{
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
+</file>
+
+<file path="vite.config.ts">
+/// <reference types="vitest" />
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import path from 'path'
+
+// https://vite.dev/config/
+export default defineConfig(({ command }) => ({
+  plugins: [vue()],
+  base: command === 'build' ? '/story-starter/' : '/',
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src')
+    }
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    env: {
+      VITE_SUPABASE_URL: 'http://localhost:3000',
+      VITE_SUPABASE_ANON_KEY: 'test-key'
+    }
+  }
+}))
+</file>
+
+<file path="package.json">
+{
+  "name": "story-starter",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "type-check": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@shadcn/ui": "^0.0.4",
+    "@supabase/supabase-js": "^2.57.4",
+    "autoprefixer": "^10.4.21",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-vue-next": "^0.544.0",
+    "postcss": "^8.5.6",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss-animate": "^1.0.7",
+    "vue": "^3.5.18",
+    "zod": "^4.1.8"
+  },
+  "devDependencies": {
+    "@types/node": "^24.4.0",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vitest/ui": "^3.2.4",
+    "@vue/test-utils": "^2.4.6",
+    "@vue/tsconfig": "^0.7.0",
+    "c8": "^10.1.3",
+    "jsdom": "^27.0.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "~5.8.3",
+    "vite": "^7.1.2",
+    "vitest": "^3.2.4",
+    "vue-tsc": "^3.0.5"
+  }
+}
+</file>
+
+</files>
