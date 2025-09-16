@@ -3,7 +3,7 @@ import type { Database, SupabaseResponse } from '@/types/database'
 
 // Environment validation
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_KEY
+const supabaseKey = import.meta.env.VITE_SUPABASE_KEY
 const isTest = import.meta.env.MODE === 'test' || process.env.NODE_ENV === 'test'
 
 // Function to validate and create Supabase client
@@ -24,11 +24,11 @@ function createSupabaseClient(): SupabaseClient<Database> {
     } as unknown as SupabaseClient<Database>
   }
 
-  if (!supabaseUrl || !supabaseAnonKey) {
+  if (!supabaseUrl || !supabaseKey) {
     throw new Error('Missing Supabase environment variables. Please check your .env file.')
   }
   
-  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  return createClient<Database>(supabaseUrl, supabaseKey, {
     auth: {
       autoRefreshToken: true,
       persistSession: true,
