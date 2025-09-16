@@ -59,7 +59,7 @@ export function useAuth() {
     }
   }
 
-  async function signUp({ email, password }: { email: string; password: string }) {
+  async function signUp({ email, password, confirmPassword: _confirmPassword }: { email: string; password: string; confirmPassword?: string }) {
     isLoading.value = true
     try {
       const result = await supabase.auth.signUp({

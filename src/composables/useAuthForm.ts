@@ -51,7 +51,7 @@ export function useAuthForm(isSignUp: boolean = false) {
     }
   }
 
-  function validateField(fieldName: string, showError = false) {
+  function validateField(fieldName: string, _showError = false) {
     const value = (formData.value as any)[fieldName]
     switch (fieldName) {
       case 'email':
