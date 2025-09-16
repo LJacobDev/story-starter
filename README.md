@@ -40,4 +40,4 @@ It jumps on problems confidently, makes long explanations about why it thinks it
 
 ## Next steps
 
-Hope to either find a way to help frame the problem into something that the LLM can more easily work with, or else start adapting the workflow where development relies more heavily on the human developer taking care of things directly
+Hope to either find a way to help frame the problem into something that the LLM can more easily work with, or else start adapting the workflow where development relies more heavily on the human developer taking care of things directly while leveraging the LLM's strengths in other ways.
