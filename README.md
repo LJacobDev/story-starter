@@ -41,3 +41,9 @@ It jumps on problems confidently, makes long explanations about why it thinks it
 ## Next steps
 
 Hope to either find a way to help frame the problem into something that the LLM can more easily work with, or else start adapting the workflow where development relies more heavily on the human developer taking care of things directly while leveraging the LLM's strengths in other ways.
+
+
+
+## Update
+
+For whatever reason, simply switching over from claude sonnet 4 to gpt-5 mini was enough to get things back on track.  Somehow gpt-5 mini was able to look at things and figure out solutions to the problems that were absolutely baffling claude, and it appears that the project can resume development instead of needing to revert to an earlier commit or restart from scratch.
