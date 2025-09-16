@@ -107,12 +107,27 @@
           </div>
         </div>
 
+        <!-- Auth Messages -->
+        <div v-if="successMessage" class="p-3 bg-green-50 border border-green-200 rounded-md">
+          <div class="text-sm text-green-800">
+            {{ successMessage }}
+          </div>
+          <div v-if="needsVerification" class="text-xs text-green-700 mt-2">
+            <strong>Note:</strong> You'll need to verify your email before you can sign in.
+          </div>
+        </div>
+
+        <div v-if="authError" class="p-3 bg-red-50 border border-red-200 rounded-md">
+          <div class="text-sm text-red-800">
+            {{ authError }}
+          </div>
+        </div>
+
         <!-- Submit Button -->
         <Button
           type="submit"
           class="w-full"
-          :disabled="!canSubmit"
-          :aria-describedby="!isValid ? 'signup-form-errors' : undefined"
+          :disabled="isLoading"
         >
           <span v-if="isLoading">Creating account...</span>
           <span v-else>Sign Up</span>
@@ -146,8 +161,9 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount } from 'vue'
+import { ref, onBeforeUnmount } from 'vue'
 import { useAuthForm } from '@/composables/useAuthForm'
+import { useAuth } from '@/composables/useAuth'
 import Card from '@/components/ui/Card.vue'
 import CardHeader from '@/components/ui/CardHeader.vue'
 import CardTitle from '@/components/ui/CardTitle.vue'
@@ -160,8 +176,15 @@ import type { AuthFormData } from '@/utils/validation'
 // Define emits
 defineEmits<{
   'switch-to-signin': []
-  'submit': [data: AuthFormData]
 }>()
+
+// Auth state and actions
+const { signUp } = useAuth()
+
+// Local state for form messages
+const authError = ref<string | null>(null)
+const successMessage = ref<string | null>(null)
+const needsVerification = ref(false)
 
 // Use the auth form composable for sign up
 const {
@@ -179,9 +202,37 @@ const {
 // Handle form submission
 const handleFormSubmit = () => {
   handleSubmit(async (data: AuthFormData) => {
-    // For now, just emit the data - actual auth will be implemented in next prompt
-    console.log('Sign up form submitted:', data)
-    // emit('submit', data)
+    authError.value = null
+    successMessage.value = null
+    needsVerification.value = false
+    
+    try {
+      const result = await signUp({
+        email: data.email,
+        password: data.password,
+        confirmPassword: data.confirmPassword
+      })
+
+      if (result.success) {
+        if (result.needsVerification) {
+          needsVerification.value = true
+          successMessage.value = `Account created successfully! Please check your email (${data.email}) for a verification link.`
+        } else {
+          successMessage.value = 'Account created and signed in successfully! Welcome to Story Starter.'
+        }
+        // Clear form data on success
+        formData.email = ''
+        formData.password = ''
+        if (formData.confirmPassword !== undefined) {
+          formData.confirmPassword = ''
+        }
+      } else {
+        authError.value = result.error || 'Sign up failed. Please try again.'
+      }
+    } catch (error) {
+      authError.value = 'An unexpected error occurred. Please try again.'
+      console.error('Sign up error:', error)
+    }
   })
 }
 

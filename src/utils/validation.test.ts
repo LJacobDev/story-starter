@@ -137,12 +137,12 @@ describe('Form Validation', () => {
     it('should return errors for invalid sign-in form', () => {
       const formData: AuthFormData = {
         email: 'invalid-email',
-        password: 'weak'
+        password: '' // Empty password should fail for sign-in
       }
       
       const errors = validateAuthForm(formData, false)
       expect(errors.email).toBe('Please enter a valid email address')
-      expect(errors.password).toBe('Password must be at least 8 characters with uppercase, lowercase, and number')
+      expect(errors.password).toBe('This field is required') // Required validation runs first
     })
 
     it('should return errors for invalid sign-up form', () => {

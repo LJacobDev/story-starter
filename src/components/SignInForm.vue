@@ -1,7 +1,15 @@
 <template>
   <Card class="w-full max-w-md mx-auto">
     <CardHeader>
-      <CardTitle>Sign In</CardTitle>
+      <CardT        <!-- Submit Button -->
+        <Button
+          type="submit"
+          class="w-full"
+          :disabled="isLoading"
+        >
+          <span v-if="isLoading">Signing in...</span>
+          <span v-else>Sign In</span>
+        </Button>In</CardTitle>
     </CardHeader>
     <CardContent>
       <form @submit.prevent="handleFormSubmit" class="space-y-4">
@@ -69,12 +77,24 @@
           </div>
         </div>
 
+        <!-- Auth Messages -->
+        <div v-if="successMessage" class="p-3 bg-green-50 border border-green-200 rounded-md">
+          <div class="text-sm text-green-800">
+            {{ successMessage }}
+          </div>
+        </div>
+
+        <div v-if="authError" class="p-3 bg-red-50 border border-red-200 rounded-md">
+          <div class="text-sm text-red-800">
+            {{ authError }}
+          </div>
+        </div>
+
         <!-- Submit Button -->
         <Button
           type="submit"
           class="w-full"
-          :disabled="!canSubmit"
-          :aria-describedby="!isValid ? 'signin-form-errors' : undefined"
+          :disabled="isLoading"
         >
           <span v-if="isLoading">Signing in...</span>
           <span v-else>Sign In</span>
@@ -108,8 +128,9 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount } from 'vue'
+import { ref, onBeforeUnmount } from 'vue'
 import { useAuthForm } from '@/composables/useAuthForm'
+import { useAuth } from '@/composables/useAuth'
 import Card from '@/components/ui/Card.vue'
 import CardHeader from '@/components/ui/CardHeader.vue'
 import CardTitle from '@/components/ui/CardTitle.vue'
@@ -122,8 +143,14 @@ import type { AuthFormData } from '@/utils/validation'
 // Define emits
 defineEmits<{
   'switch-to-signup': []
-  'submit': [data: AuthFormData]
 }>()
+
+// Auth state and actions
+const { signIn } = useAuth()
+
+// Local state for form messages
+const authError = ref<string | null>(null)
+const successMessage = ref<string | null>(null)
 
 // Use the auth form composable
 const {
@@ -140,10 +167,38 @@ const {
 
 // Handle form submission
 const handleFormSubmit = () => {
+  console.log('Sign in form submitted - starting validation')
+  console.log('Form data:', { email: formData.email, password: formData.password ? '[HIDDEN]' : 'empty' })
+  console.log('Form valid:', isValid.value)
+  console.log('Can submit:', canSubmit.value)
+  
   handleSubmit(async (data: AuthFormData) => {
-    // For now, just emit the data - actual auth will be implemented in next prompt
-    console.log('Sign in form submitted:', data)
-    // emit('submit', data)
+    console.log('Form validation passed, attempting sign in')
+    authError.value = null
+    successMessage.value = null
+    
+    try {
+      const result = await signIn({
+        email: data.email,
+        password: data.password
+      })
+
+      console.log('Sign in result:', { success: result.success, error: result.error })
+
+      if (result.success) {
+        successMessage.value = 'Successfully signed in! Welcome back.'
+        console.log('Sign in successful')
+        // Clear form data on success
+        formData.email = ''
+        formData.password = ''
+      } else {
+        authError.value = result.error || 'Sign in failed. Please try again.'
+        console.log('Sign in failed:', result.error)
+      }
+    } catch (error) {
+      authError.value = 'An unexpected error occurred. Please try again.'
+      console.error('Sign in error:', error)
+    }
   })
 }
 

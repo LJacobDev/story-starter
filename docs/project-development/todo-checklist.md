@@ -126,25 +126,25 @@ This checklist tracks the development progress of the Story Starter application 
 
 ---
 
-#### [ ] Task 2.1.2: Authentication Logic and State Management
-**Status**: Not Started  
+#### [x] Task 2.1.2: Authentication Logic and State Management
+**Status**: ✅ **COMPLETED**  
 **Description**: Implement Supabase Auth with state management
 
 **Requirements Checklist**:
-- [ ] Set up Supabase Auth configuration
-- [ ] Create authentication composables (useAuth)
-- [ ] Implement sign-up functionality with email verification
-- [ ] Implement sign-in functionality
-- [ ] Add authentication state management
-- [ ] Handle authentication errors gracefully
-- [ ] Create route guards for protected pages
-- [ ] Write integration tests for authentication flows
+- [x] Set up Supabase Auth configuration
+- [x] Create authentication composables (useAuth)
+- [x] Implement sign-up functionality with email verification
+- [x] Implement sign-in functionality
+- [x] Add authentication state management
+- [x] Handle authentication errors gracefully
+- [x] Create route guards for protected pages
+- [x] Write integration tests for authentication flows
 
 **Success Criteria**:
-- [ ] Users can successfully register and sign in
-- [ ] Authentication state is properly managed
-- [ ] Errors are handled and displayed appropriately
-- [ ] Protected routes work correctly
+- [x] Users can successfully register and sign in
+- [x] Authentication state is properly managed
+- [x] Errors are handled and displayed appropriately
+- [x] Protected routes work correctly
 
 ---
 

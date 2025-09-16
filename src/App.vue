@@ -1,11 +1,23 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { useAuth } from '@/composables/useAuth'
 import AuthContainer from '@/components/AuthContainer.vue'
 import vueLogo from '@/assets/vue.svg'
+
+// Authentication
+const { user, isAuthenticated, signOut, loading } = useAuth()
 
 // Reactive state
 const count = ref(0)
 const currentView = ref<'home' | 'auth' | 'demo'>('home')
+
+// Watch authentication state to auto-redirect
+watch(isAuthenticated, (newValue) => {
+  if (newValue && currentView.value === 'auth') {
+    // Redirect to home when user signs in
+    currentView.value = 'home'
+  }
+})
 
 // Test status - you can see if everything is working
 const testStatus = computed(() => {
@@ -14,6 +26,7 @@ const testStatus = computed(() => {
     'TailwindCSS': true, // Visible in the demo
     'Vue Composition API': true, // This script proves it
     'TypeScript': true, // No compilation errors means this works
+    'Authentication': isAuthenticated.value, // Shows if auth is working
   }
   
   const working = Object.values(components).filter(Boolean).length
@@ -25,8 +38,21 @@ const testStatus = computed(() => {
 // Handle successful authentication
 const handleAuthSuccess = (result: any) => {
   console.log('Authentication successful:', result)
-  // In the future, this will redirect to the main app
-  // For now, just log it and maybe show a success message
+  // The watcher above will handle the redirect
+}
+
+// Handle sign out
+const handleSignOut = async () => {
+  try {
+    const result = await signOut()
+    if (result.success) {
+      currentView.value = 'home'
+    } else {
+      console.error('Sign out failed:', result.error)
+    }
+  } catch (error) {
+    console.error('Sign out error:', error)
+  }
 }
 </script>
 
@@ -56,7 +82,10 @@ const handleAuthSuccess = (result: any) => {
             >
               Home
             </button>
+            
+            <!-- Show Sign In button only when not authenticated -->
             <button 
+              v-if="!isAuthenticated"
               @click="currentView = 'auth'"
               :class="[
                 'px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base',
@@ -67,6 +96,20 @@ const handleAuthSuccess = (result: any) => {
             >
               Sign In
             </button>
+            
+            <!-- Show user info and sign out when authenticated -->
+            <div v-else class="flex items-center space-x-2">
+              <span class="text-sm text-slate-600 dark:text-slate-400 hidden sm:inline">
+                Welcome, {{ user?.email?.split('@')[0] }}!
+              </span>
+              <button 
+                @click="handleSignOut"
+                class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
+              >
+                Sign Out
+              </button>
+            </div>
+            
             <button 
               @click="currentView = 'demo'"
               :class="[
@@ -89,10 +132,29 @@ const handleAuthSuccess = (result: any) => {
       <div v-if="currentView === 'home'" class="text-center">
         <div class="mb-8">
           <h2 class="text-4xl font-bold text-slate-900 dark:text-white mb-4">
-            Welcome to Story Starter! 
+            <span v-if="isAuthenticated">Welcome back to Story Starter!</span>
+            <span v-else>Welcome to Story Starter!</span>
           </h2>
           <p class="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            Create amazing stories with AI assistance. Sign up to get started!
+            <span v-if="isAuthenticated">
+              You're signed in and ready to create amazing stories with AI assistance.
+            </span>
+            <span v-else>
+              Create amazing stories with AI assistance. Sign up to get started!
+            </span>
+          </p>
+        </div>
+
+        <!-- Authentication Status Banner -->
+        <div v-if="isAuthenticated" class="mb-8 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg max-w-2xl mx-auto">
+          <div class="flex items-center justify-center space-x-2">
+            <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            <span class="text-green-800 dark:text-green-300 font-medium">
+              ✅ Authenticated as {{ user?.email }}
+            </span>
+          </div>
+          <p class="text-sm text-green-700 dark:text-green-400 mt-2">
+            Email verified: {{ user?.email_confirmed_at ? 'Yes' : 'Pending verification' }}
           </p>
         </div>
 
@@ -126,11 +188,20 @@ const handleAuthSuccess = (result: any) => {
         <!-- CTA Button -->
         <div class="flex justify-center">
           <button 
+            v-if="!isAuthenticated"
             @click="currentView = 'auth'"
             class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-3 rounded-lg font-medium hover:from-blue-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
           >
             Get Started Now
           </button>
+          <div v-else class="space-x-4">
+            <button 
+              class="bg-gradient-to-r from-green-500 to-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:from-green-600 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+              disabled
+            >
+              🎉 Ready to Create Stories! (Coming Soon)
+            </button>
+          </div>
         </div>
       </div>
 

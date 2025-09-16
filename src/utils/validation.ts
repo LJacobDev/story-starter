@@ -23,7 +23,7 @@ export const emailValidation: ValidationRule = {
   message: 'Please enter a valid email address'
 }
 
-// Password validation rules
+// Password validation rules for sign up (strict)
 export const passwordValidation: ValidationRule = {
   test: (password: string) => {
     // At least 8 characters, 1 uppercase, 1 lowercase, 1 number
@@ -31,6 +31,12 @@ export const passwordValidation: ValidationRule = {
     return passwordRegex.test(password)
   },
   message: 'Password must be at least 8 characters with uppercase, lowercase, and number'
+}
+
+// Simple password validation for sign in (just check not empty)
+export const signInPasswordValidation: ValidationRule = {
+  test: (password: string) => password.trim().length > 0,
+  message: 'Password is required'
 }
 
 // Confirm password validation
@@ -65,8 +71,12 @@ export const validateAuthForm = (
   // Email validation
   errors.email = validateField(data.email, [requiredValidation, emailValidation])
 
-  // Password validation
-  errors.password = validateField(data.password, [requiredValidation, passwordValidation])
+  // Password validation - use strict validation for sign up, simple for sign in
+  const passwordRules = isSignUp 
+    ? [requiredValidation, passwordValidation]
+    : [requiredValidation, signInPasswordValidation]
+  
+  errors.password = validateField(data.password, passwordRules)
 
   // Confirm password validation (only for sign up)
   if (isSignUp && data.confirmPassword !== undefined) {

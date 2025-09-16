@@ -26,7 +26,10 @@ export function useAuthForm(isSignUp: boolean = false) {
   })
 
   const canSubmit = computed(() => {
-    return isValid.value && !isLoading.value
+    // Allow submission if basic fields are filled and not loading
+    const hasBasicFields = formData.email.trim() !== '' && formData.password.trim() !== ''
+    const hasConfirmPassword = !isSignUp || (formData.confirmPassword && formData.confirmPassword.trim() !== '')
+    return hasBasicFields && hasConfirmPassword && !isLoading.value
   })
 
   // Methods
@@ -85,10 +88,20 @@ export function useAuthForm(isSignUp: boolean = false) {
   const handleSubmit = async (submitFn: (data: AuthFormData) => Promise<void>) => {
     hasBeenSubmitted.value = true
     
-    if (!validateForm()) {
+    // Simplified validation - only check if email and password are not empty
+    if (!formData.email.trim() || !formData.password.trim()) {
+      console.log('Form validation failed: Missing email or password')
+      validateForm() // Show validation errors
       return
     }
 
+    if (isSignUp && (!formData.confirmPassword || formData.confirmPassword.trim() === '')) {
+      console.log('Form validation failed: Missing confirm password for signup')
+      validateForm() // Show validation errors
+      return
+    }
+
+    console.log('Form validation passed, calling submit function')
     isLoading.value = true
     
     try {

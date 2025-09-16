@@ -101,3 +101,115 @@ When we get to implementing task 4.1.1, I'd like to revisit the idea of breaking
 ## Conclusion
 
 This prompt plan ensures a systematic, test-driven approach to building the Story Starter application. Each phase builds upon the previous work while maintaining high code quality and user experience standards. The incremental approach allows for early testing and validation of features, reducing the risk of integration issues and ensuring a polished final product.
+
+
+
+
+
+
+
+## Pre-Task Assessment Protocol
+
+Before implementing any task, GitHub Copilot must:
+
+1. **State Current Understanding**:
+   - "I can see that [current state of project]"
+   - "The last working version had [specific features working]"
+   - "I understand this task requires [specific changes]"
+
+2. **Confidence Assessment**:
+   - "My confidence level for this task is X/10 because [specific reasons]"
+   - "Potential risks I see: [list specific risks]"
+   - "I will need to modify these files: [specific file list]"
+
+3. **Complexity Check**:
+   - "This task appears to be [simple/moderate/complex]"
+   - "If complex: I recommend breaking this into smaller subtasks: [list them]"
+   - "I can handle this complexity: [yes/no with reasons]"
+   - "If the task is simple, I can perform the prompt as given"
+   - "If the task is not simple, instead of performing the prompt, I do not perform the prompt yet, but instead I give a text reply that gives the prompt's goals and instructions but broken into smaller, more manageable sub prompts to do one at a time.  If any of those sub prompts are themselves not simple, I break those ones down into nested sub prompts, and provide the text of this new set of prompts so that the developer may go paste it in their updated prompt plan file."
+
+4. **Verification Plan**:
+   - "I will test each change by [specific method]"
+   - "I will tell the developer how they can manually test the change [by doing these actions]"
+   - "Success criteria: [measurable outcomes]"
+   - "Rollback plan: [if this fails, do X]"
+
+5. **Context Reference Files**:
+    - "I will read .github/copilot-context.md for a current understanding of this project's context, state, goals, and everything needed to understand the relationships between the different parts and the histories of how they got to be the way they are"
+    - "On each change, I will provide a fully new set of context and relationship data that can be pasted overtop of the previous copilot-context.md file.  This will help the developer read diffs between changes in order to track the evolution of it and be able to make edits to it to correct things"
+
+## Mandatory Pre-Change Checklist
+
+- [ ] Identify the exact files that need changes
+- [ ] Make ONE change at a time
+- [ ] Test after each change before proceeding
+
+If any of these fail, STOP and ask for help rather than making assumptions.
+
+
+
+
+
+
+## Optimal Workflow with Repomix:
+
+Initial Generation - Create baseline repomix file
+
+Task Completion Updates - Regenerate after each completed task
+
+Complex Task Preparation - Generate fresh repomix before starting complex tasks like 4.1.1
+
+Debugging Sessions - Generate when encountering complex interconnected issues
+
+
+## Context Reference Strategy:
+
+### Based on the copilot instructions, I should also maintain copilot-context.md. The optimal approach would be:
+
+Repomix - Complete codebase snapshot for complex analysis
+
+Copilot-context.md - High-level project state, relationships, and recent changes
+
+Combined approach - Use repomix for deep understanding, context.md for ongoing state tracking
+
+
+Github copilot should update .github/copilot-context.md with information in this format:
+
+# Copilot Working Memory Reference
+
+## Current Project State
+- **Last Known Good State**: [Commit hash and description]
+- **Currently Working**: [What we're implementing now]
+- **Last Test Results**: [Pass/fail count and key issues]
+- **Known Issues**: [List of problems we're aware of]
+
+## Key File Relationships
+- `useAuthForm.ts` depends on: [list dependencies]
+- `SignInForm.vue` uses: [list what it imports/uses]  
+- Authentication flow: [trace the data flow]
+
+## Recent Changes Made
+- [Date]: Modified [files] to [do what]
+- [Date]: Fixed [issue] by [method]
+
+## Next Steps Plan
+1. [Specific next action]
+2. [How to verify it worked]
+3. [What to do if it fails]
+
+## Complexity Warning Signs
+- [ ] More than 5 files need changes
+- [ ] Circular dependencies detected
+- [ ] Test failure cascade (one change breaks multiple tests)
+- [ ] Can't predict impact of changes
+
+## assumptions about the project that changed when new things were learned
+- [initial assumption]
+- [new information learned by testing that assumption]
+
+## Human parseable summary of state and insights derived from reading most recent repomix file
+- include anything else useful from the latest repomix file that wasn't covered by the above sections
+
+*Update this file copilot-context.md before and after each major task*
+*the developer will look at the diffs on this file and make edits and corrections*
