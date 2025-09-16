@@ -19,7 +19,7 @@ Some of the commits will have unusually long commit messages, but to help with b
 Next I will want to iterate on this kind of project again to start focusing on code organization and quality.
 
 
-### Current state
+## Current state
 
 This workflow is attempting to rely on prompts to get the work done, with infrequent human intervention, to see whether a careful workflow and prompt plan is able to achieve results where the agent does most of the activity.
 
@@ -28,16 +28,16 @@ The agent has been stuck for a long time on getting a sign in form to work.  It 
 Strangely, it was able to produce a successful authentication component that it used to test authentication, but it wasn't able to carry the understanding of what made that test component work into the actual sign up form.
 
 
-### Strengths of the LLM agent in this project
+## Strengths of the LLM agent in this project
 
 Helping to create specs and implementation plans, and keeping track of goals and things learned
 
 
-### Limitations of the LLM agent in this project
+## Limitations of the LLM agent in this project
 
 It jumps on problems confidently, makes long explanations about why it thinks it will easily solve them, and takes a long time to work on them but fails to solve the tasks and often makes things worse while trying
 
 
-### Next steps
+## Next steps
 
 Hope to either find a way to help frame the problem into something that the LLM can more easily work with, or else start adapting the workflow where development relies more heavily on the human developer taking care of things directly
