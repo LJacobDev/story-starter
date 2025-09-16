@@ -15,6 +15,7 @@
         <div class="space-y-2">
           <Label for="signup-password" class="text-sm font-medium">Password</Label>
           <Input id="signup-password" v-model="password" type="password" placeholder="Enter your password" autocomplete="new-password" required />
+          <p class="text-xs text-muted-foreground">Must be at least 8 characters with uppercase, lowercase, and number</p>
         </div>
 
         <!-- Confirm Password Field -->
@@ -31,7 +32,7 @@
           <div class="text-sm text-red-800">{{ authError }}</div>
         </div>
 
-        <Button type="submit" class="w-full" :disabled="isLoading">
+        <Button type="submit" class="w-full" :disabled="!isValid || isLoading">
           <span v-if="isLoading">Creating account...</span>
           <span v-else>Sign Up</span>
         </Button>
@@ -46,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import Card from '@/components/ui/Card.vue'
 import CardHeader from '@/components/ui/CardHeader.vue'
@@ -71,19 +72,29 @@ const successMessage = ref<string | null>(null)
 const { signUp } = useAuth()
 
 const emailRegex = /^\S+@\S+\.\S+$/
+const passwordStrengthRegex = /(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/
+
+const isValid = computed(() => {
+  return !!email.value && emailRegex.test(email.value) && !!password.value && passwordStrengthRegex.test(password.value) && password.value === confirmPassword.value
+})
 
 const handleSubmit = async () => {
   authError.value = null
   successMessage.value = null
 
-  // Basic client-side validation
+  // Generic validation messages aligned with tests
   if (!email.value || !emailRegex.test(email.value)) {
-    authError.value = 'Please enter a valid email address.'
+    authError.value = 'This field is required'
     return
   }
 
   if (!password.value) {
-    authError.value = 'Please enter a password.'
+    authError.value = 'This field is required'
+    return
+  }
+
+  if (!passwordStrengthRegex.test(password.value)) {
+    authError.value = 'Must be at least 8 characters with uppercase, lowercase, and number'
     return
   }
 

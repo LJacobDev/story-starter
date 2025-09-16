@@ -1,7 +1,5 @@
 import { ref, computed, getCurrentInstance, onMounted } from 'vue'
-import { getSupabaseClient } from '@/utils/supabase'
-
-const _client = getSupabaseClient()
+import { supabase } from '@/lib/supabase'
 
 const user = ref<any>(null)
 const session = ref<any>(null)
@@ -9,29 +7,27 @@ const isLoading = ref(false)
 
 function initAuthListener() {
   try {
-    // Only call onMounted if we are in a component context
     if (getCurrentInstance()) {
       onMounted(() => {
-        _client.auth.onAuthStateChange((_event: any, newSession: any) => {
-          session.value = newSession ?? null
-          user.value = (newSession as any)?.user ?? null
-        })
+        if (supabase?.auth?.onAuthStateChange) {
+          supabase.auth.onAuthStateChange((_event: any, newSession: any) => {
+            session.value = newSession ?? null
+            user.value = (newSession as any)?.user ?? null
+          })
+        }
       })
     } else {
-      // Not in component setup; attempt to initialize listener directly if available
-      // Some test stubs may provide a no-op onAuthStateChange implementation
-      if (typeof _client.auth.onAuthStateChange === 'function') {
-        _client.auth.onAuthStateChange((_event: any, newSession: any) => {
+      if (supabase?.auth?.onAuthStateChange) {
+        supabase.auth.onAuthStateChange((_event: any, newSession: any) => {
           session.value = newSession ?? null
           user.value = (newSession as any)?.user ?? null
         })
       }
     }
   } catch (e) {
-    // Swallow errors in non-runtime contexts (tests) to avoid noisy warnings
-    // Developers should mock auth functions in unit tests where needed
+    // ignore in test/non-Vue contexts
     // eslint-disable-next-line no-console
-    console.debug('initAuthListener: skipped in this environment')
+    console.debug('initAuthListener skipped')
   }
 }
 
@@ -43,45 +39,93 @@ export function useAuth() {
   async function signIn({ email, password }: { email: string; password: string }) {
     isLoading.value = true
     try {
-      const { data, error } = await _client.auth.signInWithPassword({ email, password })
+      const result = await supabase.auth.signInWithPassword({ email, password })
       isLoading.value = false
-      if (error) throw error
-      session.value = (data as any)?.session ?? null
-      user.value = (data as any)?.user ?? null
-      return { user: user.value, session: session.value }
+
+      const { data, error } = result as any
+      if (error) {
+        return { success: false, error: error?.message || error || 'Sign in failed', user: null }
+      }
+
+      const returnedUser = (data as any)?.user ?? null
+      const returnedSession = (data as any)?.session ?? null
+      user.value = returnedUser
+      session.value = returnedSession
+
+      return { success: true, error: null, user: returnedUser, session: returnedSession }
     } catch (err: any) {
       isLoading.value = false
-      return { error: err?.message || 'Sign in failed' }
+      return { success: false, error: err?.message || 'Sign in failed', user: null }
     }
   }
 
   async function signUp({ email, password }: { email: string; password: string }) {
     isLoading.value = true
     try {
-      const { data, error } = await _client.auth.signUp({ email, password })
+      const result = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      })
       isLoading.value = false
-      if (error) throw error
-      session.value = (data as any)?.session ?? null
-      user.value = (data as any)?.user ?? null
-      return { user: user.value, session: session.value }
+
+      const { data, error } = result as any
+      if (error) {
+        return { success: false, error: error?.message || error || 'Sign up failed', user: null }
+      }
+
+      const returnedUser = (data as any)?.user ?? null
+      const returnedSession = (data as any)?.session ?? null
+      user.value = returnedUser
+      session.value = returnedSession
+
+      const needsVerification = !!returnedUser && !returnedUser.email_confirmed_at
+
+      return { success: true, error: null, user: returnedUser, session: returnedSession, needsVerification }
     } catch (err: any) {
       isLoading.value = false
-      return { error: err?.message || 'Sign up failed' }
+      return { success: false, error: err?.message || 'Sign up failed', user: null }
     }
   }
 
   async function signOut() {
     isLoading.value = true
     try {
-      const { error } = await _client.auth.signOut()
+      const { error } = await supabase.auth.signOut()
       isLoading.value = false
-      if (error) throw error
+      if (error) {
+        return { success: false, error: error?.message || 'Sign out failed' }
+      }
       session.value = null
       user.value = null
-      return { success: true }
+      return { success: true, error: null }
     } catch (err: any) {
       isLoading.value = false
-      return { error: err?.message || 'Sign out failed' }
+      return { success: false, error: err?.message || 'Sign out failed' }
+    }
+  }
+
+  async function resendEmailVerification(email: string) {
+    isLoading.value = true
+    try {
+      const result = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      })
+      isLoading.value = false
+      const { error } = result as any
+      if (error) {
+        return { success: false, error: error?.message || 'Resend failed' }
+      }
+      return { success: true, error: null }
+    } catch (err: any) {
+      isLoading.value = false
+      return { success: false, error: err?.message || 'Resend failed' }
     }
   }
 
@@ -92,6 +136,7 @@ export function useAuth() {
     isAuthenticated,
     signIn,
     signUp,
-    signOut
+    signOut,
+    resendEmailVerification
   }
 }
