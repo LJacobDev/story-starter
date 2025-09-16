@@ -127,7 +127,7 @@
         <Button
           type="submit"
           class="w-full"
-          :disabled="isLoading"
+          :disabled="!canSubmit"
         >
           <span v-if="isLoading">Creating account...</span>
           <span v-else>Sign Up</span>

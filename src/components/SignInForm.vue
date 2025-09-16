@@ -1,15 +1,7 @@
 <template>
   <Card class="w-full max-w-md mx-auto">
     <CardHeader>
-      <CardT        <!-- Submit Button -->
-        <Button
-          type="submit"
-          class="w-full"
-          :disabled="isLoading"
-        >
-          <span v-if="isLoading">Signing in...</span>
-          <span v-else>Sign In</span>
-        </Button>In</CardTitle>
+      <CardTitle>Sign In</CardTitle>
     </CardHeader>
     <CardContent>
       <form @submit.prevent="handleFormSubmit" class="space-y-4">
@@ -94,7 +86,7 @@
         <Button
           type="submit"
           class="w-full"
-          :disabled="isLoading"
+          :disabled="!canSubmit"
         >
           <span v-if="isLoading">Signing in...</span>
           <span v-else>Sign In</span>

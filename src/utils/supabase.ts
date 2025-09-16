@@ -3,7 +3,7 @@ import type { Database, SupabaseResponse } from '@/types/database'
 
 // Environment validation
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_KEY
 
 // Function to validate and create Supabase client
 function createSupabaseClient(): SupabaseClient<Database> {
