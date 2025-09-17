@@ -311,6 +311,7 @@ Requirements:
 - Add advanced AI customization options (tone, creativity level)
 - Include image upload/URL input functionality
 - Implement form validation and character limits
+- implement any reasonable client side user input sanitization, however since sanitization is better handled inside the edge function, tell the developer an explicit and thorough plan for what to design the edge function like in order to sanitize any user input at any time it is advisable to do so. See docs/improvements/user-input-sanitization.md for ideas.
 
 Testing Requirements:
 - Test dynamic field addition/removal
