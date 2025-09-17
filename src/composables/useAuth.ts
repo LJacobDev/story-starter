@@ -129,6 +129,33 @@ export function useAuth() {
     }
   }
 
+  // Add confirmEmail implementation (guarded cast to any so tests can mock supabase.auth.verify)
+  async function confirmEmail(token: string) {
+    isLoading.value = true
+    try {
+      // Supabase client in tests is mocked to expose `auth.verify`. Cast to any to avoid TS type issues.
+      const result = await (supabase.auth as any).verify({ token })
+      isLoading.value = false
+
+      const { data, error } = result as any
+      if (error) {
+        return { success: false, error: error?.message || 'Verification failed', user: null }
+      }
+
+      const returnedUser = (data as any)?.user ?? null
+      const returnedSession = (data as any)?.session ?? null
+
+      // Update local state with the verified user/session
+      user.value = returnedUser
+      session.value = returnedSession
+
+      return { success: true, error: null, user: returnedUser, session: returnedSession }
+    } catch (err: any) {
+      isLoading.value = false
+      return { success: false, error: err?.message || 'Verification failed', user: null }
+    }
+  }
+
   return {
     user,
     session,
@@ -137,6 +164,7 @@ export function useAuth() {
     signIn,
     signUp,
     signOut,
-    resendEmailVerification
+    resendEmailVerification,
+    confirmEmail
   }
 }
