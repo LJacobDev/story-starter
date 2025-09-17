@@ -78,10 +78,17 @@ export function useAuth() {
 
       const returnedUser = (data as any)?.user ?? null
       const returnedSession = (data as any)?.session ?? null
-      user.value = returnedUser
-      session.value = returnedSession
 
+      // Only set local auth state if the user is already email-confirmed
       const needsVerification = !!returnedUser && !returnedUser.email_confirmed_at
+      if (!needsVerification) {
+        user.value = returnedUser
+        session.value = returnedSession
+      } else {
+        // keep user/session null while awaiting email verification
+        user.value = null
+        session.value = null
+      }
 
       return { success: true, error: null, user: returnedUser, session: returnedSession, needsVerification }
     } catch (err: any) {
