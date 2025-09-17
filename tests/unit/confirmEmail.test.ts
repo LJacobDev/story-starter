@@ -41,7 +41,8 @@ describe('Email confirmation (TDD) - confirmEmail', () => {
     const mockUser = createMockUser()
     const mockSession = createMockSession()
 
-    vi.mocked(supabase.auth.verify).mockResolvedValue({
+    // Cast auth to any so TS doesn't complain about missing 'verify'
+    vi.mocked((supabase.auth as any).verify).mockResolvedValue({
       data: { user: mockUser, session: mockSession },
       error: null
     } as any)
@@ -54,11 +55,11 @@ describe('Email confirmation (TDD) - confirmEmail', () => {
     expect(result.success).toBe(true)
     expect(result.error).toBeNull()
     expect(result.user).toEqual(mockUser)
-    expect(supabase.auth.verify).toHaveBeenCalledWith({ token: 'VALID_TOKEN' })
+    expect((supabase.auth as any).verify).toHaveBeenCalledWith({ token: 'VALID_TOKEN' })
   })
 
   it('should return an error for invalid or expired token', async () => {
-    vi.mocked(supabase.auth.verify).mockResolvedValue({
+    vi.mocked((supabase.auth as any).verify).mockResolvedValue({
       data: null,
       error: createMockError('Invalid or expired token')
     } as any)
