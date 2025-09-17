@@ -46,7 +46,8 @@ export function useRouteGuard(options: RouteGuardOptions = {}): ComputedRef<Rout
     if (requireEmailVerification && user.value && !user.value.email_confirmed_at) {
       return {
         canAccess: false,
-        redirectTo: '/auth/verify',
+        // Updated to match test expectation
+        redirectTo: '/verify-email',
         reason: 'Email verification required'
       }
     }

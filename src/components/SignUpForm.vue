@@ -42,6 +42,11 @@
         Already have an account?
         <button @click="$emit('switch-to-signin')" class="text-primary hover:underline focus:outline-none focus:underline" type="button">Sign in</button>
       </div>
+
+      <!-- Render resend control when an account was created and requires verification -->
+      <div class="mt-4" v-if="savedEmail">
+        <ResendVerification :email="savedEmail" />
+      </div>
     </CardContent>
   </Card>
 </template>
@@ -56,6 +61,7 @@ import CardContent from '@/components/ui/CardContent.vue'
 import Button from '@/components/ui/Button.vue'
 import Input from '@/components/ui/Input.vue'
 import Label from '@/components/ui/Label.vue'
+import ResendVerification from '@/components/ResendVerification.vue'
 
 // Define emits
 defineEmits<{
@@ -68,6 +74,7 @@ const confirmPassword = ref('')
 const isLoading = ref(false)
 const authError = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
+const savedEmail = ref<string | null>(null) // stores the email to be used by ResendVerification
 
 const { signUp } = useAuth()
 
@@ -81,6 +88,7 @@ const isValid = computed(() => {
 const handleSubmit = async () => {
   authError.value = null
   successMessage.value = null
+  savedEmail.value = null
 
   // Generic validation messages aligned with tests
   if (!email.value || !emailRegex.test(email.value)) {
@@ -109,10 +117,20 @@ const handleSubmit = async () => {
     const result = await signUp({ email: email.value, password: password.value })
 
     if (result.success) {
-      successMessage.value = 'Account created. Please check your email to verify your account.'
-      email.value = ''
-      password.value = ''
-      confirmPassword.value = ''
+      if (result.needsVerification) {
+        // Keep the email for resend control, clear sensitive fields
+        savedEmail.value = email.value
+        successMessage.value = 'Account created. Please check your email to verify your account.'
+        password.value = ''
+        confirmPassword.value = ''
+        // do not clear savedEmail - used by ResendVerification
+      } else {
+        successMessage.value = 'Account created and signed in successfully!'
+        // Clear form
+        email.value = ''
+        password.value = ''
+        confirmPassword.value = ''
+      }
     } else {
       authError.value = result.error || 'Sign up failed. Please try again.'
     }
