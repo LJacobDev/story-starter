@@ -163,6 +163,7 @@ Success Criteria:
 
 ### Chunk 2.2: Email Verification and User Experience
 
+[don't use this prompt directly, use the text below where things are broken into smaller steps]
 #### Prompt 2.2.1
 ```text
 Implement email verification flow and user feedback.
@@ -186,6 +187,29 @@ Success Criteria:
 - Rate limiting prevents spam
 - All edge cases are handled gracefully
 ```
+
+Smaller steps for next focus (Phase 2 → Task 2.2.1)
+- Implement `EmailVerify` view and route: `/verify-email` to consume callback token.
+- Add `confirmEmail(token)` and `resendVerification()` to `useAuth` (TDD-first).
+- Unit tests: mock Supabase confirm/resend behaviors (success, invalid, expired).
+- UX: loading / success / failure messages; route guard for unverified users.
+
+TDD subtasks for Task 2.2.1
+1. Add unit tests for `confirmEmail` and `resendVerification` (mocked).
+2. Implement `confirmEmail` in composable and wire `/verify-email` route.
+3. Add resend button in SignUp UI and tests.
+4. Add route guard for unverified accounts and UI messaging.
+
+Verification plan (summary)
+- Unit tests first (Vitest with Supabase mocks), then CI run + Pages verification.
+- Success: tests pass, verify route confirms tokens, protected routes respect verification state.
+
+
+
+Next major phases (after 2.2.1)
+- Phase 3: story CRUD composables, grid and list UI (TDD).
+- Phase 4: generator UI incremental steps + Edge function integration (Gemini proxy).
+- Phase 5–6: analytics, accessibility audit and polish.
 
 ---
 

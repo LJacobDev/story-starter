@@ -150,25 +150,34 @@ This checklist tracks the development progress of the Story Starter application 
 
 ### Chunk 2.2: Email Verification and User Experience
 
-#### [ ] Task 2.2.1: Email Verification Flow
-**Status**: Not Started  
-**Description**: Implement complete email verification system
+#### [~] Task 2.2.1: Email Verification Flow
+**Status**: 🔄 In Progress  
+**Description**: Implement complete email verification system (TDD-first)
 
-**Requirements Checklist**:
-- [ ] Configure email verification in Supabase
-- [ ] Create email verification page/component
-- [ ] Add "resend verification" functionality
-- [ ] Implement user feedback for verification status
-- [ ] Handle verification success/failure states
-- [ ] Add loading states and user-friendly messages
-- [ ] Test email verification flow end-to-end
+**Requirements Checklist (current)**:
+- [x] Configure email verification in Supabase (callback URL set to Pages domain)
+- [ ] Create email verification page/component (/verify-email)
+- [ ] Add confirmEmail(token) method to useAuth composable
+- [ ] Add "resend verification" functionality in SignUp UI
+- [ ] Implement user feedback for verification status (loading / success / failure)
+- [ ] Add route-guard behavior for unverified users (prevent protected access)
+- [ ] Write unit tests for confirm/resend flows with mocked Supabase
+- [ ] Add simple end-to-end check (manual or mocked) to confirm callback handling
 
 **Success Criteria**:
 - [ ] Email verification works completely
 - [ ] Users receive clear feedback at each step
 - [ ] Rate limiting prevents spam
 - [ ] All edge cases are handled gracefully
+- [ ] Token confirmation and UI feedback work for success and failure cases
+- [ ] Users can resend verification emails (with rate-limit guidance)
+- [ ] Route guards treat unverified users appropriately
+- [ ] Unit tests cover success, invalid token, and expired token scenarios
 
+Notes
+- Tests and mocks are present and stable — write tests first, implement next.
+- Keep TOKEN_REFRESH_FAILED handling and resilient supabase init in place.
+- Ensure README documents required secrets and the exact Supabase callback URL for pages.
 ---
 
 ## Phase 3: Core Story Management
