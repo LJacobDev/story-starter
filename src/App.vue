@@ -67,41 +67,57 @@ const handleSignOut = async () => {
 
           <!-- Navigation -->
           <nav class="flex items-center space-x-2 sm:space-x-4">
-            <button 
-              @click="() => navigateTo('/')"
-              class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-            >
-              Home
-            </button>
+            <template v-if="hasRouter">
+              <router-link 
+                to="/" 
+                class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              >Home</router-link>
 
-            <!-- Show Sign In button only when not authenticated -->
-            <button 
-              v-if="!isAuthenticated"
-              @click="() => navigateTo('/auth')"
-              class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-            >
-              Sign In
-            </button>
+              <router-link 
+                v-if="!isAuthenticated" 
+                to="/auth"
+                class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              >Sign In</router-link>
 
-            <!-- Show user info and sign out when authenticated -->
-            <div v-else class="flex items-center space-x-2">
-              <span class="text-sm text-slate-600 dark:text-slate-400 hidden sm:inline">
-                Welcome, {{ user?.email?.split('@')[0] }}!
-              </span>
+              <div v-else class="flex items-center space-x-2">
+                <span class="text-sm text-slate-600 dark:text-slate-400 hidden sm:inline">
+                  Welcome, {{ user?.email?.split('@')[0] }}!
+                </span>
+                <button 
+                  @click="handleSignOut"
+                  class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >Sign Out</button>
+              </div>
+
+              <router-link 
+                to="/demo"
+                class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              >Demo</router-link>
+            </template>
+            <template v-else>
               <button 
-                @click="handleSignOut"
-                class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
-              >
-                Sign Out
-              </button>
-            </div>
-
-            <button 
-              @click="() => navigateTo('/demo')"
-              class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-            >
-              Demo
-            </button>
+                @click="() => navigateTo('/')"
+                class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              >Home</button>
+              <button 
+                v-if="!isAuthenticated"
+                @click="() => navigateTo('/auth')"
+                class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              >Sign In</button>
+              <div v-else class="flex items-center space-x-2">
+                <span class="text-sm text-slate-600 dark:text-slate-400 hidden sm:inline">
+                  Welcome, {{ user?.email?.split('@')[0] }}!
+                </span>
+                <button 
+                  @click="handleSignOut"
+                  class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >Sign Out</button>
+              </div>
+              <button 
+                @click="() => navigateTo('/demo')"
+                class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              >Demo</button>
+            </template>
           </nav>
         </div>
       </div>

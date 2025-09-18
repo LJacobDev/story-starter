@@ -162,7 +162,7 @@ This checklist tracks the development progress of the Story Starter application 
 - [x] Implement user feedback for verification status (loading / success / failure)
 - [x] Add route-guard behavior for unverified users (prevent protected access)
 - [x] Write unit tests for confirm/resend flows with mocked Supabase
-- [x] Add simple end-to-end check (manual or mocked) to confirm callback handling
+- [x] Do simple end-to-end check (manual) to confirm callback handling
 
 **Success Criteria**:
 - [x] Email verification works completely
@@ -177,7 +177,6 @@ This checklist tracks the development progress of the Story Starter application 
 Notes
 - Tests and mocks are present and stable — write tests first, implement next.
 - Keep TOKEN_REFRESH_FAILED handling and resilient supabase init in place.
-- Ensure README documents required secrets and the exact Supabase callback URL for pages.
 ---
 
 ## Phase 3: Core Story Management

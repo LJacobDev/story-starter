@@ -2,25 +2,16 @@ import { createRouter, createWebHashHistory, type Router } from 'vue-router'
 import { useRouteGuard } from '@/composables/useRouteGuard'
 import appRoutes from './routes'
 
-// Create router using hash history so GH Pages serves index.html for all SPA routes
+// Create router using hash history. IMPORTANT: don't pass import.meta.env.BASE_URL here.
+// With hash routing, the path after # should start with '/', e.g. '#/verify-email'.
+// Passing a base like '/story-starter/' would break matching (URLs look like '#/').
 const router = createRouter({
-  history: createWebHashHistory(import.meta.env.BASE_URL),
+  history: createWebHashHistory(),
   routes: appRoutes as any
 })
 
 export function setupRouterGuards(r: Router = router) {
-  // Ensure central routes are registered if the app hasn't already registered them
-  try {
-    for (const rr of appRoutes) {
-      // avoid duplicate registration
-      if (!r.hasRoute((rr as any).name ?? (rr as any).path)) {
-        r.addRoute(rr as any)
-      }
-    }
-  } catch (e) {
-    // silent - router may already have routes
-  }
-
+  // Install guards
   r.beforeEach((to, _from, next) => {
     const requireAuth = !!to.meta?.requireAuth
     const requireEmailVerification = !!to.meta?.requireEmailVerification
@@ -36,7 +27,6 @@ export function setupRouterGuards(r: Router = router) {
 
     // If route is marked guestOnly and user is authenticated, redirect to home
     if (guestOnly && result.canAccess && !!(guard.value.canAccess && !result.reason)) {
-      // user can access protected routes -> user is authenticated
       next({ path: '/' })
       return
     }
