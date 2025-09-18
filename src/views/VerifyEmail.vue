@@ -38,11 +38,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
+import { supabase } from '@/lib/supabase'
 
 const route = useRoute()
-const { confirmEmail } = useAuth()
+const router = useRouter()
+const { confirmEmail, user } = useAuth()
 
 const loading = ref(true)
 const error = ref<string | null>(null)
@@ -52,23 +54,43 @@ onMounted(async () => {
     const rawToken = route.query.token
     const token = Array.isArray(rawToken) ? rawToken[0] : (rawToken as string | undefined)
 
-    if (!token) {
-      error.value = 'No verification token was provided.'
+    // Case 1: We have a token (older/mock flow) -> call confirmEmail
+    if (token) {
+      const result = await (confirmEmail as any)(token)
+      if (!result || !result.success) {
+        error.value = result?.error || 'Verification failed. Please try again.'
+        loading.value = false
+        return
+      }
       loading.value = false
+      error.value = null
       return
     }
 
-    const result = await (confirmEmail as any)(token)
+    // Case 2: No token in query. This happens in the real Supabase flow where the
+    // access_token was already applied by main.ts (setSession) and the URL was
+    // cleaned to `#/verify-email`. In this case, if we already have a verified
+    // user/session, treat it as a success.
+    // Give the auth state a brief moment to settle.
+    await new Promise(r => setTimeout(r, 50))
 
-    if (!result || !result.success) {
-      error.value = result?.error || 'Verification failed. Please try again.'
+    // Prefer a fresh read from Supabase to ensure the user object is up-to-date
+    let currentUser: any = user.value
+    try {
+      const { data } = await supabase.auth.getUser()
+      if (data?.user) currentUser = data.user
+    } catch {}
+
+    const confirmed = !!(currentUser && (currentUser.email_confirmed_at || currentUser.confirmed_at))
+    if (confirmed) {
       loading.value = false
+      error.value = null
       return
     }
 
-    // success
+    // If still not confirmed and no token, show a helpful message
+    error.value = 'No verification token was provided, and we could not confirm the session. Please open the link again or resend the verification email.'
     loading.value = false
-    error.value = null
   } catch (err: any) {
     error.value = err?.message || 'An unexpected error occurred during verification.'
     loading.value = false
@@ -76,6 +98,6 @@ onMounted(async () => {
 })
 
 const goHome = () => {
-  window.location.href = '/'
+  router.push('/')
 }
 </script>
