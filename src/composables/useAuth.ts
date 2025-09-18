@@ -116,23 +116,49 @@ export function useAuth() {
 
   async function signOut() {
     isLoading.value = true
+    let remoteError: any = null
     try {
-      // Prefer a local-only signout to avoid 401/403 and ensure client tokens are cleared
+      // Clear local session first to avoid UI flicker
       try { await (supabase.auth as any).signOut?.({ scope: 'local' }) } catch {}
 
+      // Attempt remote sign out (may 401/403 if no active session)
+      try {
+        const res: any = await supabase.auth.signOut()
+        remoteError = res?.error ?? null
+      } catch (err: any) {
+        remoteError = err
+      }
+
+      // Always clear local artifacts and state
       clearLocalAuthArtifacts()
       session.value = null
       user.value = null
 
       isLoading.value = false
+
+      if (remoteError) {
+        const status = (remoteError as any)?.status ?? (remoteError as any)?.cause?.status
+        const msg = String(remoteError?.message || '').toLowerCase()
+        const benign = status === 401 || status === 403 || msg.includes('session missing') || msg.includes('not logged in')
+        if (benign) {
+          return { success: true, error: null }
+        }
+        return { success: false, error: remoteError?.message || 'Sign out failed' }
+      }
+
       return { success: true, error: null }
     } catch (err: any) {
-      isLoading.value = false
-      // Even if something throws, treat as success after local cleanup
+      // Defensive: still ensure local cleanup
       clearLocalAuthArtifacts()
       session.value = null
       user.value = null
-      return { success: true, error: null }
+      isLoading.value = false
+
+      const msg = String(err?.message || '').toLowerCase()
+      if (msg.includes('session missing') || msg.includes('not logged in')) {
+        return { success: true, error: null }
+      }
+      return { success: false, error: err?.message || 'Sign out failed' }
     }
   }
 

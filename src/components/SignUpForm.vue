@@ -82,7 +82,10 @@ const emailRegex = /^\S+@\S+\.\S+$/
 const passwordStrengthRegex = /(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}/
 
 const isValid = computed(() => {
-  return !!email.value && emailRegex.test(email.value) && !!password.value && passwordStrengthRegex.test(password.value) && password.value === confirmPassword.value
+  const e = email.value.trim()
+  const p = password.value
+  const c = confirmPassword.value
+  return !!e && emailRegex.test(e) && !!p && passwordStrengthRegex.test(p) && p === c
 })
 
 const handleSubmit = async () => {
@@ -91,7 +94,8 @@ const handleSubmit = async () => {
   savedEmail.value = null
 
   // Generic validation messages aligned with tests
-  if (!email.value || !emailRegex.test(email.value)) {
+  const e = email.value.trim()
+  if (!e || !emailRegex.test(e)) {
     authError.value = 'This field is required'
     return
   }
@@ -114,12 +118,12 @@ const handleSubmit = async () => {
   isLoading.value = true
 
   try {
-    const result = await signUp({ email: email.value, password: password.value })
+    const result = await signUp({ email: e, password: password.value })
 
     if (result.success) {
       if (result.needsVerification) {
         // Keep the email for resend control, clear sensitive fields
-        savedEmail.value = email.value
+        savedEmail.value = e
         successMessage.value = 'Account created. Please check your email to verify your account.'
         password.value = ''
         confirmPassword.value = ''
