@@ -217,7 +217,7 @@ Next major phases (after 2.2.1)
 
 ### Chunk 3.1: Story Display and Grid Layout
 
-#### Prompt 3.1.1
+#### Prompt 3.1.1 (this prompt is being broken into micro prompts)
 ```text
 Create story card components and grid layout. Implement responsive design.
 
@@ -240,6 +240,84 @@ Success Criteria:
 - Images load properly with fallbacks
 - Components are fully accessible
 - Loading states provide good UX
+```
+
+
+### Prompt 3.1.1 — TDD Micro‑Prompts (card + grid + loading first; modal later)
+
+Note: "Home-level conditional rendering test contract"
+- Tests will mock `useAuth()` to simulate guest vs authenticated states and assert:
+  - Guest: shows a single "Public Stories" grid
+  - Authenticated: shows "Your Stories" grid first, then "All Public Stories" grid
+- Ensures Home renders correct sections and ordering based on auth state.
+
+Prompt 3.1.1a.1 — Tests first: StoryCard props and formatting
+- Create tests for presentational StoryCard.
+- Props: `id`, `title`, `type` (short_story|movie_summary|tv_commercial), `isPrivate`, `createdAt` (Date|string), `imageUrl?`, `description?`.
+- Behavior expectations:
+  - Renders title (truncate), 1–2 line description, type badge, privacy badge.
+  - Date formatting: if < 10 days old → "n days ago"; else → "Month 10th 2025".
+  - Image: prefer `imageUrl`; otherwise render type‑specific monochrome SVG fallback:
+    - short_story → book (slate/gray), movie_summary → filmstrip (indigo/blue), tv_commercial → clapper/megaphone (emerald/green).
+  - Accessible alt text: "Cover image for <title>" or "Story cover image".
+- Files to add: `tests/unit/StoryCard.spec.ts`, `src/components/stories/StoryCard.vue` (stub), `src/utils/formatDate.ts` with tests.
+- Success: tests fail initially.
+
+Prompt 3.1.1a.2 — Implement StoryCard to satisfy tests
+- Implement with ShadCN Card/Badge; truncation via Tailwind; alt handling.
+- Add inline SVG fallbacks per type/color scheme.
+- Make tests pass.
+
+Prompt 3.1.1b.1 — Tests first: StoryGrid responsive + skeleton + empty
+- Component props: `items: StoryCardProps[]`, `loading: boolean`, `emptyMessage?: string`.
+- Tests cover:
+  - Responsive columns at sm/md/lg/xl → 1/2/3/4.
+  - `loading=true` shows 12 skeleton cards.
+  - Not loading and empty `items` shows empty message.
+- Files: `tests/unit/StoryGrid.spec.ts`, `src/components/stories/StoryGrid.vue` (stub).
+- Success: tests fail initially.
+
+Prompt 3.1.1b.2 — Implement StoryGrid and skeletons
+- Responsive grid via Tailwind; add SkeletonCard shimmer.
+- Make tests pass.
+
+Prompt 3.1.1c.1 — Tests first: Home wiring (guest vs auth)
+- Tests:
+  - Guest: one grid titled "Public Stories".
+  - Auth: two grids titled "Your Stories" (first) and "All Public Stories" (second).
+  - Page H1: "Stories"; section headings are H2.
+  - Default sort: newest first.
+- Files: `tests/unit/Home.stories-grid.spec.ts` (uses placeholder arrays only).
+- Success: tests fail initially.
+
+Prompt 3.1.1c.2 — Implement Home sections (placeholder data only)
+- Wire Home.vue to render grids per auth state; use placeholder items.
+- Make tests pass.
+
+Prompt 3.1.1d.1 — Tests first: image fallback + a11y
+- Tests ensure: missing `imageUrl` renders fallback with proper roles/alt; basic axe has no critical violations.
+- File: `tests/unit/StoryCard.a11y.spec.ts`.
+- Success: tests fail initially.
+
+Prompt 3.1.1d.2 — Implement a11y polish
+- Ensure <img> alt, fallback SVG aria-hidden, sr-only text if needed; badge contrast; heading hierarchy.
+- Make tests pass.
+
+Prompt 3.1.1e.1 — Tests first: Preview modal (optional; can defer)
+- Tests for ShadCN Dialog: open/close, focus trap, Esc to close, focus return.
+- Files: `tests/unit/StoryPreviewModal.spec.ts`, `src/components/stories/StoryPreviewModal.vue` (stub).
+
+Prompt 3.1.1e.2 — Implement Preview modal (optional)
+- Implement dialog consuming card props; aria-labelledby.
+- Make tests pass.
+
+Assumptions captured
+- Date format: "n days ago" under 10 days; else long date like "March 10th 2025".
+- Grid columns: 1/2/3/4 at sm/md/lg/xl.
+- Page size for 3.1.2: 12; "Show more" appends 12; infinite loads as user scrolls further.
+- Placeholder images: monochrome, type‑specific SVGs.
+- Default sort: newest first.
+- Card includes a short description (or excerpt if missing).
 ```
 
 #### Prompt 3.1.2

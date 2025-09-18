@@ -196,6 +196,23 @@ Notes
 - [ ] Create story preview modal
 - [ ] Test component rendering and responsive behavior
 
+**Subtasks (TDD sequence)**:
+- [ ] 3.1.1a.1 Tests — StoryCard props, badges, description, date rule ("n days ago" <10d; else long date), type‑based monochrome SVG fallback, alt text
+- [ ] 3.1.1a.2 Implement — StoryCard and SVG fallbacks (short_story/book slate, movie_summary/filmstrip indigo, tv_commercial/clapper emerald)
+- [ ] 3.1.1b.1 Tests — StoryGrid responsive columns (1/2/3/4 at sm/md/lg/xl), skeleton placeholders (12), empty state
+- [ ] 3.1.1b.2 Implement — StoryGrid + SkeletonCard shimmer
+- [ ] 3.1.1c.1 Tests — Home conditional rendering (guest: Public Stories only; auth: Your Stories then All Public Stories), headings, newest-first sort
+- [ ] 3.1.1c.2 Implement — Home wiring with placeholder data only
+- [ ] 3.1.1d.1 Tests — Image fallback robustness + basic axe a11y checks
+- [ ] 3.1.1d.2 Implement — Fallback/a11y polish (alt/aria, contrast, hierarchy)
+- [ ] 3.1.1e.1 Tests — Preview modal keyboard/focus (optional; can defer)
+- [ ] 3.1.1e.2 Implement — Preview modal (optional; can defer)
+
+**Assumptions**:
+- Default sort: newest first
+- Page size for 3.1.2: 12 initially; "Show more" adds 12; infinite loads as user scrolls further
+- Placeholder SVGs are monochrome and type‑specific
+
 **Success Criteria**:
 - [ ] Story cards display correctly in responsive grid
 - [ ] Images load properly with fallbacks
