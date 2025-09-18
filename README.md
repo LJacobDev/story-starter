@@ -27,12 +27,10 @@ Wrapping up phase 2 of the prompt plan, where basic UI and authentication are no
 
 The story generation UI and functionality are being implemented now.
 
+Email verification redirect successfully redirects verified user to page as authenticated.
+
 
 ### Things to fix or polish
-
-#### Email verification redirect 
-
-Email verification works, and clicking the 'confirm email' link from the confirmation email will verify the user, however the redirect is not sending the user back to the intended location.  It is possible to click the link, and go sign in on the site even though the redirect is like this.
 
 #### Making sure all UI components are smooth and fully functional
 

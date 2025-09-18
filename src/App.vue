@@ -142,18 +142,7 @@ const handleSignOut = async () => {
           </p>
         </div>
 
-        <!-- Authentication Status Banner -->
-        <div v-if="isAuthenticated" class="mb-8 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg max-w-2xl mx-auto">
-          <div class="flex items-center justify-center space-x-2">
-            <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-            <span class="text-green-800 dark:text-green-300 font-medium">
-              ✅ Authenticated as {{ user?.email }}
-            </span>
-          </div>
-          <p class="text-sm text-green-700 dark:text-green-400 mt-2">
-            Email verified: {{ user?.email_confirmed_at ? 'Yes' : 'Pending verification' }}
-          </p>
-        </div>
+
 
         <!-- Feature Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
