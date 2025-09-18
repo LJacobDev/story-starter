@@ -2,36 +2,44 @@
 
 ## Current Project State
 - **Last Known Good State**: All unit tests passing; auth + email verification working on GitHub Pages with hash routing; logout is idempotent and persistent.
-- **Currently Working**: Phase 3, task 3.1.1a.2 — StoryCard implementation under TDD; tests are green after stabilizing VerifyEmail no-token spec.
-- **Last Test Results**: All tests passing locally (Vitest) after making the VerifyEmail failure test robust.
+- **Currently Working**: Phase 3 — 3.1.1c done (Home wired with StoryGrid for guest/auth). Next: 3.1.1d (a11y + polish) then 3.1.2 (load stories from Supabase).
+- **Last Test Results**: All tests green (132/132). Some expected Vue warnings in tests (router-link injection) but non-fatal.
 - **Known Issues**:
-  - Some legacy files/tests may be redundant from earlier agent passes; defer cleanup until after Phase 3 MVP is stable.
+  - Some legacy files/tests may be redundant; defer cleanup until after Phase 3 MVP.
 
 ## Key File Relationships
-- `src/lib/supabase.ts` creates client; tests mock via utils/supabase.
-- `src/views/VerifyEmail.vue` handles token-based and tokenless success flows.
-- `tests/unit/VerifyEmail.failure.spec.ts` now uses fake timers to advance the internal delay and mocks `useAuth.user`.
-- `src/components/stories/StoryCard.vue` shows image/SVG fallback and badges via inline spans.
+- `src/views/Home.vue` uses `useAuth.isAuthenticated` to branch sections and renders `StoryGrid` sections with H1/H2 semantics.
+- `src/components/stories/StoryGrid.vue` renders responsive grid, 12 skeletons when loading, and empty state; consumes `StoryCard`.
+- `src/components/stories/StoryCard.vue` presentational card with image or SVG fallback and Tailwind badge spans.
+- `src/utils/formatDate.ts` formats createdAt for display (used by card/rendering later).
 
 ## Recent Changes Made
-- Hardened `tests/unit/VerifyEmail.failure.spec.ts`:
-  - Use `vi.useFakeTimers()` and `advanceTimersByTimeAsync(60)` to pass the 50ms settle delay.
-  - Mock `useAuth` to include a `user: { value: null }` ref-like object.
-- All tests pass.
+- [2025-09-18]: Modified `src/views/Home.vue` to:
+  - Add page H1 "Stories" and H2 section headings per auth state.
+  - Render one grid for guests ("Public Stories").
+  - Render two grids for authed users ("Your Stories" then "All Public Stories").
+  - Provide placeholder arrays and default sort (newest first) to satisfy tests.
+- Prior: Implemented `StoryGrid.vue` and its tests; hardened VerifyEmail failure spec.
 
 ## Next Steps Plan (Phase 3)
-1) Proceed to 3.1.1b.1 — write tests for `StoryGrid` (responsive + skeleton + empty).
-2) Implement `StoryGrid` to satisfy tests.
-3) Wire `Home` per guest vs auth grids.
+1. 3.1.1d — A11y and UX polish:
+   - Keyboard focus states on cards, aria-labels for badges/icons, section landmark roles, and heading hierarchy tests.
+2. 3.1.2 — Data wiring:
+   - Replace placeholder arrays with Supabase queries (public + user-owned), loading states, error handling, pagination.
+3. 3.1.3 — Filters/search UI (title/genre/type/date/privacy) with composables and tests.
 
 ## Verification Plan
-- Keep vitest watch running; add grid tests first.
+- Unit: Home stories-grid specs verify headings, section order, and default sort.
+- Manual: Run `npm run dev` →
+  - Guest: see H1 "Stories", one section "Public Stories" with grid.
+  - Authed: see H1, two sections ordered: "Your Stories" then "All Public Stories".
+  - Check newest-first ordering in each section.
 
 ## Rollback Plan
-- Revert test edits if timing assumptions change; or expose a data-testid for the error state and assert that instead.
+- If regressions occur, revert `src/views/Home.vue` to previous version; StoryGrid and tests will guard grid contracts.
 
 ## Human-parsable summary
-- Stabilized a flaky VerifyEmail no-token test by aligning with component timing and state; suite is green. Ready to continue card/grid work.
+- Home is now wired to present story grids per auth state using StoryGrid and placeholder data, sorted newest-first. Test suite is green (132/132). Ready to proceed with a11y polish and then Supabase data fetching.
 
 ---
 
