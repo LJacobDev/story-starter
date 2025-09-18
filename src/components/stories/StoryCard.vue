@@ -9,7 +9,10 @@
             :alt="`Cover image for ${title}`"
             class="h-full w-full object-cover"
           />
-          <component v-else :is="fallbackIcon" class="h-16 w-16" />
+          <div v-else class="flex flex-col items-center justify-center">
+            <component :is="fallbackIcon" class="h-16 w-16" aria-hidden="true" />
+            <span class="sr-only">Cover image placeholder for {{ title }}</span>
+          </div>
         </div>
 
         <CardContent class="p-4 space-y-2">
@@ -78,19 +81,19 @@ const fallbackIcon = computed(() => {
   }
 })
 
-// Simple monochrome SVGs using currentColor
+// Simple monochrome SVGs using currentColor, hidden from AT
 const BookIcon = {
   name: 'BookIcon',
-  template: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-slate-500"><path d="M4 5a2 2 0 012-2h10a2 2 0 012 2v13a1 1 0 01-1 1H6a2 2 0 00-2 2V5z" stroke="currentColor" stroke-width="1.5"/><path d="M8 5.5h8M8 9h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`
+  template: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-slate-500" aria-hidden="true" focusable="false"><path d="M4 5a2 2 0 012-2h10a2 2 0 012 2v13a1 1 0 01-1 1H6a2 2 0 00-2 2V5z" stroke="currentColor" stroke-width="1.5"/><path d="M8 5.5h8M8 9h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`
 }
 
 const FilmstripIcon = {
   name: 'FilmstripIcon',
-  template: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-indigo-500"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M9 5v14M15 5v14" stroke="currentColor" stroke-width="1.5"/><path d="M6 7h1M6 10h1M6 13h1M6 16h1M17 7h1M17 10h1M17 13h1M17 16h1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`
+  template: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-indigo-500" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M9 5v14M15 5v14" stroke="currentColor" stroke-width="1.5"/><path d="M6 7h1M6 10h1M6 13h1M6 16h1M17 7h1M17 10h1M17 13h1M17 16h1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`
 }
 
 const ClapperIcon = {
   name: 'ClapperIcon',
-  template: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-emerald-500"><path d="M4 10h16v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8z" stroke="currentColor" stroke-width="1.5"/><path d="M20 10L18 4l-8 2 2 4 8 0z" stroke="currentColor" stroke-width="1.5"/><path d="M8 6l2 4M12 5l2 5M16 4l2 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`
+  template: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="text-emerald-500" aria-hidden="true" focusable="false"><path d="M4 10h16v8a2 2 0 01-2 2H6a2 2 0 01-2-2v-8z" stroke="currentColor" stroke-width="1.5"/><path d="M20 10L18 4l-8 2 2 4 8 0z" stroke="currentColor" stroke-width="1.5"/><path d="M8 6l2 4M12 5l2 5M16 4l2 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`
 }
 </script>

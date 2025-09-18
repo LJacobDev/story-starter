@@ -2,44 +2,39 @@
 
 ## Current Project State
 - **Last Known Good State**: All unit tests passing; auth + email verification working on GitHub Pages with hash routing; logout is idempotent and persistent.
-- **Currently Working**: Phase 3 — 3.1.1c done (Home wired with StoryGrid for guest/auth). Next: 3.1.1d (a11y + polish) then 3.1.2 (load stories from Supabase).
-- **Last Test Results**: All tests green (132/132). Some expected Vue warnings in tests (router-link injection) but non-fatal.
+- **Currently Working**: Phase 3 — 3.1.1d done (StoryCard image fallback + a11y). Next: 3.1.2 data wiring to Supabase.
+- **Last Test Results**: All tests green (134/134). Some expected Vue router warnings in unit tests without a router; harmless.
 - **Known Issues**:
   - Some legacy files/tests may be redundant; defer cleanup until after Phase 3 MVP.
 
 ## Key File Relationships
-- `src/views/Home.vue` uses `useAuth.isAuthenticated` to branch sections and renders `StoryGrid` sections with H1/H2 semantics.
-- `src/components/stories/StoryGrid.vue` renders responsive grid, 12 skeletons when loading, and empty state; consumes `StoryCard`.
-- `src/components/stories/StoryCard.vue` presentational card with image or SVG fallback and Tailwind badge spans.
-- `src/utils/formatDate.ts` formats createdAt for display (used by card/rendering later).
+- `src/components/stories/StoryCard.vue` now provides:
+  - <img> with descriptive alt when imageUrl exists.
+  - SVG fallback wrapped in a container with `aria-hidden="true"` on the SVG and an `sr-only` text label.
+- `src/components/stories/StoryGrid.vue` consumes StoryCard.
+- `src/views/Home.vue` renders `StoryGrid` sections by auth state.
 
 ## Recent Changes Made
-- [2025-09-18]: Modified `src/views/Home.vue` to:
-  - Add page H1 "Stories" and H2 section headings per auth state.
-  - Render one grid for guests ("Public Stories").
-  - Render two grids for authed users ("Your Stories" then "All Public Stories").
-  - Provide placeholder arrays and default sort (newest first) to satisfy tests.
-- Prior: Implemented `StoryGrid.vue` and its tests; hardened VerifyEmail failure spec.
+- [2025-09-18]: Added `tests/unit/StoryCard.a11y.spec.ts` covering fallback rendering and basic axe scan (serious/critical violations only). Installed `vitest-axe` and `axe-core`.
+- [2025-09-18]: Updated `StoryCard.vue` to set `aria-hidden` on fallback SVGs, added `sr-only` text on placeholder, preserved alt text on images. Tests now pass.
+- [2025-09-18]: Previously wired `Home.vue` to render H1/H2 sections and grids per auth state, sorted newest-first.
 
 ## Next Steps Plan (Phase 3)
-1. 3.1.1d — A11y and UX polish:
-   - Keyboard focus states on cards, aria-labels for badges/icons, section landmark roles, and heading hierarchy tests.
-2. 3.1.2 — Data wiring:
-   - Replace placeholder arrays with Supabase queries (public + user-owned), loading states, error handling, pagination.
-3. 3.1.3 — Filters/search UI (title/genre/type/date/privacy) with composables and tests.
+1. 3.1.2 — Replace Home placeholder arrays with Supabase queries:
+   - Public stories (is_private=false), and user-owned stories.
+   - Loading/error states, pagination (page size 12), "Show more".
+   - TDD: tests for composables fetching, Home integration with loading and empty states.
+2. 3.1.3 — Search and filter UI (title/type/date/privacy) with tests.
 
 ## Verification Plan
-- Unit: Home stories-grid specs verify headings, section order, and default sort.
-- Manual: Run `npm run dev` →
-  - Guest: see H1 "Stories", one section "Public Stories" with grid.
-  - Authed: see H1, two sections ordered: "Your Stories" then "All Public Stories".
-  - Check newest-first ordering in each section.
+- Unit: `StoryCard.a11y.spec.ts` asserts image alt, fallback SVG `aria-hidden`, presence of `sr-only` label, and no serious/critical axe violations.
+- Manual: Inspect a StoryCard with and without image; verify screen readers ignore SVG and announce placeholder text.
 
 ## Rollback Plan
-- If regressions occur, revert `src/views/Home.vue` to previous version; StoryGrid and tests will guard grid contracts.
+- If a11y regressions appear, revert `StoryCard.vue` to prior commit; tests will flag violations.
 
 ## Human-parsable summary
-- Home is now wired to present story grids per auth state using StoryGrid and placeholder data, sorted newest-first. Test suite is green (132/132). Ready to proceed with a11y polish and then Supabase data fetching.
+- A11y for StoryCard is in place: descriptive alt for images, hidden SVG fallback with screen-reader label. Test suite is green (134/134). Ready to wire real data to grids.
 
 ---
 

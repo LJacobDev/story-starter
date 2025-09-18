@@ -303,13 +303,6 @@ Prompt 3.1.1d.2 — Implement a11y polish
 - Ensure <img> alt, fallback SVG aria-hidden, sr-only text if needed; badge contrast; heading hierarchy.
 - Make tests pass.
 
-Prompt 3.1.1e.1 — Tests first: Preview modal (optional; can defer)
-- Tests for ShadCN Dialog: open/close, focus trap, Esc to close, focus return.
-- Files: `tests/unit/StoryPreviewModal.spec.ts`, `src/components/stories/StoryPreviewModal.vue` (stub).
-
-Prompt 3.1.1e.2 — Implement Preview modal (optional)
-- Implement dialog consuming card props; aria-labelledby.
-- Make tests pass.
 
 Assumptions captured
 - Date format: "n days ago" under 10 days; else long date like "March 10th 2025".
@@ -371,6 +364,15 @@ Success Criteria:
 - Sharing generates proper URLs
 - All user interactions are smooth
 ```
+
+Prompt 3.2.2.1 — Tests first: Preview modal (optional; can defer)
+- Tests for ShadCN Dialog: open/close, focus trap, Esc to close, focus return.
+- Files: `tests/unit/StoryPreviewModal.spec.ts`, `src/components/stories/StoryPreviewModal.vue` (stub).
+
+Prompt 3.2.2.2 — Implement Preview modal (optional)
+- Implement dialog consuming card props; aria-labelledby.
+- Make tests pass.
+
 
 ---
 
