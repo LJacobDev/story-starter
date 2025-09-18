@@ -18,37 +18,47 @@ Some of the commits will have unusually long commit messages, but to help with b
 
 Next I will want to iterate on this kind of project again to start focusing on code organization and quality.
 
+This workflow is attempting to rely mainly on prompts to get the work done, with infrequent human intervention, to see whether a careful workflow and prompt plan is able to achieve results where the agent does most of the activity.
+
 
 ## Current state
 
-This workflow is attempting to rely on prompts to get the work done, with infrequent human intervention, to see whether a careful workflow and prompt plan is able to achieve results where the agent does most of the activity.
+Wrapping up phase 2 of the prompt plan, where basic UI and authentication are now working.
 
-The agent has been stuck for a long time on getting a sign in form to work.  It has tried numerous fixes, and had repomix files prepared for it to help it understand context.  It has often said with utter confidence that it could see the problem, and was going to fix it, but then would make changes that had no impact on the problem.
+The story generation UI and functionality are being implemented now.
 
-Strangely, it was able to produce a successful authentication component that it used to test authentication, but it wasn't able to carry the understanding of what made that test component work into the actual sign up form.
+
+### Things to fix or polish
+
+#### Email verification redirect 
+
+Email verification works, and clicking the 'confirm email' link from the confirmation email will verify the user, however the redirect is not sending the user back to the intended location.  It is possible to click the link, and go sign in on the site even though the redirect is like this.
+
+#### Making sure all UI components are smooth and fully functional
+
+Getting core functionality is being prioritized, and things that need improvements in UI / UX will be looked at after that.
+
 
 
 ## Strengths of the LLM agent in this project
 
-Helping to create specs and implementation plans, and keeping track of goals and things learned
+Helping to create specs and implementation plans, and keeping track of goals and things learned.
 
+Helping to summarize broad and mutli-faceted context in a way that can help the developer understand and keep track of priorities.
 
 ## Limitations of the LLM agent in this project
 
-It jumps on problems confidently, makes long explanations about why it thinks it will easily solve them, and takes a long time to work on them but fails to solve the tasks and often makes things worse while trying
+Claude Sonnet 4 jumps on problems confidently, makes long explanations about why it thinks it will easily solve them, and takes a long time to work on them.  After doing all this, it still fails to solve the tasks and often makes things worse while trying.
 
-
-## Next steps
-
-Hope to either find a way to help frame the problem into something that the LLM can more easily work with, or else start adapting the workflow where development relies more heavily on the human developer taking care of things directly while leveraging the LLM's strengths in other ways.
+GPT-5 mini seemed to handle these situations better, possibly because of it having a larger context window, however it also would get caught in cyclical error traps that required reverting to a prior commit and convincing it to go about the problem in a different way.
 
 
 
-## Update
+## Model change: Claude Sonnet 4 taken out as implementing agent at Phase 2 and replaced with GPT-5 mini
 
 For whatever reason, simply switching over from claude sonnet 4 to gpt-5 mini was enough to get things back on track.  Somehow gpt-5 mini was able to look at things and figure out solutions to the problems that were absolutely baffling claude, and it appears that the project can resume development instead of needing to revert to an earlier commit or restart from scratch.
 
-### Update Details:
+### Model Change Details:
 
 Claude Sonnet 4 had huge problems at around task 2.1.1, 2.1.2, where it couldn't solve an authentication / validation glitch where the sign in fields kept showing 'field required' and disabling the 'sign in' button, even when filled properly.  It took Claude lots of effort and the use of a repomix file set to try to debug this and it still failed to solve it.
 
