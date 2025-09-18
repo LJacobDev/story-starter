@@ -66,7 +66,7 @@ export function useAuth() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+          emailRedirectTo: `${window.location.origin}/verify-email`
         }
       })
       isLoading.value = false
@@ -121,7 +121,7 @@ export function useAuth() {
         type: 'signup',
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+          emailRedirectTo: `${window.location.origin}/verify-email`
         }
       })
       isLoading.value = false

@@ -143,7 +143,7 @@ export function useAuth(): AuthComposable {
         email: credentials.email,
         password: credentials.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+          emailRedirectTo: `${window.location.origin}/verify-email`
         }
       })
 
@@ -259,7 +259,7 @@ export function useAuth(): AuthComposable {
         type: 'signup',
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+          emailRedirectTo: `${window.location.origin}/verify-email`
         }
       })
 
