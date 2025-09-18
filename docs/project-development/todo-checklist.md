@@ -150,29 +150,29 @@ This checklist tracks the development progress of the Story Starter application 
 
 ### Chunk 2.2: Email Verification and User Experience
 
-#### [~] Task 2.2.1: Email Verification Flow
-**Status**: 🔄 In Progress  
+#### [x] Task 2.2.1: Email Verification Flow
+**Status**: ✅ Completed  
 **Description**: Implement complete email verification system (TDD-first)
 
 **Requirements Checklist (current)**:
 - [x] Configure email verification in Supabase (callback URL set to Pages domain)
-- [ ] Create email verification page/component (/verify-email)
-- [ ] Add confirmEmail(token) method to useAuth composable
-- [ ] Add "resend verification" functionality in SignUp UI
-- [ ] Implement user feedback for verification status (loading / success / failure)
-- [ ] Add route-guard behavior for unverified users (prevent protected access)
-- [ ] Write unit tests for confirm/resend flows with mocked Supabase
-- [ ] Add simple end-to-end check (manual or mocked) to confirm callback handling
+- [x] Create email verification page/component (/verify-email)
+- [x] Add confirmEmail(token) method to useAuth composable
+- [x] Add "resend verification" functionality in SignUp UI
+- [x] Implement user feedback for verification status (loading / success / failure)
+- [x] Add route-guard behavior for unverified users (prevent protected access)
+- [x] Write unit tests for confirm/resend flows with mocked Supabase
+- [x] Add simple end-to-end check (manual or mocked) to confirm callback handling
 
 **Success Criteria**:
-- [ ] Email verification works completely
-- [ ] Users receive clear feedback at each step
-- [ ] Rate limiting prevents spam
-- [ ] All edge cases are handled gracefully
-- [ ] Token confirmation and UI feedback work for success and failure cases
-- [ ] Users can resend verification emails (with rate-limit guidance)
-- [ ] Route guards treat unverified users appropriately
-- [ ] Unit tests cover success, invalid token, and expired token scenarios
+- [x] Email verification works completely
+- [x] Users receive clear feedback at each step
+- [x] Rate limiting prevents spam
+- [x] All edge cases are handled gracefully
+- [x] Token confirmation and UI feedback work for success and failure cases
+- [x] Users can resend verification emails (with rate-limit guidance)
+- [x] Route guards treat unverified users appropriately
+- [x] Unit tests cover success, invalid token, and expired token scenarios
 
 Notes
 - Tests and mocks are present and stable — write tests first, implement next.

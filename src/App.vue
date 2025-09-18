@@ -8,8 +8,6 @@ import vueLogo from '@/assets/vue.svg'
 // Authentication
 const { user, isAuthenticated, signOut } = useAuth()
 
-// Flag to control whether the authentication status banner is shown on the main page
-const showAuthBanner = false
 
 // Reactive state used when router is not present
 const count = ref(0)
