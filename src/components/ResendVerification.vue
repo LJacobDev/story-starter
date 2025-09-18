@@ -1,14 +1,17 @@
 <template>
   <div>
-    <button
-      :disabled="disabled || isLoading"
-      @click="handleResend"
-      class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-      type="button"
-    >
-      <span v-if="isLoading">Sending…</span>
-      <span v-else>Resend verification email</span>
-    </button>
+    <!-- center the button -->
+    <div class="flex justify-center">
+      <button
+        :disabled="disabled || isLoading"
+        @click="handleResend"
+        class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+        type="button"
+      >
+        <span v-if="isLoading">Sending…</span>
+        <span v-else>Resend verification email</span>
+      </button>
+    </div>
 
     <p v-if="message" class="mt-2 text-sm text-gray-600" role="status">{{ message }}</p>
     <p v-if="errorMsg" class="mt-2 text-sm text-destructive" role="alert">{{ errorMsg }}</p>
