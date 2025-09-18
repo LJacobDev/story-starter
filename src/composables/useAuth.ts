@@ -33,6 +33,23 @@ function initAuthListener() {
 
 initAuthListener()
 
+function clearLocalAuthArtifacts() {
+  try {
+    // Remove any Supabase v2 auth tokens that may remain
+    const keysToRemove: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)
+      if (!k) continue
+      // Supabase v2 typically uses `sb-<project-ref>-auth-token`
+      if (k.startsWith('sb-') && k.endsWith('-auth-token')) keysToRemove.push(k)
+      // Some older patterns
+      if (k.includes('supabase.auth.token')) keysToRemove.push(k)
+      if (k === 'sb-access-token' || k === 'sb-refresh-token') keysToRemove.push(k)
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k))
+  } catch {}
+}
+
 export function useAuth() {
   const isAuthenticated = computed(() => !!user.value)
 
@@ -100,17 +117,22 @@ export function useAuth() {
   async function signOut() {
     isLoading.value = true
     try {
-      const { error } = await supabase.auth.signOut()
-      isLoading.value = false
-      if (error) {
-        return { success: false, error: error?.message || 'Sign out failed' }
-      }
+      // Prefer a local-only signout to avoid 401/403 and ensure client tokens are cleared
+      try { await (supabase.auth as any).signOut?.({ scope: 'local' }) } catch {}
+
+      clearLocalAuthArtifacts()
       session.value = null
       user.value = null
+
+      isLoading.value = false
       return { success: true, error: null }
     } catch (err: any) {
       isLoading.value = false
-      return { success: false, error: err?.message || 'Sign out failed' }
+      // Even if something throws, treat as success after local cleanup
+      clearLocalAuthArtifacts()
+      session.value = null
+      user.value = null
+      return { success: true, error: null }
     }
   }
 

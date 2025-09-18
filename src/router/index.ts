@@ -1,5 +1,6 @@
 import { createRouter, createWebHashHistory, type Router } from 'vue-router'
 import { useRouteGuard } from '@/composables/useRouteGuard'
+import { useAuth } from '@/composables/useAuth'
 import appRoutes from './routes'
 
 // Create router using hash history. IMPORTANT: don't pass import.meta.env.BASE_URL here.
@@ -17,19 +18,25 @@ export function setupRouterGuards(r: Router = router) {
     const requireEmailVerification = !!to.meta?.requireEmailVerification
     const guestOnly = !!to.meta?.guestOnly
 
-    // Use the existing composable to compute guard result
+    // Use the existing composable to compute guard result for protected routes
     const guard = useRouteGuard({
       requireAuth,
       requireEmailVerification
     })
 
-    const result = guard.value
-
-    // If route is marked guestOnly and user is authenticated, redirect to home
-    if (guestOnly && result.canAccess && !!(guard.value.canAccess && !result.reason)) {
-      next({ path: '/' })
+    // Guest-only: if already authenticated, send to home
+    if (guestOnly) {
+      const { isAuthenticated } = useAuth()
+      if (isAuthenticated.value) {
+        next({ path: '/' })
+        return
+      }
+      // Not authenticated -> allow access to guest page
+      next()
       return
     }
+
+    const result = guard.value
 
     if (!result.canAccess) {
       const redirect = result.redirectTo ?? '/auth'
