@@ -138,7 +138,7 @@ describe('useAuth Composable Tests', () => {
         email: 'test@example.com',
         password: 'password123',
         options: {
-          emailRedirectTo: `${window.location.origin}/verify-email`
+          emailRedirectTo: `${import.meta.env.VITE_PUBLIC_URL ?? window.location.origin}${import.meta.env.BASE_URL ?? '/'}#/verify-email`
         }
       })
     })
@@ -209,7 +209,7 @@ describe('useAuth Composable Tests', () => {
         type: 'signup',
         email: 'test@example.com',
         options: {
-          emailRedirectTo: `${window.location.origin}/verify-email`
+          emailRedirectTo: `${import.meta.env.VITE_PUBLIC_URL ?? window.location.origin}${import.meta.env.BASE_URL ?? '/'}#/verify-email`
         }
       })
     })
