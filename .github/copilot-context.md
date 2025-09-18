@@ -2,39 +2,37 @@
 
 ## Current Project State
 - **Last Known Good State**: All unit tests passing; auth + email verification working on GitHub Pages with hash routing; logout is idempotent and persistent.
-- **Currently Working**: Phase 3 — 3.1.1d done (StoryCard image fallback + a11y). Next: 3.1.2 data wiring to Supabase.
-- **Last Test Results**: All tests green (134/134). Some expected Vue router warnings in unit tests without a router; harmless.
+- **Currently Working**: Phase 3 — 3.1.2a useStories TDD. Initial tests and implementation added.
+- **Last Test Results**: All tests green (141/141). Some expected Vue router warnings in unit tests without a router; harmless.
 - **Known Issues**:
   - Some legacy files/tests may be redundant; defer cleanup until after Phase 3 MVP.
 
 ## Key File Relationships
-- `src/components/stories/StoryCard.vue` now provides:
-  - <img> with descriptive alt when imageUrl exists.
-  - SVG fallback wrapped in a container with `aria-hidden="true"` on the SVG and an `sr-only` text label.
+- `src/components/stories/StoryCard.vue` provides accessible image/fallback.
 - `src/components/stories/StoryGrid.vue` consumes StoryCard.
-- `src/views/Home.vue` renders `StoryGrid` sections by auth state.
+- `src/views/Home.vue` renders sections with StoryGrid (placeholder data for now).
+- `src/composables/useStories.ts` now encapsulates story fetching, pagination, filtering, and search.
 
 ## Recent Changes Made
-- [2025-09-18]: Added `tests/unit/StoryCard.a11y.spec.ts` covering fallback rendering and basic axe scan (serious/critical violations only). Installed `vitest-axe` and `axe-core`.
-- [2025-09-18]: Updated `StoryCard.vue` to set `aria-hidden` on fallback SVGs, added `sr-only` text on placeholder, preserved alt text on images. Tests now pass.
-- [2025-09-18]: Previously wired `Home.vue` to render H1/H2 sections and grids per auth state, sorted newest-first.
+- [2025-09-18]: Added `tests/unit/useStories.spec.ts` to drive TDD for data fetching (public/mine, pagination, search across title/content/genre/description, type/privacy filters, exact count, hasMore, error handling).
+- [2025-09-18]: Implemented `src/composables/useStories.ts` with `fetchPublic` and `fetchMine`, internal `runQuery` handling ordering, count: 'exact', search OR, and pagination with hasMore logic. All tests pass.
 
 ## Next Steps Plan (Phase 3)
-1. 3.1.2 — Replace Home placeholder arrays with Supabase queries:
-   - Public stories (is_private=false), and user-owned stories.
-   - Loading/error states, pagination (page size 12), "Show more".
-   - TDD: tests for composables fetching, Home integration with loading and empty states.
-2. 3.1.3 — Search and filter UI (title/type/date/privacy) with tests.
+1. 3.1.2b — Integrate `useStories` into `Home.vue`:
+   - Replace placeholders, wire loading/empty/error states, and add "Show more" to append pages.
+   - For guests, include marketing hero beside/above grid per spec.
+   - TDD: create Home integration tests (loading, append, error, empty).
+2. 3.1.2c — Search and filter UI controls with tests.
 
 ## Verification Plan
-- Unit: `StoryCard.a11y.spec.ts` asserts image alt, fallback SVG `aria-hidden`, presence of `sr-only` label, and no serious/critical axe violations.
-- Manual: Inspect a StoryCard with and without image; verify screen readers ignore SVG and announce placeholder text.
+- Unit: `useStories.spec.ts` asserts exact count, ordered queries, correct range, and hasMore computation; search/type/privacy filters; error propagation.
+- Manual (later when integrated): navigate Home and verify paging and states.
 
 ## Rollback Plan
-- If a11y regressions appear, revert `StoryCard.vue` to prior commit; tests will flag violations.
+- If regressions occur, revert `useStories.ts` and tests, and restore placeholder data in Home.
 
 ## Human-parsable summary
-- A11y for StoryCard is in place: descriptive alt for images, hidden SVG fallback with screen-reader label. Test suite is green (134/134). Ready to wire real data to grids.
+- Added a tested `useStories` composable using Supabase query builder with exact counts and pagination. Suite now 141/141 passing. Ready to integrate into Home with "Show more" and marketing content for guests.
 
 ---
 
