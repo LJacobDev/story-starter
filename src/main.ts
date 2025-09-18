@@ -1,7 +1,7 @@
 import { createApp } from 'vue'
 import './style.css'
 import App from './App.vue'
-import router from '@/router'
+import router, { setupRouterGuards } from '@/router'
 import { supabase } from '@/lib/supabase'
 
 // parse fragment (handles cases like /#/verify-email#access_token=... or /#access_token=...)
@@ -69,5 +69,7 @@ async function restoreSessionFromHash() {
 
 // restore session if tokens present before mounting the app
 void restoreSessionFromHash().then(() => {
+  // install router guards
+  try { setupRouterGuards(router) } catch (e) { console.warn('failed to setup router guards', e) }
   createApp(App).use(router).mount('#app')
 })

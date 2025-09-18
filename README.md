@@ -29,8 +29,14 @@ The story generation UI and functionality are being implemented now.
 
 Email verification redirect successfully redirects verified user to page as authenticated.
 
+Redirect page no longer shows the authorization token in the url
+
 
 ### Things to fix or polish
+
+#### Resend verification email error message
+
+Clicking 'resend verification email' right after having performed a signup will show a countdown wait message in black text but then will also show a duplicate red error text beneath it.  Remove the red text but make sure it doesn't break something else while doing that.
 
 #### Making sure all UI components are smooth and fully functional
 

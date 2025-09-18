@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import AuthContainer from '@/components/AuthContainer.vue'
 import vueLogo from '@/assets/vue.svg'
@@ -7,9 +8,25 @@ import vueLogo from '@/assets/vue.svg'
 // Authentication
 const { user, isAuthenticated, signOut } = useAuth()
 
+// Flag to control whether the authentication status banner is shown on the main page
+// Set to `true` to re-enable the banner for debugging or UX reasons
+const showAuthBanner = false
+
 // Reactive state
 const count = ref(0)
 const currentView = ref<'home' | 'auth' | 'demo'>('home')
+
+// keep currentView in sync with the router path so router-based navigation works
+const route = useRoute()
+watch(() => route.path, (p) => {
+  if (p.startsWith('/auth')) {
+    currentView.value = 'auth'
+  } else if (p.startsWith('/demo')) {
+    currentView.value = 'demo'
+  } else {
+    currentView.value = 'home'
+  }
+})
 
 // Watch authentication state to auto-redirect
 watch(isAuthenticated, (newValue) => {
