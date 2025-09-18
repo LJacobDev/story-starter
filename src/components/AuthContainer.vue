@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-background p-4">
+  <div class="flex items-center justify-center p-0 w-full">
     <div class="w-full max-w-md">
       <Transition 
         name="auth-form" 
