@@ -87,4 +87,27 @@ describe('Router-level guards (TDD) - redirects based on auth and verification',
     // Assert - should remain on /protected
     expect(router.currentRoute.value.fullPath).toBe('/protected')
   })
+
+  it('redirects authenticated users away from guest-only routes to the home page', async () => {
+    // Arrange: authenticated user
+    isAuthenticatedRef.value = true
+    userRef.value = { email: 'user@example.com', email_confirmed_at: new Date().toISOString() }
+
+    const routes = [
+      { path: '/', component: { template: '<div>home</div>' } },
+      { path: '/auth', component: { template: '<div>auth</div>' }, meta: { guestOnly: true } }
+    ]
+
+    const router = createRouter({ history: createMemoryHistory(), routes })
+
+    // Act
+    const { setupRouterGuards } = await import('@/router')
+    setupRouterGuards(router)
+
+    await router.push('/auth')
+    await router.isReady()
+
+    // Assert - should be redirected to home '/'
+    expect(router.currentRoute.value.fullPath).toBe('/')
+  })
 })

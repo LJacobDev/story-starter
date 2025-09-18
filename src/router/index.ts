@@ -24,6 +24,7 @@ export function setupRouterGuards(r: Router = router) {
   r.beforeEach((to, _from, next) => {
     const requireAuth = !!to.meta?.requireAuth
     const requireEmailVerification = !!to.meta?.requireEmailVerification
+    const guestOnly = !!to.meta?.guestOnly
 
     // Use the existing composable to compute guard result
     const guard = useRouteGuard({
@@ -32,6 +33,13 @@ export function setupRouterGuards(r: Router = router) {
     })
 
     const result = guard.value
+
+    // If route is marked guestOnly and user is authenticated, redirect to home
+    if (guestOnly && result.canAccess && !!(guard.value.canAccess && !result.reason)) {
+      // user can access protected routes -> user is authenticated
+      next({ path: '/' })
+      return
+    }
 
     if (!result.canAccess) {
       const redirect = result.redirectTo ?? '/auth'

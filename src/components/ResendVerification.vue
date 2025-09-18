@@ -13,7 +13,7 @@
       </button>
     </div>
 
-    <!-- Single message element: shows either errorMsg or message (countdown/info) -->
+    <!-- Single message element: shows either error+cooldown or message (countdown/info) -->
     <p v-if="displayMessage" :class="displayClass" role="status">{{ displayMessage }}</p>
   </div>
 </template>
@@ -35,7 +35,11 @@ let timer: number | null = null
 
 // computed single message and class to avoid duplicate lines
 const displayMessage = computed(() => {
-  return errorMsg.value || message.value || ''
+  if (errorMsg.value) {
+    const suffix = cooldown.value > 0 ? ` Try again in ${cooldown.value}s` : ''
+    return `${errorMsg.value}${suffix}`
+  }
+  return message.value || ''
 })
 
 const displayClass = computed(() => {
@@ -51,11 +55,11 @@ function clearTimer() {
 
 function updateMessage() {
   if (cooldown.value > 0) {
-    if (errorMsg.value) {
-      // Include phrasing expected by tests
-      message.value = `${errorMsg.value}. Try again in ${cooldown.value}s`
-    } else {
+    if (!errorMsg.value) {
       message.value = `Resend available in ${cooldown.value}s`
+    } else {
+      // error path: message text is derived in displayMessage via cooldown suffix
+      message.value = ''
     }
   } else {
     message.value = ''

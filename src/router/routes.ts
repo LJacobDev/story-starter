@@ -5,8 +5,8 @@ import Auth from '@/views/Auth.vue'
 export const appRoutes = [
   // Public verification callback route
   { path: '/verify-email', component: VerifyEmail },
-  // Authentication entry point
-  { path: '/auth', component: Auth },
+  // Authentication entry point (guest only)
+  { path: '/auth', component: Auth, meta: { guestOnly: true } },
   // Protected route example
   { path: '/protected', component: Protected, meta: { requireAuth: true, requireEmailVerification: true } },
   // Placeholder for additional app routes; router guards can use meta flags when installing guards

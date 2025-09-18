@@ -75,3 +75,11 @@ GPT-5 mini was then far more helpful for being able to troubleshoot further erro
 So at this point, the project is switching from having claude Sonnet 4 be the coding agent to having GPT-5 mini be the coding agent for a (currently) much more effective, informative, and time-saving experience.
 
 Claude in agent mode would go ahead and make speculative changes in hopes of them working, and so there are a lot of strange files left over like old .ts files left in place just so that tests that used to expect them can still pass.  Soon, it will be important to look for and clean up such unneeded files and tests.  For now I would like to see how easily GPT-5 mini is able to handle taking over the implementation steps.
+
+
+
+## Model change:  GPT 5 available, used for some tasks
+
+### Model Change Details:
+
+While finishing up phase 2.  GPT-5 mini has been doing well in general, however GPT-5 is available now as well, and I'm experimenting with using it for larger tasks or debugging and observing how it performs compared to GPT-5 mini.
