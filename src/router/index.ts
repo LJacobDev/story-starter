@@ -1,21 +1,27 @@
-import type { Router } from 'vue-router'
+import { createRouter, createWebHashHistory, type Router } from 'vue-router'
 import { useRouteGuard } from '@/composables/useRouteGuard'
 import appRoutes from './routes'
 
-export function setupRouterGuards(router: Router) {
+// Create router using hash history so GH Pages serves index.html for all SPA routes
+const router = createRouter({
+  history: createWebHashHistory(import.meta.env.BASE_URL),
+  routes: appRoutes as any
+})
+
+export function setupRouterGuards(r: Router = router) {
   // Ensure central routes are registered if the app hasn't already registered them
   try {
-    for (const r of appRoutes) {
+    for (const rr of appRoutes) {
       // avoid duplicate registration
-      if (!router.hasRoute((r as any).name ?? (r as any).path)) {
-        router.addRoute(r as any)
+      if (!r.hasRoute((rr as any).name ?? (rr as any).path)) {
+        r.addRoute(rr as any)
       }
     }
   } catch (e) {
     // silent - router may already have routes
   }
 
-  router.beforeEach((to, _from, next) => {
+  r.beforeEach((to, _from, next) => {
     const requireAuth = !!to.meta?.requireAuth
     const requireEmailVerification = !!to.meta?.requireEmailVerification
 
@@ -36,3 +42,5 @@ export function setupRouterGuards(router: Router) {
     next()
   })
 }
+
+export default router
