@@ -33,9 +33,32 @@ async function restoreSessionFromHash() {
       if (refresh_token) localStorage.setItem('sb-refresh-token', refresh_token)
     }
 
-    // remove tokens from URL for security
-    const clean = window.location.pathname + window.location.search + '#'
-    history.replaceState(null, '', clean)
+    // Build a canonical clean URL (prefer VITE_PUBLIC_URL when available)
+    const publicBase = (import.meta.env.VITE_PUBLIC_URL as string | undefined) || `${window.location.origin}${import.meta.env.BASE_URL ?? '/'}`
+    const cleanUrl = publicBase.replace(/\/$/, '') + '#/verify-email'
+
+    // Replace the history entry immediately to remove tokens from the address bar
+    try {
+      history.replaceState(null, '', cleanUrl)
+    } catch (_e) {
+      // ignore
+    }
+
+    // Defensive: also set the hash directly (some browsers may not update immediately)
+    try { window.location.hash = '#/verify-email' } catch (_e) {}
+
+    // Short delayed cleanup to handle race conditions (e.g., new window opened before cleanup)
+    setTimeout(() => {
+      try {
+        const href = location.href
+        if (href.includes('access_token') || (window.location.hash || '').includes('access_token')) {
+          history.replaceState(null, '', cleanUrl)
+          try { window.location.hash = '#/verify-email' } catch (_e) {}
+        }
+      } catch (_e) {
+        // ignore
+      }
+    }, 350)
   } catch (e) {
     // ignore — app will render unauthenticated
     console.debug('session restore failed', e)
