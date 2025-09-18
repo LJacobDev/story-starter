@@ -35,7 +35,9 @@ async function restoreSessionFromHash() {
 
     // Build a canonical clean URL (prefer VITE_PUBLIC_URL when available)
     const publicBase = (import.meta.env.VITE_PUBLIC_URL as string | undefined) || `${window.location.origin}${import.meta.env.BASE_URL ?? '/'}`
-    const cleanUrl = publicBase.replace(/\/$/, '') + '#/verify-email'
+    // Ensure there is a single slash before the hash so the URL becomes '/#/' rather than '#'
+    const baseNoSlash = publicBase.replace(/\/$/, '')
+    const cleanUrl = baseNoSlash + '/#/verify-email'
 
     // Replace the history entry immediately to remove tokens from the address bar
     try {

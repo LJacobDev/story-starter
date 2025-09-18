@@ -13,13 +13,13 @@
       </button>
     </div>
 
-    <p v-if="message" class="mt-2 text-sm text-gray-600" role="status">{{ message }}</p>
-    <p v-if="errorMsg" class="mt-2 text-sm text-destructive" role="alert">{{ errorMsg }}</p>
+    <!-- Single message element: shows either errorMsg or message (countdown/info) -->
+    <p v-if="displayMessage" :class="displayClass" role="status">{{ displayMessage }}</p>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeUnmount } from 'vue'
+import { ref, onBeforeUnmount, computed } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 
 const props = defineProps<{ email: string }>()
@@ -32,6 +32,15 @@ const cooldown = ref(0)
 const message = ref('')
 const errorMsg = ref<string | null>(null)
 let timer: number | null = null
+
+// computed single message and class to avoid duplicate lines
+const displayMessage = computed(() => {
+  return errorMsg.value || message.value || ''
+})
+
+const displayClass = computed(() => {
+  return errorMsg.value ? 'mt-2 text-sm text-destructive' : 'mt-2 text-sm text-gray-600'
+})
 
 function clearTimer() {
   if (timer !== null) {
