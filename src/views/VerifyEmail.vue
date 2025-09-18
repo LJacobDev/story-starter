@@ -89,7 +89,7 @@ onMounted(async () => {
     }
 
     // If still not confirmed and no token, show a helpful message
-    error.value = 'No verification token was provided, and we could not confirm the session. Please open the link again or resend the verification email.'
+    error.value = 'No verification token was provided. We could not confirm the session. Please open the link again or resend the verification email.'
     loading.value = false
   } catch (err: any) {
     error.value = err?.message || 'An unexpected error occurred during verification.'

@@ -5,7 +5,11 @@ import { nextTick } from 'vue'
 
 let confirmMock = vi.fn()
 vi.mock('@/composables/useAuth', () => ({
-  useAuth: () => ({ confirmEmail: confirmMock })
+  useAuth: () => ({
+    confirmEmail: confirmMock,
+    // Provide a minimal ref-like object for user used by VerifyEmail.vue
+    user: { value: null }
+  })
 }))
 
 describe('VerifyEmail failure modes', () => {
@@ -14,7 +18,8 @@ describe('VerifyEmail failure modes', () => {
   })
 
   it('shows error when no token is provided', async () => {
-    // confirmMock should not be called
+    vi.useFakeTimers()
+
     const { default: VerifyEmail } = await import('@/views/VerifyEmail.vue')
 
     const routes = [{ path: '/verify-email', component: VerifyEmail }]
@@ -25,11 +30,16 @@ describe('VerifyEmail failure modes', () => {
 
     const wrapper = mount(VerifyEmail, { global: { plugins: [router] } })
 
-    // allow async mounted hook to run
+    // Advance past the internal 50ms delay and flush pending updates
+    await vi.advanceTimersByTimeAsync(60)
+    await nextTick()
+    await Promise.resolve()
     await nextTick()
 
     expect(wrapper.text()).toContain('No verification token was provided.')
     expect(confirmMock).not.toHaveBeenCalled()
+
+    vi.useRealTimers()
   })
 
   it('shows invalid token message when confirmEmail reports error', async () => {
