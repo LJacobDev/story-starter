@@ -1,75 +1,70 @@
 # Copilot Working Memory Reference
 
 ## Current Project State
-- **Last Known Good State**: Unit tests pass locally and the auth runtime works in dev. SignIn/SignUp forms correctly submit values (Input v-model fix applied) and local unit tests are green.
-- **Currently Working**: CI / GitHub Pages stability: ensure build-time environment variables are injected and the app handles missing or rotated Supabase credentials gracefully.
-- **Last Test Results**: Local unit tests: all passing (e.g. 101/101 observed). Vitest setup and test-friendly supabase stubs added earlier.
+- **Last Known Good State**: All unit tests passing; auth + email verification working on GitHub Pages with hash routing; logout is idempotent and persistent.
+- **Currently Working**: Transition to Phase 3 (Story Grid + Cards). Finishing README notes done.
+- **Last Test Results**: Green locally (Vitest). Router-link/view warnings in a couple of tests are expected when run without a router instance.
 - **Known Issues**:
-  - Email verification flow (Task 2.2.1) remains unimplemented end-to-end.
-  - Story generation and story-management features (Phase 3/4) are not started.
-  - A runtime "Invalid refresh token" event was observed in Pages builds; this was a client-side session issue (stale/invalid token) and was resolved by signing in again. The underlying cause appears to be sessions/tokens issued for a different project/keys or stale stored tokens.
+  - Some legacy files/tests may be redundant from earlier agent passes; defer cleanup until after Phase 3 MVP is stable.
 
 ## Key File Relationships
-- `src/utils/supabase.ts` (or `src/lib/supabase.ts`) constructs the Supabase client using import.meta.env.VITE_SUPABASE_URL and `VITE_SUPABASE_KEY` — this must match the names passed from CI at build time.
-- `.github/workflows/deploy.yml` Build job must run with access to the `github-pages` environment (or repository-level secrets) so the VITE_* secrets are available during `npm run build`.
-- `src/composables/useAuth.ts` and related auth UI depend on the supabase client; handle TOKEN_REFRESH_FAILED and sign-out flows to avoid repeated failed refresh attempts.
+- `src/lib/supabase.ts` creates client using VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.
+- `src/main.ts` restores session from hash (access_token), cleans URL to `#/verify-email`, then mounts app and installs router guards.
+- `src/router/index.ts` uses createWebHashHistory(); meta flags drive guards via `useRouteGuard`.
+- `src/router/routes.ts` defines routes: `/`, `/auth` (guestOnly), `/verify-email`, `/demo`, `/protected` (auth + verified).
+- `src/composables/useAuth.ts` auth ops: signIn, signUp (redirect URL uses VITE_PUBLIC_URL + BASE_URL), signOut (tolerates 401/403), resendEmailVerification, confirmEmail.
+- `src/views/VerifyEmail.vue` handles both token-in-query and tokenless (post-setSession) success.
+- `src/components/*` contains ShadCN-style UI wrappers; `AuthContainer.vue` is layout-only, `Auth.vue` manages spacing.
 
 ## Recent Changes Made
-- Added test-friendly stubs and guards so tests do not require real Supabase envs at module load time (makes Vitest stable).
-- Normalized environment variable name usage to `VITE_SUPABASE_KEY` across runtime code and types.
-- Updated `vite.config.ts` Vitest env to use `VITE_SUPABASE_KEY` for consistency.
-- Updated `.github/workflows/deploy.yml` to:
-  - pass VITE_SUPABASE_URL and VITE_SUPABASE_KEY into the Build job
-  - include `environment: github-pages` on the Build job so environment-scoped secrets are available
-  - add a pre-build diagnostic step that fails early if required secrets are missing
-- Observed and debugged a runtime invalid refresh token error on Pages; signing in resolved the immediate error.
+- Added Home and Demo routes and views; fixed hash routing for GH Pages.
+- Implemented pre-mount token parsing and session restoration with URL cleanup.
+- Hardened signOut to treat 401/403/no-session as benign; expanded local token cleanup.
+- Fixed SignUp email trim so button enablement is correct.
+- Updated VerifyEmail to treat tokenless confirmed sessions as success; switched navigation to router.push.
+- README refreshed with Phase 2 notes, envs, routing, and troubleshooting.
 
-## What was learned
-- Environment secrets scoped to a GitHub Environment (e.g., `github-pages`) are only injected when the job explicitly uses that environment; missing the `environment:` field can make secrets appear present in the repo UI but unavailable to the job.
-- YAML key ordering does not affect environment availability — the issue was the environment scope and job configuration, not `run` vs `env` ordering.
-- Client-side token refresh failures are a runtime session problem (stale or revoked refresh tokens or mismatched Supabase project keys), not a CI or Vite config setting.
-- A production build that lacks required VITE_* variables can throw at module load and produce a blank page; handle this by making client init resilient and surfacing a friendly banner.
-
-## Next Steps Plan
-1. Stabilize CI and deployment
-   - Keep `environment: github-pages` in the Build job.
-   - Keep the pre-build diagnostic step in place to fail early if required secrets are missing.
-2. Improve runtime resiliency
-   - Add a safe fallback in the Supabase client initialization so missing envs do not throw at module load (export a harmless stub and set a window flag to show a banner).
-   - Implement TOKEN_REFRESH_FAILED handling in `useAuth` to clear stale storage and force sign-out so repeated failed refreshes stop.
-3. Continue feature work
-   - Implement Task 2.2.1 (Email verification flow) next.
-   - Begin Phase 3 story-management features in small, test-driven steps.
+## Next Steps Plan (Phase 3)
+1) 3.1.1 Story Cards + Grid (UI only)
+   - Build ShadCN-based `StoryCard` component with placeholders and loading skeletons
+   - Responsive grid in a new `Home` (or `Stories`) section
+   - Image handling with fallback; ARIA/alt text; preview modal scaffold
+   - Tests: render, responsive classes, placeholder states
+2) 3.1.2 Fetch, Pagination, Search/Filters (data layer)
+   - Supabase queries for public + user-owned private stories
+   - Pagination or infinite scroll; empty/error states
+   - Search by title/description and filter by type/date/privacy
+   - Tests: composables mocked against supabase client
+3) 3.2.1 Story Detail & Management
+   - Detail view; edit/delete for owner; share link; image upload/URL
+   - Permissions via RLS; optimistic UI
+   - Tests: permissions and happy/error paths
 
 ## Verification Plan
-- CI: Trigger GitHub Actions deploy, confirm pre-build diagnostic prints "Secrets present (ok)" and the Build step runs with VITE_* envs set.
-- Local: Reproduce production build locally by setting the two VITE_* env vars and running `npm run build` then `npm run preview` to confirm behavior matches Pages.
-- Runtime: Test sign-in, then reload the Pages site to verify no "invalid refresh token" errors; run incognito to ensure new sessions behave correctly.
-- Tests: Run `npm run test` and ensure Vitest passes without network calls or module-load throws.
+- Unit tests in watch mode (npm run test) for each new component/composable before implementation (TDD).
+- Manual: Confirm grid responsiveness and accessibility (tab order, alt text) early.
+- Database: Use seed or fixtures for story queries; mock Supabase in unit tests.
 
-## Rollback plan
-- If the workflow or runtime changes cause regressions, revert the workflow edits and supabase client edits to the last known commit and re-run CI to isolate the regression.
+## Rollback Plan
+- If story grid changes affect routing or build, revert the UI-only changes and re-run tests; keep auth untouched.
 
 ## Complexity Warning Signs
-- [ ] More than 5 files need changes to make tests pass.
-- [ ] Tests rely on network access or external service availability.
-- [ ] Composables using lifecycle hooks being exercised directly in unit tests without component wrappers.
-- [ ] Tests depend on exact validation text strings across multiple files.
+- [ ] More than 5 files modified per subtask without tests
+- [ ] Pagination + filters intertwined without composable separation
+- [ ] Supabase queries leaking into components instead of composables
+- [ ] Image upload flows added before basic grid stability
 
-## Assumptions about the project that changed
+## Assumptions Updated
+- Hash routing is mandatory on Pages; do not set a base in createWebHashHistory().
+- Email verification may arrive as tokenless success; VerifyEmail must accept both flows.
 
-## Human-parsable summary of state and insights
-
-## Outstanding tasks and priorities
-- Implement email verification UX and resend flow (Task 2.2.1).
-- Make the supabase client initialization tolerant and add a small in-app banner when envs are missing.
-- Add TOKEN_REFRESH_FAILED handling in `useAuth` and show a user-friendly message when sessions expire.
-- Start Phase 3 story-management implementation with TDD: story cards, fetching/pagination, filters.
+## Human-parsable summary
+- Auth is stable (sign-in/out, verify, guards). Ready to build story UI.
+- Keep TDD cadence and small, testable increments.
 
 ---
 
-*This file is updated by GitHub Copilot on 2025-09-16 to reflect the current working memory. Update again after each major task to record the new state.*
-
+Update timestamp: 2025-09-18. Maintain this file before and after each major task.
 
 # note added by developer
 
