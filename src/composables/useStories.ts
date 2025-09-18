@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { supabase } from '@/utils/supabase'
+import { supabase } from '@/lib/supabase'
 import type { StoryStarterStory } from '@/types/database'
 
 export type StoriesQuery = {
@@ -40,8 +40,8 @@ export function useStories() {
     loading.value = true
     error.value = null
 
+    // Assume base is already a PostgrestFilterBuilder (i.e., after .select())
     let q = base
-      .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
       .order('id', { ascending: false })
 
@@ -75,6 +75,7 @@ export function useStories() {
   async function fetchPublic(opts: StoriesQuery = {}) {
     const base = (supabase as any)
       .from('story_starter_stories')
+      .select('*', { count: 'exact' })
       .eq('is_private', false)
 
     return runQuery(base, opts)
@@ -83,9 +84,11 @@ export function useStories() {
   async function fetchMine(userId: string, opts: StoriesQuery = {}) {
     const base = (supabase as any)
       .from('story_starter_stories')
+      .select('*', { count: 'exact' })
       .eq('user_id', userId)
 
     if (opts.privacy) {
+      // Apply privacy filter to the base before ordering/range
       base.eq('is_private', opts.privacy === 'private')
     }
 

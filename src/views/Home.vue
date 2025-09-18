@@ -4,7 +4,7 @@ import { useAuth } from '@/composables/useAuth'
 import { useStories } from '@/composables/useStories'
 import StoryGrid from '@/components/stories/StoryGrid.vue'
 
-const { isAuthenticated } = useAuth()
+const { isAuthenticated, user } = useAuth()
 
 interface StoryCardProps {
   id: string
@@ -43,13 +43,16 @@ function showMorePublic() {
 const canShowMoreMine = computed(() => yourStories.hasMore.value)
 function showMoreMine() {
   const next = (yourStories.page.value || 1) + 1
-  yourStories.fetchMine('me', { page: next })
+  const uid = (user as any).value?.id
+  if (!uid) return
+  yourStories.fetchMine(uid, { page: next })
 }
 
 onMounted(() => {
   publicStories.fetchPublic({ page: 1 })
-  if (isAuthenticated) {
-    yourStories.fetchMine('me', { page: 1 })
+  if ((isAuthenticated as any).value) {
+    const uid = (user as any).value?.id
+    if (uid) yourStories.fetchMine(uid, { page: 1 })
   }
 })
 </script>
