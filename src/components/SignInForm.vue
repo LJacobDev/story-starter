@@ -83,7 +83,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import Card from '@/components/ui/Card.vue'
 import CardHeader from '@/components/ui/CardHeader.vue'
@@ -98,11 +99,14 @@ defineEmits<{
   'switch-to-signup': []
 }>()
 
+const router = useRouter()
+
 const email = ref('')
 const password = ref('')
 const isLoading = ref(false)
 const authError = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
+let redirectTimer: ReturnType<typeof setTimeout> | null = null
 
 const { signIn } = useAuth()
 
@@ -110,6 +114,10 @@ const emailRegex = /^\S+@\S+\.\S+$/
 
 const isValid = computed(() => {
   return !!email.value && emailRegex.test(email.value) && !!password.value
+})
+
+onBeforeUnmount(() => {
+  if (redirectTimer) clearTimeout(redirectTimer)
 })
 
 const handleSubmit = async () => {
@@ -131,6 +139,10 @@ const handleSubmit = async () => {
       successMessage.value = 'Signed in successfully.'
       email.value = ''
       password.value = ''
+      // Delay 1s to allow user to read success message, then go Home
+      redirectTimer = setTimeout(() => {
+        router.push('/')
+      }, 1000)
     } else {
       authError.value = result.error || 'Sign in failed.'
     }
