@@ -83,3 +83,13 @@ Claude in agent mode would go ahead and make speculative changes in hopes of the
 ### Model Change Details:
 
 While finishing up phase 2.  GPT-5 mini has been doing well in general, however GPT-5 is available now as well, and I'm experimenting with using it for larger tasks or debugging and observing how it performs compared to GPT-5 mini.
+
+
+
+## Workflow improvement:  One model in agent mode, one in ask mode
+
+During implementation of phase 3, some SQL commands were generated to prepare the database for RLS policies.
+
+I noticed how there was a lot of waiting time between prompts and waiting on the agent model to work, and I began to distribute the work between one chat window in agent mode, with another chat window open in ask mode.
+
+The ask mode model was able to view the SQL made by the agent model and identify flaws with it.  And having two models to work with and talk with at the same time is reducing idle time waiting on responses.

@@ -313,7 +313,16 @@ Assumptions captured
 - Card includes a short description (or excerpt if missing).
 ```
 
-#### Prompt 3.1.2
+
+
+carrying on from here
+
+There are some options for how to seed the database with example stories so that pagination can be viewed while working on it
+
+I could seed the database with about 40 sample stories using a sql command but instead of doing that I'd rather move ahead with just making the rest of the app and building stories through ui interaction rather than sql seeding. then things like pagination and so on can be visually checked then. 
+
+
+#### Prompt 3.1.2   (THIS PROMPT IS BEING BROKEN INTO MICRO PROMPTS BELOW)
 ```text
 Implement story fetching and pagination. Add search and filter functionality.
 
@@ -337,6 +346,50 @@ Success Criteria:
 - Performance is optimal with large datasets
 - Error states are handled gracefully
 ```
+
+### 3.1.2 — TDD Micro‑Prompts
+
+3.1.2a.1 — Tests first: useStories composable (fetch + paginate)
+- Tests:
+  - fetchPublic({ page=1, pageSize=12, search?, type?, privacy? }) returns newest-first and total count
+  - fetchMine(...) returns both private and public for current user
+  - Pagination math correct (page 1 → first 12; page 2 → next 12)
+  - Error bubbles as { message, code }
+- Files: tests/unit/useStories.spec.ts, src/composables/useStories.ts (stub)
+- Success: tests fail initially
+
+3.1.2a.2 — Implement: useStories
+- Implement using Supabase queries with limits/offsets and filters
+- Return { items, total, error } and loading helpers
+- Make tests pass
+
+3.1.2b.1 — Tests first: Home integration + “Show more” and guest marketing
+- Tests:
+  - Guest: shows marketing/hero section and “Public Stories” grid together
+  - Auth: shows “Your Stories” then “All Public Stories” (no hero for auth)
+  - “Show more” appends 12 items per click; simulate near-bottom to continue loading
+  - Loading and empty states render correctly
+- Files: tests/unit/Home.data-integration.spec.ts
+- Success: tests fail initially
+
+3.1.2b.2 — Implement: Home integration
+- Wire Home.vue to use useStories; add marketing section for guests
+- Add “Show more” and optional intersection-observer for infinite continuation
+- Make tests pass
+
+3.1.2c.1 — Tests first: Search and Filters
+- Tests: typing search updates results (debounced), selecting type/date/privacy filters queries correctly
+- Files: tests/unit/StoryFilters.spec.ts, src/components/stories/StoryFilters.vue (stub)
+- Success: tests fail initially
+
+3.1.2c.2 — Implement: StoryFilters
+- Implement ShadCN inputs for search and filter controls; emit model to Home
+- Wire to useStories queries
+- Make tests pass
+
+
+
+
 
 ### Chunk 3.2: Story Details and Management
 
