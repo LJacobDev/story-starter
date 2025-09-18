@@ -1,16 +1,21 @@
 <template>
-  <div>
-    <div v-if="loading" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" data-testid="story-grid">
+  <div
+    data-testid="story-grid"
+    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+  >
+    <template v-if="loading">
       <SkeletonCard v-for="n in 12" :key="n" />
-    </div>
+    </template>
 
-    <div v-else-if="items.length === 0" class="py-8 text-center text-sm text-muted-foreground" data-testid="empty-state">
-      {{ emptyMessage || 'No stories to display.' }}
-    </div>
+    <template v-else-if="items.length === 0">
+      <div class="py-8 text-center text-sm text-muted-foreground" data-testid="empty-state">
+        {{ emptyMessage || 'No stories to display.' }}
+      </div>
+    </template>
 
-    <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" data-testid="story-grid">
+    <template v-else>
       <StoryCard v-for="item in items" :key="item.id" v-bind="item" />
-    </div>
+    </template>
   </div>
 </template>
 

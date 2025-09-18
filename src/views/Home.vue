@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useAuth } from '@/composables/useAuth'
+import { useStories } from '@/composables/useStories'
 import StoryGrid from '@/components/stories/StoryGrid.vue'
 
 const { isAuthenticated } = useAuth()
@@ -15,23 +16,42 @@ interface StoryCardProps {
   description?: string | null
 }
 
-// Placeholder data only; will be replaced by Supabase queries in 3.1.2
-const yourStoriesRaw: StoryCardProps[] = [
-  { id: 'y2', title: 'My Newest Story', type: 'short_story', isPrivate: false, createdAt: '2025-09-15', description: 'Newest entry' },
-  { id: 'y1', title: 'Older Tale', type: 'short_story', isPrivate: false, createdAt: '2025-08-30', description: 'Older entry' }
-]
+const yourStories = useStories()
+const publicStories = useStories()
 
-const publicStoriesRaw: StoryCardProps[] = [
-  { id: 'p3', title: 'Public Fresh', type: 'movie_summary', isPrivate: false, createdAt: '2025-09-12', description: 'Recent public' },
-  { id: 'p2', title: 'Public Mid', type: 'short_story', isPrivate: false, createdAt: '2025-09-05', description: 'Mid public' },
-  { id: 'p1', title: 'Public Old', type: 'tv_commercial', isPrivate: false, createdAt: '2025-08-20', description: 'Older public' }
-]
+function toCard(item: any): StoryCardProps {
+  return {
+    id: item.id,
+    title: item.title,
+    type: (item.story_type || item.type) as StoryCardProps['type'],
+    isPrivate: item.is_private ?? item.isPrivate ?? false,
+    createdAt: item.created_at || item.createdAt,
+    imageUrl: item.image_url ?? item.imageUrl ?? null,
+    description: item.description ?? null
+  }
+}
 
-const sortNewestFirst = (items: StoryCardProps[]) =>
-  [...items].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+const yourItems = computed<StoryCardProps[]>(() => (yourStories.items.value || []).map(toCard))
+const publicItems = computed<StoryCardProps[]>(() => (publicStories.items.value || []).map(toCard))
 
-const yourStories = computed(() => sortNewestFirst(yourStoriesRaw))
-const publicStories = computed(() => sortNewestFirst(publicStoriesRaw))
+const canShowMorePublic = computed(() => publicStories.hasMore.value)
+function showMorePublic() {
+  const next = (publicStories.page.value || 1) + 1
+  publicStories.fetchPublic({ page: next })
+}
+
+const canShowMoreMine = computed(() => yourStories.hasMore.value)
+function showMoreMine() {
+  const next = (yourStories.page.value || 1) + 1
+  yourStories.fetchMine('me', { page: next })
+}
+
+onMounted(() => {
+  publicStories.fetchPublic({ page: 1 })
+  if (isAuthenticated) {
+    yourStories.fetchMine('me', { page: 1 })
+  }
+})
 </script>
 
 <template>
@@ -41,18 +61,49 @@ const publicStories = computed(() => sortNewestFirst(publicStoriesRaw))
     <!-- Authenticated: Your Stories then All Public Stories -->
     <section v-if="isAuthenticated" data-testid="section-your" class="mb-10">
       <h2 class="text-xl font-semibold mb-3">Your Stories</h2>
-      <StoryGrid :items="yourStories" :loading="false" />
+      <StoryGrid :items="yourItems" :loading="yourStories.loading.value" />
+      <div v-if="canShowMoreMine" class="mt-4 text-center">
+        <button
+          type="button"
+          class="px-4 py-2 rounded bg-primary text-white hover:opacity-90"
+          data-testid="show-more-mine"
+          @click="showMoreMine"
+        >Show more</button>
+      </div>
     </section>
 
     <section v-if="isAuthenticated" data-testid="section-public" class="mb-10">
       <h2 class="text-xl font-semibold mb-3">All Public Stories</h2>
-      <StoryGrid :items="publicStories" :loading="false" />
+      <StoryGrid :items="publicItems" :loading="publicStories.loading.value" />
+      <div v-if="canShowMorePublic" class="mt-4 text-center">
+        <button
+          type="button"
+          class="px-4 py-2 rounded bg-primary text-white hover:opacity-90"
+          data-testid="show-more-public"
+          @click="showMorePublic"
+        >Show more</button>
+      </div>
     </section>
 
-    <!-- Guest: only Public Stories -->
-    <section v-else data-testid="section-public" class="mb-10">
-      <h2 class="text-xl font-semibold mb-3">Public Stories</h2>
-      <StoryGrid :items="publicStories" :loading="false" />
+    <!-- Guest: marketing hero + Public Stories -->
+    <section v-else class="mb-10">
+      <div data-testid="guest-hero" class="mb-8 rounded-lg border p-6 bg-muted">
+        <h2 class="text-xl font-semibold mb-2">Create and share stories</h2>
+        <p class="text-muted-foreground">Sign up to generate, save, and manage your own stories. Explore what others have made below.</p>
+      </div>
+
+      <div data-testid="section-public">
+        <h2 class="text-xl font-semibold mb-3">Public Stories</h2>
+        <StoryGrid :items="publicItems" :loading="publicStories.loading.value" />
+        <div v-if="canShowMorePublic" class="mt-4 text-center">
+          <button
+            type="button"
+            class="px-4 py-2 rounded bg-primary text-white hover:opacity-90"
+            data-testid="show-more-public"
+            @click="showMorePublic"
+          >Show more</button>
+        </div>
+      </div>
     </section>
   </div>
 </template>

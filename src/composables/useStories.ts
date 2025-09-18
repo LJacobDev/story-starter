@@ -17,7 +17,7 @@ export function useStories() {
   const pageSize = ref(12)
   const hasMore = ref(false)
   const loading = ref(false)
-  const error = ref<string | null>(null)
+  const error = ref<{ message: string; code?: string } | null>(null)
 
   function buildSearchOr(search: string) {
     const term = search.trim()
@@ -57,7 +57,7 @@ export function useStories() {
     const { data, error: e, count } = await q.range(from, to)
 
     if (e) {
-      error.value = e.message || String(e)
+      error.value = { message: e.message || String(e), code: (e as any).code }
       loading.value = false
       return
     }

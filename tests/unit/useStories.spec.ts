@@ -135,13 +135,25 @@ describe('useStories (TDD)', () => {
     expect(eqCalls).toContainEqual(['is_private', true])
   })
 
-  it('handles errors and exposes error message', async () => {
+  it('fetchMine without privacy returns both public and private (no is_private filter)', async () => {
     const s = useStories()
-    currentResponse = { data: null, error: { message: 'DB failed' }, count: null }
+    currentResponse = { data: makeItems(2), error: null, count: 2 }
+
+    await s.fetchMine('user-456')
+
+    expect(eqCalls).toContainEqual(['user_id', 'user-456'])
+    const hasPrivacyEq = eqCalls.some(([k]) => k === 'is_private')
+    expect(hasPrivacyEq).toBe(false)
+  })
+
+  it('handles errors and exposes error object with message and code', async () => {
+    const s = useStories()
+    currentResponse = { data: null, error: { message: 'DB failed', code: 'DB1' }, count: null }
 
     await s.fetchPublic()
 
-    expect(s.error.value).toBe('DB failed')
+    expect(s.error.value?.message).toBe('DB failed')
+    expect(s.error.value?.code).toBe('DB1')
     expect(s.loading.value).toBe(false)
   })
 })

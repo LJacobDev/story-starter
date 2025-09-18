@@ -431,7 +431,7 @@ Prompt 3.2.2.2 — Implement Preview modal (optional)
 
 ## Phase 4: Story Generation System
 
-### Chunk 4.1: Story Generation Form and API Integration
+### (minimize this and use the TDD micro prompts below) Chunk 4.1: Story Generation Form and API Integration
 
 #### Prompt 4.1.1
 ```text
@@ -510,6 +510,179 @@ Success Criteria:
 ```
 
 ---
+
+
+### comment:  phase 4 as described above has been completely broken down into TDD micro prompts to do below
+
+do not run the prompts above in phase 4, but paste them in at the start as a reference for the micro prompts to be compared to
+
+
+TDD Micro‑Prompts for Phase 4 (4.1.1–4.1.4), aligned to “frontend builds prompts; edge only sanitizes and forwards”
+
+General notes
+- Follow the Pre‑Task Assessment Protocol before each subtask.
+- Write tests first, then implement to satisfy them.
+- Include manual verification after tests.
+
+4.1.1 — Story Generation Form
+
+4.1.1a — Tests first: Form skeleton + validation contracts
+- Component: StoryGenerateForm.vue (stub).
+- Must render:
+  - Type select with three options (Short story, Movie summary, TV commercial) mapped to slugs internally.
+  - Inputs: title, genre, tone, creativity (0–1), additional instructions.
+  - Dynamic lists: themes (tags), plot points, characters (name/role/description).
+  - Image input: upload or URL (mode switch).
+  - Privacy toggle defaulting to private.
+- Client caps:
+  - Title ≤ 120; Genre/Tone ≤ 60.
+  - Themes ≤ 10 (≤ 30 chars each).
+  - Plot points ≤ 10 (≤ 200 chars each).
+  - Characters ≤ 6; name ≤ 60; description ≤ 400; role enum only.
+  - Additional instructions ≤ 2000; show warning when > 800.
+- Submit disabled while invalid; emits “submit” with normalized payload (types as hyphen slugs).
+- Files: tests/unit/StoryGenerateForm.spec.ts; src/components/generation/StoryGenerateForm.vue (stub).
+- Success: tests fail initially.
+
+4.1.1b — Implement: Form structure and validation
+- Implement ShadCN fields to satisfy tests; ensure emit payload normalization.
+- Manual verification: caps, warnings, default privacy, submit behavior.
+
+4.1.1c — Tests first: Dynamic list UX
+- Add/remove/reorder for themes/plot points/characters.
+- Trim inputs, dedupe themes, reject empty items, enforce max counts.
+- Keyboard UX for tags (Enter to add).
+- Success: tests fail initially.
+
+4.1.1d — Implement: Dynamic lists + polish
+- Implement list behaviors and messages.
+- Manual verification: enforce limits; pleasant keyboard flow.
+
+4.1.1e — Tests first: Image client validation
+- URL mode: only http/https; reject data: URLs.
+- Upload mode: png/jpeg/webp; ≤ 2 MB; dimensions within 200–4000 for width and height (mock metadata).
+- Emits normalized image descriptor for parent.
+- Success: tests fail initially.
+
+4.1.1f — Implement: Image input checks
+- Add validators and UI feedback; still no Storage calls here.
+- Manual verification: correct accept/reject cases.
+
+4.1.1g — Tests first: Prefill/Reset and “Edit prompts”
+- Prefill props populate all fields; Reset returns to defaults; emits “edit-prompts”/“cancel”.
+- Success: tests fail initially.
+
+4.1.1h — Implement: Prefill/Reset behavior
+- Implement prop‑driven initial values and reset controls.
+- Manual verification: edit prompts loop feels natural.
+
+4.1.2 — Prompt Builder + Edge Function + Client Integration
+
+4.1.2a — Tests first: Prompt builder utility (client)
+- Utility: composePrompt(formPayload) → string.
+- Must include:
+  - Human‑readable instructions and constraints tuned per type (client‑only responsibility).
+  - A strict “Reply ONLY with JSON matching this schema:” section describing fields: title, description?, content, story_type (slug), genre?, image_url?.
+  - Incorporation of themes/plot points/characters/tone/creativity/additional instructions.
+  - Internal types as slugs; visible labels never leak into prompt.
+  - Enforced length budgeting (truncate excess gracefully when needed).
+- Tests assert presence of key sections, slugs used, warnings for long “additional instructions.”
+- Files: tests/unit/composePrompt.spec.ts; src/utils/composePrompt.ts (stub).
+- Success: tests fail initially.
+
+4.1.2b — Implement: composePrompt
+- Implement deterministic prompt assembly with caps and ordering.
+- Manual verification: inspect prompt string for a representative form payload.
+
+4.1.2c — Tests first: useGeneration composable (client)
+- Contract:
+  - generateStory(payload) calls Edge Function with { prompt: string } only.
+  - On 200: receives sanitized text; client extracts JSON (tolerates backticks/fences) and validates schema.
+  - On 400/429/5xx: returns structured { ok: false, error: { code, message, retryAfter? } }.
+  - Maps retry semantics (suggest backoff for 429).
+- Files: tests/unit/useGeneration.spec.ts; src/composables/useGeneration.ts (stub).
+- Success: tests fail initially.
+
+4.1.2d — Implement: useGeneration composable
+- Implement POST to /functions/v1/gemini-proxy; wire JSON extraction/validation and error mapping.
+- Manual verification: mock function → happy and error paths.
+
+4.1.2e — Tests first: Edge function contract (black‑box)
+- Treat function as a sanitizing proxy:
+  - Accepts POST { prompt: string } (optionally { model, maxTokens, temperature } are transparently forwarded; not required by client).
+  - Validates total prompt length/budget (~6000 chars) and emptiness; returns 400 when invalid.
+  - Moderate per‑user rate limits (e.g., ~8/min, 60/hour, 200/day) → 429 + Retry‑After.
+  - Forwards sanitized prompt as‑is to Gemini (no server templating).
+  - Returns sanitized text from Gemini without parsing or re‑templating.
+  - Adds stable error shapes for upstream failures.
+- Files: tests/edge/gemini-proxy.contract.spec.ts (mock Gemini).
+- Success: tests fail initially.
+
+4.1.2f — Implement: Edge function (minimal, sanitize + forward)
+- Implement input/output sanitization, limits, and rate limits; forward to Gemini; return sanitized text/errors.
+- Manual verification: function serve locally; validate 400/429/5xx; confirm it echoes Gemini text (sanitized) and doesn’t inject templates.
+
+4.1.3 — Preview + Save workflow
+
+4.1.3a — Tests first: Preview component
+- StoryGeneratePreview.vue:
+  - Renders parsed title/description/content; shows image if provided else correct SVG fallback by type.
+  - Actions: Save, Discard, Retry, Edit Prompts, Undo (disabled if no previous preview).
+  - Emits: save(draft), retry(), edit(), discard(), undo().
+- Files: tests/unit/StoryGeneratePreview.spec.ts; src/components/generation/StoryGeneratePreview.vue (stub).
+- Success: tests fail initially.
+
+4.1.3b — Implement: Preview with one‑level Undo
+- Implement UI and emit contracts; store last preview for Undo.
+- Manual verification: retry → preview updates; undo → previous content restored; basic a11y (focus/labels).
+
+4.1.3c — Tests first: Save with RLS + idempotency
+- Composable: useSaveStory
+  - save(draft, { idempotencyKey }) inserts into story_starter_stories (owner inferred via RLS/trigger).
+  - Prevent double‑save in session (same idempotencyKey).
+  - Respect is_private from form default (true) unless toggled.
+  - Map Supabase errors into user messages.
+- Files: tests/unit/useSaveStory.spec.ts; src/composables/useSaveStory.ts (stub).
+- Success: tests fail initially.
+
+4.1.3d — Implement: Save composable
+- Implement insert + idempotency guard; disable Save while pending; toasts.
+- Manual verification: double‑click Save → one record only; story appears in “Your Stories.”
+
+4.1.4 — Image upload pipeline (Storage)
+
+4.1.4a — Tests first: useStoryImage composable
+- upload(file) → validates type/size/dimensions; uploads to story-covers/userId/storyId/filename; returns signed URL.
+- When URL mode is chosen, validate and pass through URL (no upload).
+- Replace/remove helpers.
+- Files: tests/unit/useStoryImage.spec.ts; src/composables/useStoryImage.ts (stub).
+- Success: tests fail initially.
+
+4.1.4b — Implement: Storage composable
+- Wire Supabase Storage; generate signed URLs; handle replace/remove.
+- Manual verification: upload 800×500 jpeg, 500 KB → visible in preview; reject 3 MB png or 150×150 png.
+
+4.1.4c — Tests first: End‑to‑end happy path (mocked)
+- Flow: fill valid form → composePrompt → generate (edge mocked) → client parses JSON → preview → upload/paste image → save → fetch “mine” shows story.
+- Files: tests/integration/generation.e2e.spec.ts (mock network).
+- Success: tests fail initially.
+
+4.1.4d — Implement: Wire route/view
+- Create /generate route that hosts the form → preview flow using the composables.
+- Manual verification checklist:
+  - Default privacy private; public only when toggled.
+  - Additional instructions warning triggers at > 800 chars.
+  - Retry replaces preview; Undo restores prior content.
+  - Upload constraints enforced; URL mode accepts https and rejects data:.
+  - After Save, story is visible in “Your Stories.”
+
+Exit criteria for Phase 4
+- All unit/integration tests pass locally and in CI.
+- Manual verification checklist complete.
+- No regressions to Phase 3 behavior (grids, RLS).
+- Feature discoverable via “Generate New Story,” safe to ship (private by default).
+
+
 
 ## Phase 5: User Feedback and Analytics
 
