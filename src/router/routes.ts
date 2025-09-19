@@ -22,4 +22,18 @@ export const appRoutes = [
   { path: '/:pathMatch(.*)*', redirect: '/' }
 ]
 
+// Dev-only route registration
+if (import.meta && import.meta.env && import.meta.env.DEV) {
+  // /dev sandbox
+  ;(appRoutes as any).splice((appRoutes as any).length - 1, 0, {
+    path: '/dev',
+    component: () => import('@/views/DevSandbox.vue')
+  })
+  // /dev/details -> redirect to mock story id for StoryDetails demo
+  ;(appRoutes as any).splice((appRoutes as any).length - 1, 0, {
+    path: '/dev/details',
+    redirect: '/stories/mock-1'
+  })
+}
+
 export default appRoutes

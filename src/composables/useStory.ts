@@ -20,6 +20,24 @@ export type StoryResult =
 
 export function useStory() {
   async function getById(id: string): Promise<StoryResult> {
+    // Dev-only mock to support /dev/details without a database
+    if (import.meta && import.meta.env && import.meta.env.DEV && id === 'mock-1') {
+      const mock: StoryRecord = {
+        id: 'mock-1',
+        user_id: 'dev-user-1',
+        title: 'Mock Short Story',
+        content: 'This is a mock story content used only in development for UI verification.\n\nIt demonstrates the StoryDetails layout.',
+        story_type: 'short_story',
+        genre: 'Adventure',
+        description: 'A mock story record returned by a dev-only branch.',
+        image_url: null,
+        is_private: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+      return { data: mock, error: null }
+    }
+
     try {
       const { data, error } = await (supabase as any)
         .from('story_starter_stories')
