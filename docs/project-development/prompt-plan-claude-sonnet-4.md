@@ -846,10 +846,13 @@ fixing the search and filter somehow resulted in the uploaded images not working
 
 ### things to still fix
 
+pressing generate button doesn't make obvious enough loading indication or explain that it takes about 10 seconds
+
+signing in with mobile doesn't seem to work yet, but viewing as unauthenticated at least works
+
 search and filter features work slowly.. they almost look like they're being lazy loaded or something like that because pressing the button shows what looks like an extra network call, then after that they're more responsive
 
 
-signing in with mobile doesn't seem to work yet, but viewing as unauthenticated at least works
 
 
 'your stories' appears empty when refreshing page, but clicking to 'generate new story' and then back to 'home' makes them reappear

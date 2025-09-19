@@ -8,7 +8,7 @@
     <div v-if="pending" data-testid="gen-loading" class="mt-3 text-sm text-muted-foreground">Generating…</div>
 
     <section v-if="!preview" class="mt-6">
-      <StoryGenerateForm @submit="handleSubmit" @edit-prompts="onEdit" @cancel="onCancel" />
+      <StoryGenerateForm :loading="pending" @submit="handleSubmit" @edit-prompts="onEdit" @cancel="onCancel" />
       <p class="text-xs text-muted-foreground mt-2">
         Note: The form shows a warning when additional instructions exceed 800 characters.
       </p>

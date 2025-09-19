@@ -141,7 +141,26 @@
 
     <!-- Submit -->
     <div>
-      <button data-testid="submit-btn" type="submit" :disabled="!canSubmit" class="rounded bg-blue-600 text-white px-4 py-2 disabled:opacity-50" @click.prevent="onSubmit">Generate</button>
+      <button
+        data-testid="submit-btn"
+        type="submit"
+        :disabled="!canSubmit || loading"
+        class="rounded bg-blue-600 text-white px-4 py-2 disabled:opacity-50 inline-flex items-center justify-center"
+        @click.prevent="onSubmit"
+        aria-live="polite"
+        :aria-busy="loading ? 'true' : 'false'"
+      >
+        <template v-if="loading">
+          <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>
+          <span>Generating… (may take up to ~10s)</span>
+        </template>
+        <template v-else>
+          <span>Generate</span>
+        </template>
+      </button>
     </div>
   </form>
 
@@ -171,6 +190,7 @@ const props = defineProps<{
     image?: { mode: 'url'; url?: string } | { mode: 'upload'; file?: File; meta?: { width: number; height: number; type: string; size: number } }
     is_private?: boolean
   }
+  loading?: boolean
 }>()
 
 const emit = defineEmits<{

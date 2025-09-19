@@ -121,8 +121,11 @@ function isSupabaseStorageUrl(url?: string | null): boolean {
 }
 
 // Keep last good src and attempt limited retries on error
-const resolvedSrc = ref<string | null>(null)
 const refreshAttempts = ref(0)
+// Initialize synchronously if a direct http(s) non-Supabase URL is provided so tests see <img> immediately
+const resolvedSrc = ref<string | null>(
+  isHttp(props.imageUrl) && !isSupabaseStorageUrl(props.imageUrl) ? (props.imageUrl as string) : null
+)
 
 async function refreshSrc(force = false) {
   const src = props.imageUrl || null
@@ -142,25 +145,35 @@ async function refreshSrc(force = false) {
 function onImgError() {
   if (refreshAttempts.value >= 2) return
   refreshAttempts.value += 1
-  // Force refresh and add a tiny cache-buster when we get a broken image
   void (async () => {
     const fresh = await resolveImageUrl(props.imageUrl || null, { forceRefresh: true })
     if (fresh) {
       const bust = `${fresh}${fresh.includes('?') ? '&' : '?'}t=${Date.now()}`
       resolvedSrc.value = bust
+    } else {
+      // fall back to SVG
+      resolvedSrc.value = null
     }
   })()
 }
 
 onMounted(() => {
-  void refreshSrc(true)
+  // Ensure storage paths resolve after mount
+  if (!(isHttp(props.imageUrl) && !isSupabaseStorageUrl(props.imageUrl))) {
+    void refreshSrc(true)
+  }
 })
 
 watch(
   () => props.imageUrl,
   () => {
     refreshAttempts.value = 0
-    void refreshSrc(true)
+    // Re-evaluate sync init for direct URLs; otherwise resolve storage
+    if (isHttp(props.imageUrl) && !isSupabaseStorageUrl(props.imageUrl)) {
+      resolvedSrc.value = props.imageUrl as string
+    } else {
+      void refreshSrc(true)
+    }
   }
 )
 
