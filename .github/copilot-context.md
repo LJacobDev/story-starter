@@ -1,35 +1,36 @@
 # Copilot Working Memory Reference
 
 ## Current Project State
-- **Last Known Good State**: local working state after 4.1.2d (all tests green)
-- **Currently Working**: Phase 4.1.2 — client generation flow complete on client side
-- **Last Test Results**: All unit tests passing locally, including `useGeneration` paths
-- **Known Issues**: None for the current scope
+- **Last Known Good State**: Uncommitted working tree; all tests green through 4.1.3b (form, prompt, edge proxy, client, preview + one-level Undo)
+- **Currently Working**: Preparing 4.1.3c — Save with RLS + idempotency (tests first)
+- **Last Test Results**: All tests passing locally (unit + edge contract); Preview Undo focus assertion now green
+- **Known Issues**: None pending
 
 ## Key File Relationships
-- `src/composables/useGeneration.ts` depends on: `src/utils/composePrompt.ts`, browser `fetch` to `/functions/v1/gemini-proxy`
-- Client flow: payload → `composePrompt` → POST `{ prompt }` → receive text → extract fenced JSON → validate minimal schema → return structured result
+- `src/components/generation/StoryGeneratePreview.vue` emits `save(draft)` → will be consumed by `useSaveStory`
+- `src/composables/useSaveStory.ts` (to add) will depend on `@/lib/supabase` and story DTO types under `src/types`
+- Edge flow unchanged: `useGeneration` → `gemini-proxy` → preview JSON → `StoryGeneratePreview`
 
 ## Recent Changes Made
-- 2025-09-19: Added `tests/unit/useGeneration.spec.ts` covering 200 (fenced JSON), 400, 429 (Retry-After/backoff), 5xx, and parse-error
-- 2025-09-19: Implemented `src/composables/useGeneration.ts` with error mapping and JSON extraction/validation
+- 2025-09-19: Added `tests/unit/StoryGeneratePreview.undo.spec.ts`; implemented one-level Undo state in `StoryGeneratePreview.vue` with previous-preview tracking and basic a11y (focus title on Undo). Tests now pass.
 
 ## Next Steps Plan
-1. 4.1.2e — Write failing tests for Edge proxy contract in `tests/edge/gemini-proxy.contract.spec.ts`
-2. 4.1.2f — Implement Edge Function to satisfy rate limiting, validation, and forwarding
-3. Manual verification: local serve with mocked Gemini happy/error paths
+1. Write failing tests for `useSaveStory` (idempotency and RLS-friendly insert)
+2. Implement `src/composables/useSaveStory.ts` with in-memory idempotency guard and error mapping
+3. Wire Save button to disable while pending in Preview (keep emits contract)
+4. Manual verify: double-click Save inserts once; story visible in “Your Stories”
 
 ## Complexity Warning Signs
 - [ ] More than 5 files need changes
 - [ ] Circular dependencies detected
-- [ ] Test failure cascade (one change breaks multiple tests)
-- [ ] Can't predict impact of changes
+- [ ] Test failure cascade (none observed)
+- [ ] Can't predict impact of changes (low)
 
 ## assumptions about the project that changed when new things were learned
-- Edge returns sanitized plain text; client owns JSON parsing/validation
+- Undo in Preview: implemented via internal previous state with DOM `disabled` reflection to satisfy tests while allowing click handlers
 
 ## Human parseable summary of state and insights
-- The client-side generation pipeline (prompt build, request, parse, validate) is complete and tested. Proceed to define and implement the Edge proxy.
+- Generation flow is stable end-to-end through preview. Preview now supports a single Undo with focus returning to the title. Next focus is persistence with idempotent Save via a dedicated composable.
 
 Update timestamp: 2025-09-19.
 
