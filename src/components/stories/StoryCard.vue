@@ -10,8 +10,8 @@
         <Card class="overflow-hidden shadow-sm hover:shadow transition-shadow bg-white dark:bg-gray-900">
           <div class="aspect-[16/9] w-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
             <img
-              v-if="imageUrl"
-              :src="imageUrl"
+              v-if="resolvedSrc"
+              :src="resolvedSrc"
               :alt="`Cover image for ${title}`"
               class="h-full w-full object-cover"
             />
@@ -90,7 +90,8 @@
 import Card from '@/components/ui/Card.vue'
 import CardContent from '@/components/ui/CardContent.vue'
 import CardTitle from '@/components/ui/CardTitle.vue'
-import { computed } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
+import { resolveImageUrl } from '@/composables/useStoryImage'
 
 interface Props {
   id: string
@@ -103,6 +104,37 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+function isHttp(url?: string | null): url is string {
+  return !!url && /^https?:\/\//i.test(url)
+}
+
+// Initialize with http/https immediately for sync render; resolve storage paths async
+const resolvedSrc = ref<string | null>(isHttp(props.imageUrl) ? (props.imageUrl as string) : null)
+
+async function refreshSrc() {
+  // If already an http url, just mirror it; otherwise resolve storage path
+  if (isHttp(props.imageUrl)) {
+    resolvedSrc.value = props.imageUrl as string
+    return
+  }
+  resolvedSrc.value = await resolveImageUrl(props.imageUrl || null)
+}
+
+onMounted(() => {
+  if (!isHttp(props.imageUrl)) refreshSrc()
+})
+
+watch(
+  () => props.imageUrl,
+  () => {
+    if (isHttp(props.imageUrl)) {
+      resolvedSrc.value = props.imageUrl as string
+    } else {
+      void refreshSrc()
+    }
+  }
+)
 
 const typeLabel = computed(() => {
   switch (props.type) {

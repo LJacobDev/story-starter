@@ -94,8 +94,10 @@
               <p v-if="imageUrlError" data-testid="error-image-url" class="text-sm text-red-600">{{ imageUrlError }}</p>
             </div>
 
-            <div v-else class="space-y-1">
-              <input type="file" accept="image/png, image/jpeg, image/webp" data-testid="image-file" @change="onFileChange" />
+            <div v-else class="space-y-2">
+              <!-- Hidden file input so we can show a nicer Upload button -->
+              <input ref="fileEl" type="file" accept="image/png, image/jpeg, image/webp" data-testid="image-file" class="hidden" @change="onFileChange" />
+              <button type="button" class="px-3 py-2 rounded border hover:bg-muted" @click="fileEl?.click()">Upload</button>
             </div>
 
             <div v-if="previewUrl" data-testid="image-preview" class="mt-2">
@@ -170,6 +172,7 @@ const story = ref<StoryRecord | null>(null)
 const titleInputEl = ref<HTMLInputElement | null>(null)
 const deleteBtnEl = ref<HTMLButtonElement | null>(null)
 const deleteCancelBtnEl = ref<HTMLButtonElement | null>(null)
+const fileEl = ref<HTMLInputElement | null>(null)
 
 // Global Escape handling for delete confirm
 function handleKeydown(e: KeyboardEvent) {

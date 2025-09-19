@@ -78,10 +78,9 @@
             data-testid="image-remove"
             @click="removeImage"
           >Remove</button>
-          <span class="text-xs text-muted-foreground">Allowed: PNG/JPEG/WEBP ≤ 2MB, 200–4000px</span>
+          <p v-if="imageError" class="text-sm text-red-600">{{ imageError }}</p>
+          <p class="text-xs text-muted-foreground">Allowed: PNG/JPEG/WEBP ≤ 2MB, 200–4000px</p>
         </div>
-
-        <p v-if="imageError" data-testid="image-error" class="text-xs text-red-600">{{ imageError }}</p>
       </div>
     </section>
 
@@ -108,7 +107,7 @@ import { makeIdempotencyKey } from '@/utils/idempotency'
 const router = useRouter()
 const { user } = useAuth()
 const { generateStory } = useGeneration()
-const { validateUrl, upload, replace, remove } = useStoryImage()
+const { upload, replace, remove, validateUrl } = useStoryImage()
 const { save, saving } = useSaveStory()
 
 const pending = ref(false)
@@ -261,10 +260,11 @@ async function uploadOrReplace() {
     ? await replace(currentImagePath.value, file, ctx)
     : await upload(file, ctx)
   if (!res.ok) {
-    imageError.value = res.error.message
+    imageError.value = res.error.message || 'Upload failed'
     return
   }
   currentImagePath.value = res.path || currentImagePath.value
+  // For preview, keep the signed URL so the <img> shows immediately
   preview.value.image_url = res.url
   // clear input
   if (fileInputRef.value) fileInputRef.value.value = ''
@@ -294,7 +294,8 @@ async function onSave(draft: any) {
     story_type: draft.story_type as any,
     genre: draft.genre,
     description: draft.description,
-    image_url: draft.image_url,
+    // Persist durable storage path if we have one; otherwise persist the URL (external link case)
+    image_url: currentImagePath.value || draft.image_url,
     is_private: (lastPayload.value && lastPayload.value.is_private) ?? true,
   }
   const res = await save(payload, { idempotencyKey: idempotencyKey.value })

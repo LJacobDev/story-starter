@@ -836,6 +836,20 @@ images not showing up when uploaded
 
 images not showing up when linked
 
+removing demo view from non dev environment, make sure tests about that are removed
+
+had issue signing in on mobile, check that
+
+'type' is defaulting to short story when newly created, but can edit it to set it right and then it displays properly
+
+make 'generating story' more visible and say to expect a few seconds waiting
+
+remove 'demo' route and view or more likely change it to dev only route and decide if changing
+
+add 'about' section that explains the app, its purpose, scope and current state
+
+
+
 add a reset password link to signin
 
 password reset 'works' in that you get a link that takes you to the site as authenticated, but functionality to also set new password needs to be added

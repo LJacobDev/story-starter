@@ -2,7 +2,7 @@ import VerifyEmail from '@/views/VerifyEmail.vue'
 import Protected from '@/views/Protected.vue'
 import Auth from '@/views/Auth.vue'
 import Home from '@/views/Home.vue'
-import Demo from '@/views/Demo.vue'
+// Removed static Demo import so demo stays out of production bundles
 import StoryDetails from '@/views/StoryDetails.vue'
 
 export const appRoutes = [
@@ -12,8 +12,6 @@ export const appRoutes = [
   { path: '/verify-email', component: VerifyEmail },
   // Authentication entry point (guest only)
   { path: '/auth', component: Auth, meta: { guestOnly: true } },
-  // Demo route
-  { path: '/demo', component: Demo },
   // Story generation route (Phase 4) — now protected
   { path: '/generate', component: () => import('@/views/GenerateStory.vue'), meta: { requireAuth: true } },
   // Story details
@@ -24,8 +22,14 @@ export const appRoutes = [
   { path: '/:pathMatch(.*)*', redirect: '/' }
 ]
 
-// Dev-only route registration
+// Dev-only route registration (kept together for clarity)
 if (import.meta && import.meta.env && import.meta.env.DEV) {
+  // Lazy-load demo only in dev so it is not part of production bundles
+  ;(appRoutes as any).splice((appRoutes as any).length - 1, 0, {
+    path: '/demo',
+    component: () => import('@/views/Demo.vue')
+  })
+
   // /dev sandbox
   ;(appRoutes as any).splice((appRoutes as any).length - 1, 0, {
     path: '/dev',
