@@ -1,39 +1,52 @@
 # Copilot Working Memory Reference
 
 ## Current Project State
-- **Last Known Good State**: Phase 4 work-in-progress; all tests green except the new 4.1.4d.3 idempotency spec before this fix (2025‑09‑19).
-- **Currently Working**: 4.1.4d.3 — Preview wiring + idempotency. Implemented per-preview idempotency keys, undo/redo semantics, and always‑rendered key element.
-- **Last Test Results**: Before fix: 1 failing (GenerateStory.idempotency.spec), 226 passing. After fix: expected all green pending next run.
-- **Known Issues**: None blocking. Ensure CI Node runtime has webcrypto/TextEncoder or fallback hash is used.
+- **Last Known Good State**: Phase 4 nearly complete; route/view for generation, preview, image handling, and save w/ idempotency implemented (2025‑09‑19). Nav link just added.
+- **Currently Working**: 4.1.4d.6 — Add “Generate New Story” to nav. Adjusted button order to keep legacy test stable.
+- **Last Test Results**: Prior run showed 1 failing test (App.vue demo-view logos) due to button order change. Ordering fixed; re‑run pending.
+- **Known Issues**: None functionally blocking. Keep Demo view until tests are updated/removed per plan.
 
 ## Key File Relationships
-- `src/views/GenerateStory.vue`: Orchestrates form → generation → preview; tracks `preview`, `previousPreview`, `lastPayload`; now also tracks `idempotencyKey` and `previousIdempotencyKey`. Undo swaps both preview and key. Idempotency key element is always rendered (`data-testid="idempotency-key"`).
-- `src/components/generation/StoryGeneratePreview.vue`: Emits save/discard/retry/edit/undo; internal one‑level undo remains for focus management but the active preview is sourced from the view prop.
-- `src/utils/idempotency.ts`: `makeIdempotencyKey` with stable stringify + SHA‑256 via webcrypto; guarded TextEncoder/webcrypto with JS hash fallback for test/Node.
-- `src/composables/useGeneration.ts`: Builds prompt, invokes edge, parses/validates result; provides `GenerationResult` used by the view.
+- `src/views/GenerateStory.vue`: Hosts form → generate → preview; manages per‑preview idempotency; image URL/upload; save + redirect.
+- `src/components/generation/StoryGenerateForm.vue`: Validated inputs, dynamic lists, privacy default.
+- `src/components/generation/StoryGeneratePreview.vue`: Renders preview, emits save/retry/edit/discard/undo; shows idempotency key.
+- `src/composables/useGeneration.ts`: Compose prompt, call edge function, robust JSON extraction, error mapping.
+- `src/composables/useStoryImage.ts`: Validate/upload images, signed URLs, URL validation.
+- `src/composables/useSaveStory.ts`: Persist story with idempotency guard.
+- `src/utils/idempotency.ts`: Deterministic key generator with webcrypto + fallback.
+- `src/App.vue`: Header nav; now includes “Generate New Story”. No‑router fallback preserves Demo as 3rd button for tests.
 
 ## Recent Changes Made
-- [2025‑09‑19]: `GenerateStory.vue` — Per‑preview idempotency: key now derived from both payload and story content; stores previous/current keys; Undo swaps; Edit/Discard clear. Added provisional synchronous key to avoid empty text during initial render. Always render key element outside preview v-if.
-- [2025‑09‑19]: `idempotency.ts` — Hardened for test/Node by guarding `TextEncoder`/webcrypto and adding a JS hash fallback.
-- [2025‑09‑19]: `StoryGeneratePreview.vue` — Prop typing relaxed for `story_type` to accept string (to align with `GenerationResult`).
+- [2025‑09‑19]: `App.vue` — Added “Generate New Story” nav link (router and no‑router). Reordered buttons so Demo remains 3rd in fallback to satisfy `tests/unit/App.test.ts`.
+- [2025‑09‑19]: `GenerateStory.vue` — Image handling (URL/upload), save + redirect, idempotency per preview; always render key element.
+- [2025‑09‑19]: `idempotency.ts` — Guarded webcrypto/TextEncoder; JS hash fallback.
 
 ## Next Steps Plan
-1. Re-run tests: `npm run test` (watch) and confirm 4.1.4d.3 spec passes. Manual check: retry → key changes; undo → key restored; edit/discard → key cleared.
-2. Proceed to 4.1.4d.4 — Image handling in preview (URL validation + upload via `useStoryImage`). Tests first.
-3. 4.1.4d.5 — Save + redirect: wire `useSaveStory.save(draft, { idempotencyKey })`; prevent duplicate saves.
+1. Re‑run tests (Ctrl+Shift+B or npm run test). Ensure App.vue Demo test passes after button order fix.
+2. Manual verification checklist (Phase 4 exit):
+   - Nav link “Generate New Story” routes to `/generate`.
+   - Default privacy is private; toggle works.
+   - Additional instructions warning at >800 chars.
+   - Retry replaces preview; Undo restores; idempotency key swaps accordingly.
+   - URL image accepts https, rejects data:.
+   - Upload rejects >2MB or <200px images; accepts valid png/jpeg/webp.
+   - Save is idempotent (double‑click doesn’t duplicate); redirects to Home/Your Stories.
+   - Edge 429 surfaces retry‑after guidance (mock).
+   - Basic a11y/keyboard flows in form and preview.
+3. Defer: Remove Demo view only after updating/removing tests that rely on it.
 
 ## Complexity Warning Signs
 - [ ] More than 5 files need changes
 - [ ] Circular dependencies detected
-- [ ] Test failure cascade (one change breaks multiple tests)
-- [ ] Can't predict impact of changes
+- [ ] Test failure cascade
+- [ ] Can’t predict impact of changes
 
 ## Assumptions Updated
-- Idempotency is per preview instance (depends on payload + generated content), not just payload.
-- The idempotency key should be visible and stable for the active preview and swap on Undo.
+- Keep Demo view while tests depend on it; plan removal later (Phase 6 or cleanup PR).
+- Idempotency key is visible and stable per preview; Undo swaps keys.
 
-## Human parseable summary
-- The failing test was due to the idempotency key being empty/not rendered. Now the key is computed per preview (payload + story content), is set immediately with a provisional hash and then replaced with a stable key, and the element is always present in the DOM. Undo swaps both preview and key; edit/discard clear both. Expect the 4.1.4d.3 test to pass. Update timestamp: 2025‑09‑19.
+## Human‑parseable Summary
+- Generation flow is end‑to‑end: form → edge → parse → preview → image → save (idempotent) → redirect. The nav link is present. One unit test briefly failed due to button order; fixed by keeping Demo as the 3rd button in no‑router mode. Re‑run tests to confirm green. After manual checks, Phase 4 can be considered complete and shippable (private by default).
 
 
 ## Assessment of repo quality and improvements at end of phase 3 to keep in mind for phase 4 (do not edit this section, just be aware of it)

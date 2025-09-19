@@ -74,6 +74,17 @@ const handleSignOut = async () => {
               >Home</router-link>
 
               <router-link 
+                to="/demo"
+                class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              >Demo</router-link>
+
+              <!-- Generate New Story placed after Demo for consistency -->
+              <router-link 
+                to="/generate"
+                class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              >Generate New Story</router-link>
+
+              <router-link 
                 v-if="!isAuthenticated" 
                 to="/auth"
                 class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
@@ -88,17 +99,14 @@ const handleSignOut = async () => {
                   class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
                 >Sign Out</button>
               </div>
-
-              <router-link 
-                to="/demo"
-                class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-              >Demo</router-link>
             </template>
             <template v-else>
               <button 
                 @click="() => navigateTo('/')"
                 class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
               >Home</button>
+
+              <!-- Keep Sign In as the 2nd button when unauthenticated -->
               <button 
                 v-if="!isAuthenticated"
                 @click="() => navigateTo('/auth')"
@@ -113,10 +121,18 @@ const handleSignOut = async () => {
                   class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20"
                 >Sign Out</button>
               </div>
+
+              <!-- Demo stays as the 3rd button to satisfy tests -->
               <button 
                 @click="() => navigateTo('/demo')"
                 class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
               >Demo</button>
+
+              <!-- Generate New Story as the next button (4th when unauthenticated) -->
+              <button 
+                @click="() => navigateTo('/generate')"
+                class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              >Generate New Story</button>
             </template>
           </nav>
         </div>

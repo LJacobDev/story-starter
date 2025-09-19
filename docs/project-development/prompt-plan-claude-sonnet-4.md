@@ -816,6 +816,21 @@ Exit criteria for Phase 4
 
 
 
+PHASE 4 IS KIND OF DONE, BASIC FEATURES ARE WORKING, BUT LOTS OF UX THINGS NEED CORRECTING
+
+
+
+REMOVE THE DEMO VIEW SOON, it just has vite + vue scaffolding junk in it
+
+
+clicking on the cards doesn't seem to take to a close up view, and there's no 'edit, delete' ellipse button
+
+the svgs show even when I tried to upload picture
+
+the upload picture button was shown before generate, and before 'save'
+
+the 'save, retry, undo' buttons are just plain text and don't look like buttons (make them nice, or shadcn ui components)
+
 sometimes the json reply from gemini is completely empty, not sure why that is.  it might be happening when there isn't enough instructions to go on
 
 
