@@ -28,7 +28,7 @@
           <button data-testid="share-btn" class="px-3 py-2 rounded border hover:bg-muted" @click="shareStory">Share</button>
           <template v-if="isOwner">
             <button data-testid="edit-btn" class="px-3 py-2 rounded bg-slate-900 text-white hover:bg-slate-700" @click="enterEdit">Edit</button>
-            <button data-testid="delete-btn" class="px-3 py-2 rounded bg-red-600 text-white hover:bg-red-700" @click="openDeleteConfirm">Delete</button>
+            <button ref="deleteBtnEl" data-testid="delete-btn" class="px-3 py-2 rounded bg-red-600 text-white hover:bg-red-700" @click="openDeleteConfirm">Delete</button>
           </template>
         </div>
       </header>
@@ -39,10 +39,10 @@
       </div>
 
       <!-- Delete confirm dialog -->
-      <div v-if="showDelete" data-testid="delete-confirm" class="rounded border p-4 bg-red-50 text-red-900">
-        <p class="mb-3 font-medium">Delete this story permanently?</p>
+      <div v-if="showDelete" data-testid="delete-confirm" class="rounded border p-4 bg-red-50 text-red-900" role="dialog" aria-modal="true" aria-labelledby="delete-confirm-title">
+        <p id="delete-confirm-title" class="mb-3 font-medium">Delete this story permanently?</p>
         <div class="flex gap-2">
-          <button data-testid="confirm-delete-cancel" class="px-3 py-2 rounded border" @click="closeDeleteConfirm">Cancel</button>
+          <button ref="deleteCancelBtnEl" data-testid="confirm-delete-cancel" class="px-3 py-2 rounded border" @click="closeDeleteConfirm">Cancel</button>
           <button data-testid="confirm-delete-confirm" class="px-3 py-2 rounded bg-red-600 text-white" :disabled="pendingDelete" @click="confirmDelete">
             <span v-if="pendingDelete">Deleting…</span>
             <span v-else>Yes, delete</span>
@@ -55,7 +55,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium mb-1" for="title">Title</label>
-            <input name="title" id="title" type="text" class="w-full rounded border px-3 py-2" v-model="form.title" />
+            <input ref="titleInputEl" name="title" id="title" type="text" class="w-full rounded border px-3 py-2" v-model="form.title" />
             <p v-if="titleError" data-testid="error-title" class="text-sm text-red-600 mt-1">{{ titleError }}</p>
           </div>
 
@@ -150,7 +150,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, reactive } from 'vue'
+import { ref, computed, watch, reactive, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStory, type StoryRecord, type StoryResult } from '@/composables/useStory'
 import { useAuth } from '@/composables/useAuth'
@@ -165,6 +165,26 @@ const { upload: uploadImage } = useStoryImage()
 const loading = ref(false)
 const error = ref<{ message: string; code?: string | number } | null>(null)
 const story = ref<StoryRecord | null>(null)
+
+// Element refs for a11y/keyboard flows
+const titleInputEl = ref<HTMLInputElement | null>(null)
+const deleteBtnEl = ref<HTMLButtonElement | null>(null)
+const deleteCancelBtnEl = ref<HTMLButtonElement | null>(null)
+
+// Global Escape handling for delete confirm
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape' && showDelete.value && !pendingDelete.value) {
+    closeDeleteConfirm()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 
 // Share state
 const shareWarning = ref<string | null>(null)
@@ -204,10 +224,16 @@ const showDelete = ref(false)
 const pendingDelete = ref(false)
 function openDeleteConfirm() {
   showDelete.value = true
+  void nextTick(() => {
+    deleteCancelBtnEl.value?.focus()
+  })
 }
 function closeDeleteConfirm() {
   if (pendingDelete.value) return
   showDelete.value = false
+  void nextTick(() => {
+    deleteBtnEl.value?.focus()
+  })
 }
 async function confirmDelete() {
   if (!story.value || pendingDelete.value) return
@@ -346,6 +372,9 @@ function enterEdit() {
     const u = (form.image_url || '').trim()
     previewUrl.value = /^https?:\/\//i.test(u) ? u : null
     editMode.value = true
+    void nextTick(() => {
+      titleInputEl.value?.focus()
+    })
   }
 }
 
