@@ -816,8 +816,10 @@ Exit criteria for Phase 4
 
 
 
+sometimes the json reply from gemini is completely empty, not sure why that is.  it might be happening when there isn't enough instructions to go on
 
-ask if there are any tests that should be added to anything
+
+check if there are any tests that should be added to anything
 
 do accessibility audit
 

@@ -60,13 +60,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 
+// Accept broader union for story_type to match GenerationResult (string)
 interface PreviewDraft {
   title: string
   description?: string
   content: string
-  story_type: 'short-story' | 'movie-summary' | 'tv-commercial'
+  story_type: 'short-story' | 'movie-summary' | 'tv-commercial' | string
   genre?: string
-  image_url?: string
+  image_url?: string | null
 }
 
 const props = defineProps<{ preview: PreviewDraft; saving?: boolean }>();
@@ -98,7 +99,8 @@ watch(
 )
 
 const fallbackLabel = computed(() => {
-  switch (currentPreview.value.story_type) {
+  const t = String(currentPreview.value.story_type)
+  switch (t) {
     case 'movie-summary':
       return 'Movie summary cover'
     case 'tv-commercial':

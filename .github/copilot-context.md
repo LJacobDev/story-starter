@@ -1,27 +1,26 @@
 # Copilot Working Memory Reference
 
 ## Current Project State
-- **Last Known Good State**: All unit/integration tests passing after generation error-mapping fix (2025‑09‑19).
-- **Currently Working**: 4.1.4d — /generate flow; 4.1.4d.2 complete; improved JSON extraction for Edge replies that wrap content under generatedText; next 4.1.4d.3 (Preview wiring + idempotency).
-- **Last Test Results**: 226 passed, 0 failed locally; mocked E2E happy path green.
-- **Known Issues**: None blocking. Live manual test still requires .env (VITE_SUPABASE_URL/KEY) and deployed/running edge function.
+- **Last Known Good State**: Phase 4 work-in-progress; all tests green except the new 4.1.4d.3 idempotency spec before this fix (2025‑09‑19).
+- **Currently Working**: 4.1.4d.3 — Preview wiring + idempotency. Implemented per-preview idempotency keys, undo/redo semantics, and always‑rendered key element.
+- **Last Test Results**: Before fix: 1 failing (GenerateStory.idempotency.spec), 226 passing. After fix: expected all green pending next run.
+- **Known Issues**: None blocking. Ensure CI Node runtime has webcrypto/TextEncoder or fallback hash is used.
 
 ## Key File Relationships
-- `src/components/generation/StoryGenerateForm.vue` emits normalized payload; shows >800‑char warning; disables submit when invalid.
-- `src/composables/useGeneration.ts` composes prompt → calls edge via `supabase.functions.invoke('gemini-proxy')` with fallback to raw `fetch('/functions/v1/gemini-proxy')`; extracts JSON via fence stripping, envelope unwrapping, double-parse, and brace-scan; validates schema; maps errors incl. 429 with Retry‑After; dev-only fallback synthesizes schema from plain prose in `generatedText`.
-- `src/utils/supabase.ts` provides real client; in test mode, includes a minimal `functions.invoke` stub that proxies to `/functions/v1/<name>` and returns `{ data, error }` like supabase‑js.
-- `tests/integration/generation.e2e.spec.ts` mocks edge and exercises generate → preview data → save → fetch‑mine.
-- `useSaveStory` and `useStories` power save + list flows used by E2E.
+- `src/views/GenerateStory.vue`: Orchestrates form → generation → preview; tracks `preview`, `previousPreview`, `lastPayload`; now also tracks `idempotencyKey` and `previousIdempotencyKey`. Undo swaps both preview and key. Idempotency key element is always rendered (`data-testid="idempotency-key"`).
+- `src/components/generation/StoryGeneratePreview.vue`: Emits save/discard/retry/edit/undo; internal one‑level undo remains for focus management but the active preview is sourced from the view prop.
+- `src/utils/idempotency.ts`: `makeIdempotencyKey` with stable stringify + SHA‑256 via webcrypto; guarded TextEncoder/webcrypto with JS hash fallback for test/Node.
+- `src/composables/useGeneration.ts`: Builds prompt, invokes edge, parses/validates result; provides `GenerationResult` used by the view.
 
 ## Recent Changes Made
-- [2025‑09‑19]: `useGeneration.ts` — Enhanced JSON extraction: added deepUnwrapJson for `{ generatedText: '...json...' }`, double-parse for inner JSON strings, and scanForJsonObject brace-matching fallback; retained error mapping and dev logs.
-- [2025‑09‑19]: `src/utils/supabase.ts` — Augmented test stub with `functions.invoke` that POSTs to `/functions/v1/<name>` and returns `{ data, error }` like supabase‑js.
-- [2025‑09‑19]: Verified `/generate` view renders form and calls `useGeneration.generateStory`; integration and unit tests pass.
+- [2025‑09‑19]: `GenerateStory.vue` — Per‑preview idempotency: key now derived from both payload and story content; stores previous/current keys; Undo swaps; Edit/Discard clear. Added provisional synchronous key to avoid empty text during initial render. Always render key element outside preview v-if.
+- [2025‑09‑19]: `idempotency.ts` — Hardened for test/Node by guarding `TextEncoder`/webcrypto and adding a JS hash fallback.
+- [2025‑09‑19]: `StoryGeneratePreview.vue` — Prop typing relaxed for `story_type` to accept string (to align with `GenerationResult`).
 
 ## Next Steps Plan
-1. Implement 4.1.4d.3 — Render `StoryGeneratePreview` in `GenerateStory.vue`; wire actions: Retry/Edit/Discard/Undo; persist per‑preview idempotency key until preview changes.
-2. Verification: retry then undo restores previous preview; idempotency key resets on edit/discard; tests green.
-3. If green, proceed to 4.1.4d.4 — image handling (URL/Upload with constraints) and 4.1.4d.5 — save + redirect.
+1. Re-run tests: `npm run test` (watch) and confirm 4.1.4d.3 spec passes. Manual check: retry → key changes; undo → key restored; edit/discard → key cleared.
+2. Proceed to 4.1.4d.4 — Image handling in preview (URL validation + upload via `useStoryImage`). Tests first.
+3. 4.1.4d.5 — Save + redirect: wire `useSaveStory.save(draft, { idempotencyKey })`; prevent duplicate saves.
 
 ## Complexity Warning Signs
 - [ ] More than 5 files need changes
@@ -30,13 +29,11 @@
 - [ ] Can't predict impact of changes
 
 ## Assumptions Updated
-- Edge may return an envelope `{ generatedText: string }` or embed JSON inside prose; client now unwraps and scans robustly before validation.
-- Production calls prefer `supabase.functions.invoke`; relative `/functions/v1/*` remains test-only.
+- Idempotency is per preview instance (depends on payload + generated content), not just payload.
+- The idempotency key should be visible and stable for the active preview and swap on Undo.
 
 ## Human parseable summary
-- Client can now parse JSON even when wrapped or embedded in text, reducing friction with diverse Edge/model responses. Ready to wire preview actions and idempotency in the view.
-
-Update timestamp: 2025‑09‑19.
+- The failing test was due to the idempotency key being empty/not rendered. Now the key is computed per preview (payload + story content), is set immediately with a provisional hash and then replaced with a stable key, and the element is always present in the DOM. Undo swaps both preview and key; edit/discard clear both. Expect the 4.1.4d.3 test to pass. Update timestamp: 2025‑09‑19.
 
 
 ## Assessment of repo quality and improvements at end of phase 3 to keep in mind for phase 4 (do not edit this section, just be aware of it)
