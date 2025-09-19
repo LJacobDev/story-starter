@@ -24,9 +24,17 @@
           <StoryGenerateForm @submit="handleSubmit" />
         </div>
         <div class="border rounded p-4 bg-gray-50">
-          <h3 class="font-medium mb-2">Last submitted payload</h3>
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="font-medium">Last submitted payload</h3>
+            <label v-if="lastPayload" class="inline-flex items-center gap-2 text-xs">
+              <input type="checkbox" v-model="showPrompt" />
+              <span>Show composed prompt</span>
+            </label>
+          </div>
           <div v-if="lastPayload" class="text-xs overflow-auto max-h-[70vh]">
-            <pre class="whitespace-pre-wrap">{{ pretty(lastPayload) }}</pre>
+            <div v-if="showPrompt" class="mb-2 text-gray-500">Prompt length: {{ composedPrompt.length }}</div>
+            <pre v-if="!showPrompt" class="whitespace-pre-wrap">{{ pretty(lastPayload) }}</pre>
+            <pre v-else class="whitespace-pre-wrap">{{ composedPrompt }}</pre>
           </div>
           <div v-else class="text-sm text-gray-500">Fill the form and click Generate to see the normalized payload here.</div>
         </div>
@@ -36,9 +44,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import StoryGrid from '@/components/stories/StoryGrid.vue'
 import StoryGenerateForm from '@/components/generation/StoryGenerateForm.vue'
+import { composePrompt } from '@/utils/composePrompt'
 
 const mockItems = ref([
   {
@@ -53,6 +62,9 @@ const mockItems = ref([
 ])
 
 const lastPayload = ref<any | null>(null)
+const showPrompt = ref(false)
+const composedPrompt = computed(() => (lastPayload.value ? composePrompt(lastPayload.value) : ''))
+
 function handleSubmit(payload: any) {
   lastPayload.value = payload
 }
