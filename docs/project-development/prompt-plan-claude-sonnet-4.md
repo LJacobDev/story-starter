@@ -819,6 +819,8 @@ Exit criteria for Phase 4
 PHASE 4 IS KIND OF DONE, BASIC FEATURES ARE WORKING, BUT LOTS OF UX THINGS NEED CORRECTING
 
 
+NOTE:  using the dev sandbox to preview unhooked up UI earlier was very helpful - do it sooner to do more manual testing of things so less has to get fixed at the end next time
+
 
 REMOVE THE DEMO VIEW SOON, it just has vite + vue scaffolding junk in it
 
