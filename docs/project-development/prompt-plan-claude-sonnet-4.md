@@ -486,6 +486,13 @@ Success Criteria:
 - Make tests pass
 
 
+
+
+
+
+
+### PROMPTS 3.2.2.1 AND 3.2.2.2 ARE BEING DEFERRED TO PHASE 4, PHASE 3 IS COMPLETE AT THIS POINT
+
 Prompt 3.2.2.1 — Tests first: Preview modal (optional; can defer)
 - Tests for ShadCN Dialog: open/close, focus trap, Esc to close, focus return.
 - Files: `tests/unit/StoryPreviewModal.spec.ts`, `src/components/stories/StoryPreviewModal.vue` (stub).
@@ -517,6 +524,14 @@ Prompt 3.2.2.2 — Implement Preview modal (optional)
 - Make tests pass
 
 ---
+
+
+
+
+
+
+
+
 
 ## Phase 4: Story Generation System
 

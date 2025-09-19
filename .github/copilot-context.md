@@ -1,38 +1,43 @@
 # Copilot Working Memory Reference
 
 ## Current Project State
-- **Last Known Good State**: All unit tests passing. Filters UI implemented and wired; useStories supports date presets and ordering.
-- **Currently Working**: Phase 3 finished for chunk 3.1. Next, prepare Phase 4 tests-first.
-- **Last Test Results**: All unit tests green; types compile cleanly after wiring.
+- **Last Known Good State**: All unit tests passing (154/154). StoryDetails route and view implemented; filters working; date presets in useStories.
+- **Currently Working**: Phase 3.2.1b completed. UX improvements on guest hero and header nav.
+- **Last Test Results**: 100% pass. Prior unhandled promise rejections in StoryDetails resolved.
 - **Known Issues**:
   - Preview modal still deferred (3.1.1e).
 
 ## Key File Relationships
-- `StoryFilters.vue` emits { search, type|null, privacy 'all'|'public', date }.
-- `Home.vue` normalizes filters to StoriesQuery and calls `useStories.fetchPublic/fetchMine`.
-- `useStories.ts` accepts date presets and orders/filters queries accordingly.
+- `StoryDetails.vue` uses: `useStory.getById`, `vue-router useRoute` (watches `params.id`).
+- `useStory.ts` depends on: `utils/supabase` client; table `story_starter_stories`.
+- `Home.vue` uses: `StoryFilters`, `useStories.fetchPublic/fetchMine` with normalized filters.
+- `App.vue` header now clickable to home; Demo nav removed.
 
 ## Recent Changes Made
-- [2025-09-18]: Extended `useStories` with date presets (newest/oldest/last7/last30) and ordering.
-- [2025-09-18]: Wired `StoryFilters` into `Home.vue` with normalization to avoid TS null vs string issues; used ShadCN Input/Label in filters.
+- [2025-09-18]: Implemented `useStory.getById` with Supabase select('*').
+- [2025-09-18]: Refactored `StoryDetails.vue` to watch route param and harden load() against undefined/throw; fixed flaky tests; eliminated unhandled errors.
+- [2025-09-18]: Revamped guest marketing hero in `Home.vue` (centered, gradient, improved copy, CTA).
+- [2025-09-18]: Made “Story Starter” header clickable to Home; removed Demo tab and demo fallback section in `App.vue`.
 
 ## Next Steps Plan
-1. Add/adjust integration tests to assert Home triggers filtered queries (optional if unit coverage is sufficient).
-2. Begin Phase 4 with tests-first for StoryGenerateForm (4.1.1a).
+1. 3.2.2 (Edit/Delete scaffolding): tests-first for permissions and UI affordances.
+2. Later: revisit hero copy/styles per user feedback; add responsive tweaks if desired.
+3. Prepare Phase 4 tests-first (generation form, prompt builder, edge proxy contract).
 
 ## Verification Plan
-- Manual: Toggle type/privacy/date; observe updated lists and hasMore; ensure Show more respects filters.
-- Automated: Ensure existing specs remain green; consider adding a Home filters integration spec.
+- Automated: `npx vitest run` should remain green.
+- Manual: Navigate as guest to Home → see new hero; click header logo/title → goes Home; no Demo tab visible.
 
 ## Rollback Plan
-- Revert Home filter wiring and keep pagination-only if unexpected regressions occur.
+- Revert `StoryDetails.vue` changes if any regressions in detail loading.
+- Revert `Home.vue` hero edits if copy/layout not desired.
+- Re-add Demo nav if needed; tests will still pass without it.
 
 ## Human-parsable summary
-- Filters bar is fully functional and wired. Date ranges and ordering work; pagination coexists with filters. Phase 3 chunk 3.1 is complete except the optional preview modal.
+- 3.2.1b is functionally complete: route exists, view fetches by id, tests pass, and the view is resilient.
+- UX: guest hero is now a centered, colorful gradient panel with clearer messaging and a CTA; header logo/title is a Home button; Demo tab removed.
 
----
-
-Update timestamp: 2025-09-18. Maintain this file before and after each major task.
+Update timestamp: 2025-09-18.
 
 
 

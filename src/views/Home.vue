@@ -124,9 +124,27 @@ onMounted(() => {
 
     <!-- Guest: marketing hero + Public Stories -->
     <section v-else class="mb-10">
-      <div data-testid="guest-hero" class="mb-8 rounded-lg border p-6 bg-muted">
-        <h2 class="text-xl font-semibold mb-2">Create and share stories</h2>
-        <p class="text-muted-foreground">Sign up to generate, save, and manage your own stories. Explore what others have made below.</p>
+      <div
+        data-testid="guest-hero"
+        class="mb-10 rounded-2xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white p-8 shadow-lg"
+      >
+        <div class="max-w-3xl mx-auto text-center space-y-3">
+          <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight">
+            Kickstart your next great story with AI
+          </h2>
+          <p class="text-white/90 text-lg">
+            Propose characters, themes, and pivotal moments for a short story, movie summary,
+            or TV commercial—and let AI draft compelling ideas to jump‑start your writing.
+          </p>
+          <p class="text-white/90">
+            Save, share, and refine your favorites so you can find your next concept faster.
+          </p>
+          <div class="pt-2">
+            <a href="#/auth" class="inline-flex items-center px-5 py-2.5 rounded-lg bg-white text-slate-900 font-medium hover:bg-white/90 transition">
+              Get started free
+            </a>
+          </div>
+        </div>
       </div>
 
       <div data-testid="section-public">
