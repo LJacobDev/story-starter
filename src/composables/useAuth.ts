@@ -4,30 +4,43 @@ import { supabase } from '@/lib/supabase'
 const user = ref<any>(null)
 const session = ref<any>(null)
 const isLoading = ref(false)
+const isReady = ref(false)
 
 function initAuthListener() {
   try {
-    if (getCurrentInstance()) {
-      onMounted(() => {
-        if (supabase?.auth?.onAuthStateChange) {
-          supabase.auth.onAuthStateChange((_event: any, newSession: any) => {
-            session.value = newSession ?? null
-            user.value = (newSession as any)?.user ?? null
-          })
-        }
-      })
-    } else {
+    const attach = () => {
       if (supabase?.auth?.onAuthStateChange) {
         supabase.auth.onAuthStateChange((_event: any, newSession: any) => {
           session.value = newSession ?? null
           user.value = (newSession as any)?.user ?? null
+          isReady.value = true
         })
       }
+      // Initial hydration to avoid flicker on refresh
+      if (supabase?.auth?.getSession) {
+        supabase.auth.getSession().then((res: any) => {
+          const data = res?.data ?? {}
+          session.value = data?.session ?? null
+          user.value = data?.session?.user ?? null
+        }).finally(() => {
+          isReady.value = true
+        })
+      } else {
+        // If API not available (tests), still mark ready
+        isReady.value = true
+      }
+    }
+
+    if (getCurrentInstance()) {
+      onMounted(attach)
+    } else {
+      attach()
     }
   } catch (e) {
     // ignore in test/non-Vue contexts
     // eslint-disable-next-line no-console
     console.debug('initAuthListener skipped')
+    isReady.value = true
   }
 }
 
@@ -215,6 +228,7 @@ export function useAuth() {
     user,
     session,
     isLoading,
+    isReady,
     isAuthenticated,
     signIn,
     signUp,

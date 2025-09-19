@@ -72,7 +72,7 @@ vi.mock('@/composables/useStories', () => ({
 
 // Default to guest; tests can override with vi.doMock before import
 vi.mock('@/composables/useAuth', () => ({
-  useAuth: () => ({ isAuthenticated: false })
+  useAuth: () => ({ isAuthenticated: false, isReady: true })
 }))
 
 describe('Home data integration (TDD)', () => {
@@ -83,7 +83,7 @@ describe('Home data integration (TDD)', () => {
 
   it('guest: shows marketing/hero and Public Stories grid together', async () => {
     // guest auth
-    vi.doMock('@/composables/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false }) }))
+    vi.doMock('@/composables/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false, isReady: true }) }))
 
     // Home creates yourStories first, then publicStories
     const dummyYour = createStoriesMock()
@@ -107,7 +107,7 @@ describe('Home data integration (TDD)', () => {
   })
 
   it('auth: shows Your Stories then All Public Stories; no hero', async () => {
-    vi.doMock('@/composables/useAuth', () => ({ useAuth: () => ({ isAuthenticated: true }) }))
+    vi.doMock('@/composables/useAuth', () => ({ useAuth: () => ({ isAuthenticated: true, isReady: true }) }))
 
     // mine then public instances
     const mine = createStoriesMock({ items: makeStories(2, 'mine'), total: 2 })
@@ -129,7 +129,7 @@ describe('Home data integration (TDD)', () => {
 
   it('Show more appends 12 items for Public Stories', async () => {
     // guest scenario for simplicity
-    vi.doMock('@/composables/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false }) }))
+    vi.doMock('@/composables/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false, isReady: true }) }))
 
     const first12 = makeStories(12, 'pub', 1)
     const next12 = makeStories(12, 'pub', 13)
@@ -176,7 +176,7 @@ describe('Home data integration (TDD)', () => {
 
   it('renders loading (skeletons) and empty states correctly', async () => {
     // guest
-    vi.doMock('@/composables/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false }) }))
+    vi.doMock('@/composables/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false, isReady: true }) }))
 
     // yourStories dummy, public loading instance
     const dummyYour = createStoriesMock()

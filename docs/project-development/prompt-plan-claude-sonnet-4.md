@@ -529,8 +529,9 @@ Prompt 3.2.2.2 — Implement Preview modal (optional)
 
 
 
+I'm going to skip the preview modal from phase 3 and take care of it in the phase 4 micro prompts
 
-
+when the fallback svgs are put in place, I'll prefer to use some images from pexels or similar
 
 
 ## Phase 4: Story Generation System

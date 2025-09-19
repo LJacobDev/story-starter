@@ -26,13 +26,13 @@ vi.mock('@/composables/useStories', () => {
 
 // Default mock (guest); individual tests will re-mock as needed
 vi.mock('@/composables/useAuth', () => ({
-  useAuth: () => ({ isAuthenticated: false })
+  useAuth: () => ({ isAuthenticated: false, isReady: true })
 }))
 
 describe('Home stories sections (contract)', () => {
   it('guest: shows one grid titled "Public Stories" with H1 "Stories"', async () => {
     // ensure guest
-    vi.doMock('@/composables/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false }) }))
+    vi.doMock('@/composables/useAuth', () => ({ useAuth: () => ({ isAuthenticated: false, isReady: true }) }))
     const { default: Home } = await import('@/views/Home.vue')
     const wrapper = mount(Home)
 
@@ -49,7 +49,7 @@ describe('Home stories sections (contract)', () => {
 
   it('auth: shows "Your Stories" then "All Public Stories" with two grids', async () => {
     vi.resetModules()
-    vi.doMock('@/composables/useAuth', () => ({ useAuth: () => ({ isAuthenticated: true }) }))
+    vi.doMock('@/composables/useAuth', () => ({ useAuth: () => ({ isAuthenticated: true, isReady: true }) }))
     const { default: Home } = await import('@/views/Home.vue')
     const wrapper = mount(Home)
 
@@ -70,7 +70,7 @@ describe('Home stories sections (contract)', () => {
 
   it('default sort: newest first (check title order contains "Newest" first)', async () => {
     vi.resetModules()
-    vi.doMock('@/composables/useAuth', () => ({ useAuth: () => ({ isAuthenticated: true }) }))
+    vi.doMock('@/composables/useAuth', () => ({ useAuth: () => ({ isAuthenticated: true, isReady: true }) }))
     const { default: Home } = await import('@/views/Home.vue')
     const wrapper = mount(Home)
 

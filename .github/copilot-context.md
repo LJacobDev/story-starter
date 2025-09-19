@@ -1,46 +1,79 @@
 # Copilot Working Memory Reference
 
 ## Current Project State
-- **Last Known Good State**: StoryDetails share implemented; prior suites green before adding image tests.
-- **Currently Working**: Phase 3.2.1i/j — Fix image spec interactions (radio selection + file input) so tests pass; then finalize implementation.
-- **Last Test Results**: Targeted run requested for StoryDetails.image.spec.ts; awaiting fresh results after radio interaction fix.
+- **Last Known Good State**: Phase 3 complete — all StoryDetails suites (route, edit, delete, share, image, a11y) passing; grids and filters stable.
+- **Currently Working**: Preparing Phase 4 (generation) per micro-prompts; minor UX: prevent Home hero flicker on refresh.
+- **Last Test Results**: 166/166 tests passing locally; axe checks clean on StoryCard/StoryDetails a11y specs.
 - **Known Issues**:
-  - Real toasts not yet integrated (placeholders only); plan to add shadcn toast after 3.2.1l.
-  - Image pipeline implementation pending (useStoryImage validations + integration in StoryDetails edit form).
+  - None blocking. Minor: jsdom canvas warning from vitest-axe (safe to ignore), Home hero flashes briefly when auth is already signed-in on refresh.
 
 ## Key File Relationships
-- `src/views/StoryDetails.vue` uses: `useStory.getById`, `useStory.update`, `useStory.remove`, `vue-router` (watches `route.params.id`), and `useAuth` for `isOwner` (compares `user.id` to `story.user_id`).
-- `src/composables/useStory.ts` depends on: `utils/supabase` client; table `story_starter_stories` with RLS.
-- `src/views/Home.vue` uses: `useStories.fetchPublic/fetchMine`. Note: when tests navigate Home, these calls can run; unit tests that redirect to Home should stub the view to avoid external fetches.
-- `src/App.vue` includes a no-router fallback handling `/demo` for unit tests.
+- `src/views/Home.vue` uses `useAuth.isAuthenticated`, `useStories.fetchPublic/fetchMine`, `StoryFilters` model to build queries.
+- `src/views/StoryDetails.vue` depends on `useStory` (getById/update/remove), `useAuth` (owner checks), `useStoryImage` (upload). Now includes focus management and Esc handling for the confirm dialog.
+- `src/composables/useAuth.ts` exposes `user`, `session`, `isAuthenticated`, `isReady` (new) to gate UI until initial auth hydration.
 
 ## Recent Changes Made
-- [2025-09-19]: Tests — Updated `tests/unit/StoryDetails.image.spec.ts` to use `setValue(true)` for radio inputs and kept the corrected file input change pattern (assign files property, then trigger change).
-- [2025-09-19]: Tests — Added `tests/unit/StoryDetails.share.spec.ts` covering Share button visibility, navigator.share usage, clipboard fallback, and private-story warning (expected failing tests initially; now passing with implementation).
-- [2025-09-18]: StoryDetails — Added owner-only Edit with form (title, story_type, genre, description, image_url, is_private, content), validation caps (title ≤120, genre ≤60), Cancel/Save with pending; wired to `useStory.update`.
-- [2025-09-18]: StoryDetails — Added Delete with confirm dialog and pending; on confirm calls `useStory.remove` then navigates to Home.
-- [2025-09-18]: Tests — Added `tests/unit/StoryDetails.edit.spec.ts` and `tests/unit/StoryDetails.delete.spec.ts`; delete spec stubs Home to prevent Supabase fetch side-effects; both suites passing.
-- [2025-09-18]: Composables — Implemented `useStory.update(id, patch)` and `useStory.remove(id)` with error mapping.
-- [2025-09-18]: App — Updated no-router fallback in `App.vue` to handle `/demo`, restoring passing demo/logo test.
-- [2025-09-19]: Tests — Added `tests/unit/StoryDetails.image.spec.ts` covering URL mode validation/preview/remove and upload mode via composable returning signed URL.
-- [2025-09-19]: Composables — Added stub `src/composables/useStoryImage.ts` with `upload(file)` placeholder (tests mock behavior).
-- [2025-09-19]: Views — Implemented Share in `StoryDetails.vue` with navigator.share/clipboard fallback and private warning.
+- [2025-09-19]: Added tests `tests/unit/StoryDetails.a11y.spec.ts` and implemented a11y polish in `StoryDetails.vue` (focus to title on edit; focus to Cancel on confirm open; focus return to Delete on close; Esc closes confirm; dialog aria attributes).
+- [2025-09-19]: Added `.vscode/tasks.json` default build task mapping to `npm run test` (watch) for Ctrl+Shift+B.
+- [2025-09-19]: Updated `useAuth.ts` to hydrate initial session via `getSession()` and added `isReady` to prevent refresh flicker.
+- Earlier: Completed 3.2.1 a–j (route, edit, delete, share, image), with tests.
 
 ## Next Steps Plan
-1. Run the targeted image suite to confirm the radio fix: StoryDetails.image.spec.ts.
-2. If radios still fail on this VTU version, switch to setting `input.element.checked = true` and `await input.trigger('change')` as an alternative.
-3. Ensure upload mode test path continues to set `files` on the input element and trigger change without passing `target` payload.
-4. Re-run the full StoryDetails suites (edit/delete/share/image) to guard against regressions.
+1. Home hero flicker: Gate guest hero with `isReady` and render only after initial auth state resolves. Verify no flash when authenticated on refresh.
+2. Phase 4 kickoff: 4.1.1a tests-first (StoryGeneration form skeleton + validation caps) under tests/unit.
+3. Add CI note: run `npm run type-check` and `npm run test:coverage`; track coverage trend.
 
 ## Verification Plan
-- Automated: run the targeted suite for image handling; then full StoryDetails suites.
-- Success criteria: All StoryDetails specs pass; no TypeScript errors in tests; preview/remove behaviors verified via data-testid hooks.
-- Rollback: Revert the latest test changes if failures persist; fall back to the explicit `checked` assignment approach for radios.
+- Automated: run full unit suite; ensure StoryDetails a11y tests remain green.
+- Manual: reload Home while authenticated; hero should not flash before Your/Public sections render.
 
 ## Human-parsable summary
-- Adjusted image tests to use VTU-supported radio interaction (`setValue(true)`), retained correct file input event pattern. Next, run the suite and, if necessary, switch to explicit `checked` assignment for stability on this VTU version.
+- Phase 3 finished via TDD with a11y polish. Added VS Code test task. Auth composable now hydrates on load and exposes `isReady`; we’ll use it to prevent Home hero flicker on refresh. Phase 4 can start (form tests-first).
 
 Update timestamp: 2025-09-19.
+
+
+## Assessment of repo quality and improvements at end of phase 3 to keep in mind for phase 4 (do not edit this section, just be aware of it)
+
+Summarized conversation historyHere’s a concise repo review with concrete, high‑leverage suggestions.
+
+What’s clean and well organized
+- Structure: Clear Vue 3 + Vite + TS layout (components, composables, views, utils, router, types). Good separation of concerns.
+- Hosting: Hash router configured correctly for GitHub Pages; vite base set per build mode.
+- Testing: Vitest set up with UI/coverage; useful unit/integration tests (Home grid, skeletons, show more, a11y checks in plan). Supabase client has a safe test stub to avoid env/network.
+- UI: ShadCN-style primitives under components/ui; StoryCard implements accessible fallbacks (aria-hidden SVGs + sr-only text).
+- Data flow: Composables pattern for stories/auth; Home.vue cleanly composes data and view with reactivity.
+- Docs/plan: Prompt plan + TDD micro-prompts are thorough and actionable.
+
+Improvements to consider
+- Standardize Supabase client import
+  - Current: supabase.ts and a thin wrapper src/lib/supabase.ts. Pick one canonical import path (e.g., '@/lib/supabase') and update composables for consistency and easier mocking.
+- Centralize story type mapping
+  - Switches for type → label/icon repeat. Create a single map in utils/types (slug ↔ label, icon component or asset path) and reuse in StoryCard, filters, and future preview.
+- Reuse fallback SVGs
+  - Inline SVG components in StoryCard duplicate the asset set under src/assets. Prefer importing the shared assets or a small Icons module to avoid drift.
+- Tighten search sanitization
+  - useStories.buildSearchOr only strips %. Also remove commas/parentheses/quotes (they affect PostgREST or()), or use a safer strategy:
+    - Escape/whitelist term characters, or
+    - Use text search (fts) or rpc with parameters for safer matching.
+- Unify tests location
+  - You have tests co-located (src/components/*.test.ts) and under tests/unit. Pick one convention (prefer tests/…) for consistency and tooling.
+- Add linting/formatting
+  - Introduce ESLint + Prettier (Vue/TS configs), add npm scripts and CI step to enforce style and catch issues early.
+- Strengthen types and DTOs
+  - Define StoryCardProps and Story entity DTOs in src/types and reuse across components/composables. Add explicit mappers (DB → UI) to remove ad‑hoc field aliasing in Home.vue.
+- Router guards cohesion
+  - setupRouterGuards is solid; consider extracting route meta keys and guard options to a small helper to reduce inline boolean casting and improve testability.
+- Vitest config polish
+  - Set coverage thresholds, include/exclude globs, and ensure CI enforces coverage. Consider using vitest-axe in a11y test files now that it’s in devDeps.
+- Path aliases in TS
+  - Vite alias @ is configured; ensure tsconfig paths mirrors it (tsconfig.app.json). If missing, add "paths" to avoid TS import friction in IDEs.
+- Performance and queries
+  - For ilike across multiple columns, consider indices or trgm for title/description to keep performance with larger datasets.
+- UI cohesion
+  - Leverage lucide-vue-next for consistent iconography, or move all custom icons under components/icons with a single API.
+
+Overall: The repo is already in good shape. Prioritize standardizing Supabase imports, centralizing story type/icon logic, tightening search sanitization, and adding lint/format. These will pay off quickly in maintainability and testability as Phase 4 progresses.
 
 
 
