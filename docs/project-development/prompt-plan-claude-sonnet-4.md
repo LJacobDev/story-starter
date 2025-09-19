@@ -837,6 +837,9 @@ images not showing up when linked
 removing demo view from non dev environment, make sure tests about that are removed
 remove 'demo' route and view or more likely change it to dev only route and decide if changing
 
+start a new chat history and see if it's quicker than running on a long one - confirmed - making an 'agent hand off briefing' text and starting a new chat makes agent response rate much higher than when in a long conversation
+
+
 ### things to still fix
 
 signing in with mobile doesn't seem to work yet, but viewing as unauthenticated at least works
@@ -855,11 +858,11 @@ make 'generating story' more visible and say to expect a few seconds waiting
 
 add 'about' section that explains the app, its purpose, scope and current state
 
+
 add a reset password link to signin
 
 password reset 'works' in that you get a link that takes you to the site as authenticated, but functionality to also set new password needs to be added
 
-start a new chat history and see if it's quicker than running on a long one
 
 there is git history version control but I want to use semgrep version codes
 

@@ -62,6 +62,11 @@ function showMoreMine() {
 // Filters state shared by both sections; UI default: privacy 'all', date 'newest'
 const filters = reactive<StoryFiltersModel>({ search: '', type: null, privacy: 'all', date: 'newest' })
 
+// Ensure parent updates the same reactive object instead of reassigning (works with :model-value/@update)
+function onFiltersUpdate(next: StoryFiltersModel) {
+  Object.assign(filters, next)
+}
+
 watch(
   () => ({ ...filters }),
   () => {
@@ -75,6 +80,23 @@ watch(
     }
   },
   { deep: true }
+)
+
+// New: ensure we (re)fetch when auth becomes ready or user/auth changes (fixes empty "Your Stories" on refresh)
+watch(
+  [() => (isReady as any).value, () => (isAuthenticated as any).value, () => (user as any).value?.id],
+  () => {
+    if (!(isReady as any).value) return
+    const f = normalizeFiltersForQuery(filters)
+    // Always update public
+    publicStories.fetchPublic({ ...f, page: 1 })
+    // Conditionally update "mine" after session is ready and user is present
+    const uid = (user as any).value?.id
+    if ((isAuthenticated as any).value && uid) {
+      yourStories.fetchMine(uid, { ...f, page: 1 })
+    }
+  },
+  { immediate: true }
 )
 
 onMounted(() => {
@@ -95,7 +117,8 @@ onMounted(() => {
     <div v-if="!isReady" aria-hidden="true" class="h-8 mb-6"></div>
     <template v-else>
       <div class="mb-6">
-        <StoryFilters v-model="filters" />
+        <!-- Replace v-model with explicit binding to avoid reassigning the reactive object -->
+        <StoryFilters :model-value="filters" @update:modelValue="onFiltersUpdate" />
       </div>
 
       <!-- Authenticated: Your Stories then All Public Stories -->

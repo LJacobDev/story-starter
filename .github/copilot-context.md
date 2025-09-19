@@ -1,34 +1,36 @@
 # Copilot Working Memory Reference
 
 ## Current Project State
-- **Last Known Good State**: Phase 4 main flow implemented; image fixes and StoryCard clickable; tests mostly green (2025‑09‑19).
-- **Currently Working**: Fix useStories search/type filters and align image bucket path with tests.
-- **Last Test Results**: 2 failing tests — useStories expects eq('story_type', …) in public query; useStoryImage expects path to start with 'story-covers/'.
-- **Known Issues**: Search/filter UX reported as ineffective; durable image path vs signed URL persistence in StoryDetails pending.
+- **Last Known Good State**: Phase 4 flow implemented; images/StoryCard clickable; tests all green locally (2025‑09‑19).
+- **Currently Working**: Fixed Home filters wiring and auth hydration refetch to address inert filters and empty “Your Stories” on refresh.
+- **Last Test Results**: All tests passing previously; expect no changes from this edit.
+- **Known Issues**: Mobile sign‑in intermittent; occasional empty JSON from Gemini; UX polish for buttons/spinners.
 
 ## Key File Relationships
-- `src/composables/useStories.ts` → fetchPublic/fetchMine build base queries, then `runQuery` applies date/order and search.
-- `src/composables/useStoryImage.ts` → BUCKET used for new uploads (env‑driven 'story-images'); tests expect legacy 'story-covers' path.
-- `src/components/stories/StoryCard.vue` → resolves storage path to URL for display.
+- `src/views/Home.vue` depends on `useAuth` (isReady/isAuthenticated/user.id) and `useStories` composable for queries.
+- `src/components/stories/StoryFilters.vue` emits `update:modelValue` with a new object; parent must mutate existing reactive state to trigger watchers.
+- `useStories.fetchMine(userId, filters)` requires a valid user id; should be called only after auth is ready.
 
 ## Recent Changes Made
-- [2025‑09‑19]: `useStories.ts` — Added sanitize for search; moved type eq filter into fetchPublic/fetchMine to satisfy test spy on eq calls.
-- [2025‑09‑19]: `useStoryImage.ts` — Uses env `VITE_STORY_IMAGES_BUCKET` defaulting to 'story-images'; detectBucketAndInner supports both 'story-images' and 'story-covers'.
+- [2025‑09‑19]: Modified `src/views/Home.vue` to:
+  - Replace `v-model` with `:model-value` + `@update:modelValue` and mutate the same reactive `filters` via `Object.assign`.
+  - Add a watcher on `isReady`, `isAuthenticated`, and `user.id` to refetch public and mine once auth hydrates (with `immediate: true`).
 
 ## Next Steps Plan
-1. Align `useStoryImage.upload` to use 'story-covers' for tests, but keep env override path for runtime via detectBucketAndInner. Strategy: set BUCKET to STORY_COVERS_BUCKET by default, fallback to env if provided; or honor specific test flag.
-2. Re‑run tests. Verify eq('story_type', …) spy passes and bucket path regex matches.
-3. Manual verify: search term affects results; type filter applies.
+1. Manual verify: sign in, hard refresh Home; confirm “Your Stories” populates automatically; change filters and see both grids refetch.
+2. If double fetch observed, add minimal diffing or throttle to auth-state watcher.
+3. Investigate mobile sign‑in redirects (`redirectTo`) for Pages; ensure hash routing works with recovery/confirm links.
 
 ## Complexity Warning Signs
-- [ ] Multiple .or() calls risk overriding each other — mitigated by single or() for search only.
-- [ ] Divergence between test expectations and env defaults for bucket — decide canonical default.
+- [ ] Multiple refetch triggers (filters watcher + auth watcher) could cause redundant calls; monitor network.
+- [ ] Ensure `useStories` cancels/guards overlapping requests.
 
 ## Assumptions Updated
-- For CI/tests, bucket default is 'story-covers' to match spec; runtime can still honor VITE_STORY_IMAGES_BUCKET.
+- Filters component emits a fresh object; parent must not rely on `v-model` reassigning a `reactive const`.
+- Auth hydration may complete after mount; refetch should run once ready.
 
 ## Human‑parseable Summary
-- We moved type filtering to the base query and sanitized search input. One test still expects storage paths to start with 'story-covers'; we will default BUCKET to that constant for uploads (while still resolving 'story-images' paths at render time). This should bring tests back to green and keep runtime flexibility.
+We fixed the inert search/filter behavior by binding `StoryFilters` explicitly and merging into the same reactive `filters` object, ensuring the existing watcher fires. Added an auth‑state watcher so “Your Stories” refetches after session hydration, resolving the empty-on-refresh issue without requiring navigation.
 
 
 ## Assessment of repo quality and improvements at end of phase 3 to keep in mind for phase 4 (do not edit this section, just be aware of it)
