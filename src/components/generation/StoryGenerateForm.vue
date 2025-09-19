@@ -144,15 +144,87 @@
       <button data-testid="submit-btn" type="submit" :disabled="!canSubmit" class="rounded bg-blue-600 text-white px-4 py-2 disabled:opacity-50" @click.prevent="onSubmit">Generate</button>
     </div>
   </form>
+
+  <!-- Action controls: Edit Prompts / Reset / Cancel -->
+  <div class="flex gap-2 pt-2">
+    <button type="button" data-testid="edit-prompts-btn" class="rounded border px-3 py-2" @click="emit('edit-prompts')">Edit prompts</button>
+    <button type="button" data-testid="reset-btn" class="rounded border px-3 py-2" @click="resetForm">Reset</button>
+    <button type="button" data-testid="cancel-btn" class="rounded border px-3 py-2" @click="emit('cancel')">Cancel</button>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { getImageMetadata } from '@/utils/imageMeta'
 
+const props = defineProps<{
+  prefill?: {
+    story_type?: 'short-story' | 'movie-summary' | 'tv-commercial'
+    title?: string
+    genre?: string
+    tone?: string
+    creativity?: number
+    additional_instructions?: string
+    themes?: string[]
+    plot_points?: string[]
+    characters?: Array<{ name: string; role: string; description: string }>
+    image?: { mode: 'url'; url?: string } | { mode: 'upload'; file?: File; meta?: { width: number; height: number; type: string; size: number } }
+    is_private?: boolean
+  }
+}>()
+
 const emit = defineEmits<{
   (e: 'submit', payload: any): void
+  (e: 'edit-prompts'): void
+  (e: 'cancel'): void
 }>()
+
+// Defaults helper
+function applyDefaults() {
+  typeSlug.value = 'short-story'
+  title.value = ''
+  genre.value = ''
+  tone.value = ''
+  creativity.value = ''
+  instructions.value = ''
+  themes.value = []
+  plotPoints.value = []
+  characters.value = []
+  imageMode.value = 'url'
+  imageUrl.value = ''
+  imageFile.value = null
+  imageMeta.value = null
+  imageError.value = ''
+  isPrivate.value = true
+}
+
+function applyPrefill() {
+  if (!props.prefill) return
+  if (props.prefill.story_type) typeSlug.value = props.prefill.story_type
+  if (props.prefill.title) title.value = props.prefill.title
+  if (props.prefill.genre) genre.value = props.prefill.genre
+  if (props.prefill.tone) tone.value = props.prefill.tone
+  if (typeof props.prefill.creativity === 'number') creativity.value = String(props.prefill.creativity)
+  if (props.prefill.additional_instructions) instructions.value = props.prefill.additional_instructions
+  if (props.prefill.themes) themes.value = [...props.prefill.themes]
+  if (props.prefill.plot_points) plotPoints.value = [...props.prefill.plot_points]
+  if (props.prefill.characters) characters.value = props.prefill.characters.map(c => ({ ...c }))
+  if (props.prefill.image) {
+    if (props.prefill.image.mode === 'url') {
+      imageMode.value = 'url'
+      imageUrl.value = props.prefill.image.url || ''
+    } else {
+      imageMode.value = 'upload'
+      imageFile.value = props.prefill.image.file ?? null
+      imageMeta.value = props.prefill.image.meta ?? null
+    }
+  }
+  if (typeof props.prefill.is_private === 'boolean') isPrivate.value = props.prefill.is_private
+}
+
+function resetForm() {
+  applyDefaults()
+}
 
 // State
 const typeSlug = ref<'short-story' | 'movie-summary' | 'tv-commercial'>('short-story')
@@ -183,6 +255,10 @@ const imageMeta = ref<{ width: number; height: number; type: string; size: numbe
 const imageError = ref('')
 
 const isPrivate = ref(true)
+
+// Apply defaults and prefill immediately so DOM reflects correct initial state
+applyDefaults()
+applyPrefill()
 
 // Validation
 const titleTooLong = computed(() => title.value.length > 120)

@@ -1,27 +1,23 @@
 # Copilot Working Memory Reference
 
 ## Current Project State
-- **Last Known Good State**: vitest run after 4.1.1f — all tests green (37 files, 193 tests)
-- **Currently Working**: Completed 4.1.1e (tests) and 4.1.1f (implementation) for image validation
-- **Last Test Results**: All suites passed locally
-- **Known Issues**: none blocking
+- **Last Known Good State**: vitest run after prefill fix — all tests green (38 files, 196 tests)
+- **Currently Working**: Completed 4.1.1g–h; prefill now correctly sets type select and other fields; Reset returns to defaults
+- **Last Test Results**: All suites passed locally (single-run and watch)
+- **Known Issues**: None blocking; jsdom logs canvas getContext not implemented in a11y tests (benign)
 
 ## Key File Relationships
-- `src/components/generation/StoryGenerateForm.vue` now validates image URL/upload and emits normalized descriptor.
-- `tests/unit/StoryGenerateForm.image.spec.ts` covers URL scheme, file type/size/dimensions, and payload shape.
-- `src/utils/imageMeta.ts` provides `getImageMetadata(file)` used by the form; tests mock it.
+- `src/components/generation/StoryGenerateForm.vue` applies defaults and prefill immediately in setup; no onMounted dependency.
+- `tests/unit/StoryGenerateForm.prefill.spec.ts` validates prefill of all fields, Reset to defaults, and emits for edit-prompts/cancel.
+- `src/utils/imageMeta.ts` used by file image validation; tests mock it.
 
 ## Recent Changes Made
-- [Today]: Added `tests/unit/StoryGenerateForm.image.spec.ts` (failing first), then:
-  - Implemented URL mode validation (http/https only; empty allowed) and error messaging.
-  - Implemented upload mode validation: png/jpeg/webp, ≤ 2 MB, dimensions 200–4000 (via `getImageMetadata`).
-  - Added data-testids: `image-file-input`, `image-error`; kept `image-mode-*` and `image-url-input`.
-  - Emission: `{ image: { mode: 'url', url } }` or `{ image: { mode: 'upload', file, meta } }`.
+- [2025-09-19]: Fixed prefill timing in `StoryGenerateForm.vue` by removing onMounted and calling `applyDefaults()` then `applyPrefill()` during setup so initial DOM reflects `prefill.story_type` (e.g., `movie-summary`). All tests now pass.
 
 ## Next Steps Plan
-1. 4.1.1g — Tests first: Prefill/Reset and “Edit prompts”.
-2. 4.1.1h — Implement: Prefill/Reset behavior.
-3. Manual: verify on `/dev` playground; try invalid/valid images and check submit gating.
+1. 4.1.2a — Write failing tests for `composePrompt(formPayload)` utility.
+2. Implement `composePrompt` to satisfy tests; manually inspect prompt for a representative payload.
+3. Extend `/dev` sandbox to preview the composed prompt for manual verification.
 
 ## Complexity Warning Signs
 - [ ] More than 5 files need changes
@@ -30,10 +26,10 @@
 - [ ] Can't predict impact of changes
 
 ## assumptions about the project that changed when new things were learned
-- Image validation must not involve Storage; pure client checks only at this phase.
+- Prefill must be applied before mount to ensure correct initial select value in tests and runtime.
 
-## Human parseable summary of state and insights derived from recent work
-- Image validation is client-side with clear errors and submit gating. Tests mock metadata; browser implementation in `imageMeta.ts` reads natural dimensions via Image for real use.
+## Human parseable summary of state and insights
+- The failing prefill test was due to applying defaults/prefill in onMounted. Moving them into setup makes the v-model initial values correct at first render. This also simplifies lifecycle and avoids flicker.
 
 Update timestamp: 2025-09-19.
 
