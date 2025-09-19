@@ -828,9 +828,13 @@ This is a list of things noticed while using the app that stand out and need to 
 
 ### things that have been solved
 
+stories aren't clickable to view details
+
 ### things to still fix
 
-stories aren't clickable to view details
+images not showing up when uploaded
+
+images not showing up when linked
 
 add a reset password link to signin
 
