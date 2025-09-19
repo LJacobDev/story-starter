@@ -2,35 +2,48 @@
 
 ## Current Project State
 - **Last Known Good State**: Phase 4 flow implemented; images/StoryCard clickable; tests all green locally (2025‑09‑19).
-- **Currently Working**: Fixed Home filters wiring and auth hydration refetch to address inert filters and empty “Your Stories” on refresh.
-- **Last Test Results**: All tests passing previously; expect no changes from this edit.
+- **Currently Working**: Fixing Storage image display regressions by adding TTL-aware caching to resolveImageUrl; investigating bucket/URL handling.
+- **Last Test Results**: All tests green previously; composable change is internal and should not affect unit tests.
 - **Known Issues**: Mobile sign‑in intermittent; occasional empty JSON from Gemini; UX polish for buttons/spinners.
 
 ## Key File Relationships
 - `src/views/Home.vue` depends on `useAuth` (isReady/isAuthenticated/user.id) and `useStories` composable for queries.
 - `src/components/stories/StoryFilters.vue` emits `update:modelValue` with a new object; parent must mutate existing reactive state to trigger watchers.
 - `useStories.fetchMine(userId, filters)` requires a valid user id; should be called only after auth is ready.
+- `src/components/stories/StoryCard.vue` uses `resolveImageUrl` to display Storage-backed images and falls back to inline SVGs when null.
+- `src/composables/useStoryImage.ts` uploads into `${BUCKET}/${userId}/${storyId}/filename` and returns `{ url (signed), path (bucket/path) }`.
+- `src/utils/supabase.ts` provides the client using `VITE_SUPABASE_URL` and `VITE_SUPABASE_KEY`.
 
 ## Recent Changes Made
 - [2025‑09‑19]: Modified `src/views/Home.vue` to:
   - Replace `v-model` with `:model-value` + `@update:modelValue` and mutate the same reactive `filters` via `Object.assign`.
   - Add a watcher on `isReady`, `isAuthenticated`, and `user.id` to refetch public and mine once auth hydrates (with `immediate: true`).
+- [2025‑09‑19]: Updated `src/composables/useStoryImage.ts` to make the URL cache TTL-aware. Cached signed URLs now expire and refresh instead of being reused indefinitely, preventing 400s from stale tokens.
 
 ## Next Steps Plan
 1. Manual verify: sign in, hard refresh Home; confirm “Your Stories” populates automatically; change filters and see both grids refetch.
 2. If double fetch observed, add minimal diffing or throttle to auth-state watcher.
 3. Investigate mobile sign‑in redirects (`redirectTo`) for Pages; ensure hash routing works with recovery/confirm links.
+4. Manual verify: reload Home; confirm images load. In DevTools, confirm image src is either public URL or a fresh signed URL (no immediate 400).
+5. If failures remain, double-check that stored `image_url` values are in the form `bucket/path/to/file.ext` or `https://...`. The resolver supports both.
+6. If Firefox shows OpaqueResponseBlocking warnings, test in Chrome/Edge and verify bucket public vs private policy. If private, rely on signed URLs; public buckets can use public URLs.
 
 ## Complexity Warning Signs
 - [ ] Multiple refetch triggers (filters watcher + auth watcher) could cause redundant calls; monitor network.
 - [ ] Ensure `useStories` cancels/guards overlapping requests.
+- [ ] Multiple old signed URLs in cache causing mixed results across cards — mitigated by TTL.
+- [ ] Bucket mis-match between env `VITE_STORY_IMAGES_BUCKET` and persisted `bucket` segments in DB.
 
 ## Assumptions Updated
 - Filters component emits a fresh object; parent must not rely on `v-model` reassigning a `reactive const`.
 - Auth hydration may complete after mount; refetch should run once ready.
+- Persisted values may be either full `bucket/path` or inner path; resolver normalizes via detectBucketAndInner.
+- Public URLs are preferred when available; otherwise a 1h signed URL is generated and cached with TTL.
 
 ## Human‑parseable Summary
 We fixed the inert search/filter behavior by binding `StoryFilters` explicitly and merging into the same reactive `filters` object, ensuring the existing watcher fires. Added an auth‑state watcher so “Your Stories” refetches after session hydration, resolving the empty-on-refresh issue without requiring navigation.
+
+We also observed 400 errors on signed URLs in Firefox after a refactor. The root cause is commonly stale signed URLs or path handling. We improved `resolveImageUrl` to cache with expiry and prefer public URLs when allowed. Next, we’ll validate bucket naming and policies and ensure DB‑persisted paths are normalized.
 
 
 ## Assessment of repo quality and improvements at end of phase 3 to keep in mind for phase 4 (do not edit this section, just be aware of it)

@@ -7,6 +7,20 @@ import StoryFilters, { type StoryFiltersModel } from '@/components/stories/Story
 
 const { isAuthenticated, user, isReady } = useAuth()
 
+// Helper: safely read a Ref or plain value with a fallback (for test mocks)
+function getRefVal<T>(maybeRefOrVal: any, fallback: T): T {
+  if (maybeRefOrVal && typeof maybeRefOrVal === 'object' && 'value' in maybeRefOrVal) return maybeRefOrVal.value as T
+  if (typeof maybeRefOrVal !== 'undefined') return maybeRefOrVal as T
+  return fallback
+}
+
+const authReady = computed<boolean>(() => getRefVal<boolean>(isReady as any, true))
+const authed = computed<boolean>(() => getRefVal<boolean>(isAuthenticated as any, false))
+const userId = computed<string | null>(() => {
+  const u = getRefVal<any>(user as any, null)
+  return u?.id ?? null
+})
+
 interface StoryCardProps {
   id: string
   title: string
@@ -53,7 +67,7 @@ function showMorePublic() {
 const canShowMoreMine = computed(() => yourStories.hasMore.value)
 function showMoreMine() {
   const next = (yourStories.page.value || 1) + 1
-  const uid = (user as any).value?.id
+  const uid = userId.value
   if (!uid) return
   const f = normalizeFiltersForQuery(filters)
   yourStories.fetchMine(uid, { ...f, page: next })
@@ -72,8 +86,8 @@ watch(
   () => {
     const f = normalizeFiltersForQuery(filters)
     publicStories.fetchPublic({ ...f, page: 1 })
-    if ((isAuthenticated as any).value) {
-      const uid = (user as any).value?.id
+    if (authed.value) {
+      const uid = userId.value
       if (uid) {
         yourStories.fetchMine(uid, { ...f, page: 1 })
       }
@@ -82,17 +96,15 @@ watch(
   { deep: true }
 )
 
-// New: ensure we (re)fetch when auth becomes ready or user/auth changes (fixes empty "Your Stories" on refresh)
+// Refetch when auth becomes ready or changes (robust to test mocks)
 watch(
-  [() => (isReady as any).value, () => (isAuthenticated as any).value, () => (user as any).value?.id],
+  [() => authReady.value, () => authed.value, () => userId.value],
   () => {
-    if (!(isReady as any).value) return
+    if (!authReady.value) return
     const f = normalizeFiltersForQuery(filters)
-    // Always update public
     publicStories.fetchPublic({ ...f, page: 1 })
-    // Conditionally update "mine" after session is ready and user is present
-    const uid = (user as any).value?.id
-    if ((isAuthenticated as any).value && uid) {
+    const uid = userId.value
+    if (authed.value && uid) {
       yourStories.fetchMine(uid, { ...f, page: 1 })
     }
   },
@@ -102,8 +114,8 @@ watch(
 onMounted(() => {
   const f = normalizeFiltersForQuery(filters)
   publicStories.fetchPublic({ ...f, page: 1 })
-  if ((isAuthenticated as any).value) {
-    const uid = (user as any).value?.id
+  if (authed.value) {
+    const uid = userId.value
     if (uid) yourStories.fetchMine(uid, { ...f, page: 1 })
   }
 })
@@ -114,7 +126,7 @@ onMounted(() => {
     <h1 class="text-3xl font-bold mb-6">Stories</h1>
 
     <!-- Prevent flicker until auth is hydrated -->
-    <div v-if="!isReady" aria-hidden="true" class="h-8 mb-6"></div>
+    <div v-if="!authReady" aria-hidden="true" class="h-8 mb-6"></div>
     <template v-else>
       <div class="mb-6">
         <!-- Replace v-model with explicit binding to avoid reassigning the reactive object -->

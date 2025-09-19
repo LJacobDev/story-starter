@@ -839,8 +839,15 @@ remove 'demo' route and view or more likely change it to dev only route and deci
 
 start a new chat history and see if it's quicker than running on a long one - confirmed - making an 'agent hand off briefing' text and starting a new chat makes agent response rate much higher than when in a long conversation
 
+search and filter features work now
+
+fixing the search and filter somehow resulted in the uploaded images not working anymore
+-- it wasn't actually this that did it, it had something to do with the storage paths
 
 ### things to still fix
+
+search and filter features work slowly.. they almost look like they're being lazy loaded or something like that because pressing the button shows what looks like an extra network call, then after that they're more responsive
+
 
 signing in with mobile doesn't seem to work yet, but viewing as unauthenticated at least works
 

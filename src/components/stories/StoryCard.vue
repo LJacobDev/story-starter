@@ -14,6 +14,7 @@
               :src="resolvedSrc"
               :alt="`Cover image for ${title}`"
               class="h-full w-full object-cover"
+              @error="onImgError"
             />
             <div v-else class="flex flex-col items-center justify-center">
               <!-- Inline fallback SVGs to avoid runtime template compilation -->
@@ -109,30 +110,57 @@ function isHttp(url?: string | null): url is string {
   return !!url && /^https?:\/\//i.test(url)
 }
 
-// Initialize with http/https immediately for sync render; resolve storage paths async
-const resolvedSrc = ref<string | null>(isHttp(props.imageUrl) ? (props.imageUrl as string) : null)
+function isSupabaseStorageUrl(url?: string | null): boolean {
+  if (!url) return false
+  try {
+    const u = new URL(url)
+    return /\/storage\/v1\/object\//.test(u.pathname)
+  } catch {
+    return false
+  }
+}
 
-async function refreshSrc() {
-  // If already an http url, just mirror it; otherwise resolve storage path
-  if (isHttp(props.imageUrl)) {
-    resolvedSrc.value = props.imageUrl as string
+// Keep last good src and attempt limited retries on error
+const resolvedSrc = ref<string | null>(null)
+const refreshAttempts = ref(0)
+
+async function refreshSrc(force = false) {
+  const src = props.imageUrl || null
+  if (!src) {
+    resolvedSrc.value = null
     return
   }
-  resolvedSrc.value = await resolveImageUrl(props.imageUrl || null)
+  // For non-Supabase external links, use as-is
+  if (isHttp(src) && !isSupabaseStorageUrl(src)) {
+    resolvedSrc.value = src
+    return
+  }
+  // For Storage paths or Supabase URLs, resolve (optionally force a re-sign)
+  resolvedSrc.value = await resolveImageUrl(src, { forceRefresh: force })
+}
+
+function onImgError() {
+  if (refreshAttempts.value >= 2) return
+  refreshAttempts.value += 1
+  // Force refresh and add a tiny cache-buster when we get a broken image
+  void (async () => {
+    const fresh = await resolveImageUrl(props.imageUrl || null, { forceRefresh: true })
+    if (fresh) {
+      const bust = `${fresh}${fresh.includes('?') ? '&' : '?'}t=${Date.now()}`
+      resolvedSrc.value = bust
+    }
+  })()
 }
 
 onMounted(() => {
-  if (!isHttp(props.imageUrl)) refreshSrc()
+  void refreshSrc(true)
 })
 
 watch(
   () => props.imageUrl,
   () => {
-    if (isHttp(props.imageUrl)) {
-      resolvedSrc.value = props.imageUrl as string
-    } else {
-      void refreshSrc()
-    }
+    refreshAttempts.value = 0
+    void refreshSrc(true)
   }
 )
 

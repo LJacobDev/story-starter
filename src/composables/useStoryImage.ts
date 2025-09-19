@@ -21,8 +21,13 @@ export const STORY_IMAGES_BUCKET = (import.meta as any).env?.VITE_STORY_IMAGES_B
 // Default to 'story-covers' for test expectations; allow env override when provided
 const BUCKET = (import.meta as any).env?.VITE_STORY_IMAGES_BUCKET || STORY_COVERS_BUCKET
 
-// Simple in-memory cache for resolved URLs (bucket+path -> url)
-const signedUrlCache = new Map<string, string>()
+// Simple in-memory cache for resolved URLs (bucket+path -> url) with TTL to avoid expired signed URLs
+type CachedUrl = { url: string; expiresAt: number }
+const signedUrlCache = new Map<string, CachedUrl>()
+
+const DEFAULT_TTL_SEC = 60 * 60 // 1 hour for signed URLs
+const PUBLIC_TTL_SEC = 24 * 60 * 60 // 24 hours for public URLs (non-expiring in practice)
+function nowSec() { return Math.floor(Date.now() / 1000) }
 
 function detectBucketAndInner(input: string): { bucket: string; inner: string } {
   let s = input.replace(/^\/+/, '')
@@ -32,40 +37,83 @@ function detectBucketAndInner(input: string): { bucket: string; inner: string } 
   return { bucket: BUCKET, inner: s }
 }
 
+function parseSupabaseStorageUrl(u: string): { bucket: string; inner: string } | null {
+  try {
+    const url = new URL(u)
+    // Expect paths like: /storage/v1/object/sign/<bucket>/<inner> OR /storage/v1/object/public/<bucket>/<inner>
+    const parts = url.pathname.split('/').filter(Boolean)
+    const idx = parts.findIndex((p) => p === 'object')
+    if (idx === -1 || idx + 1 >= parts.length) return null
+    let start = idx + 1
+    // Skip method segment if present
+    if (parts[start] === 'sign' || parts[start] === 'public') {
+      start += 1
+    }
+    const bucket = parts[start]
+    const inner = parts.slice(start + 1).join('/')
+    if (!bucket || !inner) return null
+    return { bucket, inner }
+  } catch {
+    return null
+  }
+}
+
 /**
  * Resolve a storage path (e.g., story-images/userId/storyId/file.jpg) or raw inner path
- * into a browser-displayable URL. If already an http/https URL, returns it.
- * Uses public URL when available, otherwise a signed URL (1h).
+ * into a browser-displayable URL. If already an http/https URL and not a Supabase Storage URL,
+ * returns it as-is. If it is a Supabase Storage URL (public or signed), we re-derive a fresh
+ * URL (preferring public; else new signed) to avoid stale tokens being persisted.
  */
-export async function resolveImageUrl(input?: string | null): Promise<string | null> {
+export async function resolveImageUrl(input?: string | null, opts?: { forceRefresh?: boolean }): Promise<string | null> {
   if (!input) return null
   const raw = String(input).trim()
-  if (/^https?:\/\//i.test(raw)) return raw
 
-  const { bucket, inner } = detectBucketAndInner(raw)
+  // If given an http(s) URL, check if it's a Supabase Storage URL. If so, parse bucket/inner and re-resolve.
+  // Otherwise, return the URL directly.
+  const httpMatch = /^https?:\/\//i.test(raw)
+  const parsedStorage = httpMatch ? parseSupabaseStorageUrl(raw) : null
+  let bucket: string, inner: string
+  if (parsedStorage) {
+    bucket = parsedStorage.bucket
+    inner = parsedStorage.inner
+  } else if (httpMatch) {
+    return raw
+  } else {
+    const det = detectBucketAndInner(raw)
+    bucket = det.bucket
+    inner = det.inner
+  }
+
   const cacheKey = `${bucket}/${inner}`
-  const cached = signedUrlCache.get(cacheKey)
-  if (cached) return cached
+  if (!opts?.forceRefresh) {
+    const cached = signedUrlCache.get(cacheKey)
+    // Reuse cached URL only if it is not about to expire (keep a small safety window)
+    if (cached && cached.expiresAt > nowSec() + 60) {
+      return cached.url
+    }
+  } else {
+    signedUrlCache.delete(cacheKey)
+  }
 
   try {
     // Try public url first (if bucket is public)
     const { data } = (supabase as any).storage.from(bucket).getPublicUrl(inner)
     const publicUrl = (data as any)?.publicUrl
     if (publicUrl && /^https?:\/\//i.test(publicUrl)) {
-      signedUrlCache.set(cacheKey, publicUrl)
+      signedUrlCache.set(cacheKey, { url: publicUrl, expiresAt: nowSec() + PUBLIC_TTL_SEC })
       return publicUrl
     }
   } catch {
-    // ignore
+    // ignore and fallback to signed URL
   }
 
   try {
     const { data, error } = await (supabase as any).storage
       .from(bucket)
-      .createSignedUrl(inner, 60 * 60)
+      .createSignedUrl(inner, DEFAULT_TTL_SEC)
     if (!error && (data as any)?.signedUrl) {
       const url = (data as any).signedUrl as string
-      signedUrlCache.set(cacheKey, url)
+      signedUrlCache.set(cacheKey, { url, expiresAt: nowSec() + DEFAULT_TTL_SEC })
       return url
     }
   } catch {
@@ -166,7 +214,7 @@ export function useStoryImage(opts?: UseStoryImageOptions) {
     // Signed URL for immediate preview
     const { data: urlData, error: urlErr } = await (supabase as any).storage
       .from(BUCKET)
-      .createSignedUrl(inner, 60 * 60)
+      .createSignedUrl(inner, DEFAULT_TTL_SEC)
     if (urlErr) {
       return { ok: false, error: { message: urlErr.message || 'Failed to create signed URL', code: urlErr.code } }
     }
