@@ -2,37 +2,41 @@
 
 ## Current Project State
 - **Last Known Good State**: All unit tests passing; auth + email verification working on GitHub Pages with hash routing; logout is idempotent and persistent.
-- **Currently Working**: Phase 3 — 3.1.2a useStories TDD. Initial tests and implementation added.
-- **Last Test Results**: All tests green (141/141). Some expected Vue router warnings in unit tests without a router; harmless.
+- **Currently Working**: Phase 3 — 3.1.2c.2 Implement StoryFilters and wire into Home/useStories.
+- **Last Test Results**: All unit tests are green.
 - **Known Issues**:
+  - Preview modal deferred (3.1.1e).
   - Some legacy files/tests may be redundant; defer cleanup until after Phase 3 MVP.
 
 ## Key File Relationships
 - `src/components/stories/StoryCard.vue` provides accessible image/fallback.
 - `src/components/stories/StoryGrid.vue` consumes StoryCard.
-- `src/views/Home.vue` renders sections with StoryGrid (placeholder data for now).
-- `src/composables/useStories.ts` now encapsulates story fetching, pagination, filtering, and search.
+- `src/components/stories/StoryFilters.vue` emits model updates; Home consumes and passes to `useStories`.
+- `src/views/Home.vue` renders sections with StoryGrid and hosts StoryFilters.
+- `src/composables/useStories.ts` encapsulates fetching, pagination, filtering, and search.
+- Tests mock Supabase via `@/utils/supabase` — keep imports aligned.
 
 ## Recent Changes Made
-- [2025-09-18]: Added `tests/unit/useStories.spec.ts` to drive TDD for data fetching (public/mine, pagination, search across title/content/genre/description, type/privacy filters, exact count, hasMore, error handling).
-- [2025-09-18]: Implemented `src/composables/useStories.ts` with `fetchPublic` and `fetchMine`, internal `runQuery` handling ordering, count: 'exact', search OR, and pagination with hasMore logic. All tests pass.
+- [2025-09-18]: Fixed Supabase query chaining in `useStories` (select before eq), removed inline template component in `StoryGrid` to eliminate runtime-compiler warnings, corrected `Home.vue` to use actual user id for `fetchMine`.
+- [2025-09-18]: Added tests for filters (`tests/unit/StoryFilters.spec.ts`) and implemented a stub `src/components/stories/StoryFilters.vue` with debounced search and immediate emits. Aligned `useStories` to import from `@/utils/supabase` to match test mocks. All unit tests now pass.
+
+## Assumptions at the start and things that were discovered that required changing things
 
 ## Next Steps Plan (Phase 3)
-1. 3.1.2b — Integrate `useStories` into `Home.vue`:
-   - Replace placeholders, wire loading/empty/error states, and add "Show more" to append pages.
-   - For guests, include marketing hero beside/above grid per spec.
-   - TDD: create Home integration tests (loading, append, error, empty).
-2. 3.1.2c — Search and filter UI controls with tests.
+1. Implement `StoryFilters.vue` with ShadCN UI polish and wire to Home.
+2. Extend `useStories` with date presets: newest/oldest ordering; last7/last30 via created_at gte.
+3. Add integration tests asserting Home triggers `useStories` calls on filter changes.
 
 ## Verification Plan
-- Unit: `useStories.spec.ts` asserts exact count, ordered queries, correct range, and hasMore computation; search/type/privacy filters; error propagation.
-- Manual (later when integrated): navigate Home and verify paging and states.
+- Unit: keep StoryFilters spec green; add new specs for date presets in `useStories` if needed.
+- Integration: simulate filter changes in Home and assert updated queries and rendered items.
+- Manual: interact with filters on Home; confirm queries and visible results update; check loading/empty states.
 
 ## Rollback Plan
-- If regressions occur, revert `useStories.ts` and tests, and restore placeholder data in Home.
+- Revert StoryFilters integration and leave Home working with pagination only if issues arise.
 
 ## Human-parsable summary
-- Added a tested `useStories` composable using Supabase query builder with exact counts and pagination. Suite now 141/141 passing. Ready to integrate into Home with "Show more" and marketing content for guests.
+- Phase 3 grids and fetching are stable. All tests pass. Next: finish and wire filter bar (search/type/date/privacy) with ShadCN components and date presets.
 
 ---
 

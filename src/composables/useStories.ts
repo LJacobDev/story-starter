@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/utils/supabase'
 import type { StoryStarterStory } from '@/types/database'
 
 export type StoriesQuery = {
