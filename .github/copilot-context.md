@@ -1,35 +1,35 @@
 # Copilot Working Memory Reference
 
 ## Current Project State
-- **Last Known Good State**: vitest run after prefill fix — all tests green (38 files, 196 tests)
-- **Currently Working**: Completed 4.1.1g–h; prefill now correctly sets type select and other fields; Reset returns to defaults
-- **Last Test Results**: All suites passed locally (single-run and watch)
-- **Known Issues**: None blocking; jsdom logs canvas getContext not implemented in a11y tests (benign)
+- **Last Known Good State**: local working state after 4.1.2d (all tests green)
+- **Currently Working**: Phase 4.1.2 — client generation flow complete on client side
+- **Last Test Results**: All unit tests passing locally, including `useGeneration` paths
+- **Known Issues**: None for the current scope
 
 ## Key File Relationships
-- `src/components/generation/StoryGenerateForm.vue` applies defaults and prefill immediately in setup; no onMounted dependency.
-- `tests/unit/StoryGenerateForm.prefill.spec.ts` validates prefill of all fields, Reset to defaults, and emits for edit-prompts/cancel.
-- `src/utils/imageMeta.ts` used by file image validation; tests mock it.
+- `src/composables/useGeneration.ts` depends on: `src/utils/composePrompt.ts`, browser `fetch` to `/functions/v1/gemini-proxy`
+- Client flow: payload → `composePrompt` → POST `{ prompt }` → receive text → extract fenced JSON → validate minimal schema → return structured result
 
 ## Recent Changes Made
-- [2025-09-19]: Fixed prefill timing in `StoryGenerateForm.vue` by removing onMounted and calling `applyDefaults()` then `applyPrefill()` during setup so initial DOM reflects `prefill.story_type` (e.g., `movie-summary`). All tests now pass.
+- 2025-09-19: Added `tests/unit/useGeneration.spec.ts` covering 200 (fenced JSON), 400, 429 (Retry-After/backoff), 5xx, and parse-error
+- 2025-09-19: Implemented `src/composables/useGeneration.ts` with error mapping and JSON extraction/validation
 
 ## Next Steps Plan
-1. 4.1.2a — Write failing tests for `composePrompt(formPayload)` utility.
-2. Implement `composePrompt` to satisfy tests; manually inspect prompt for a representative payload.
-3. Extend `/dev` sandbox to preview the composed prompt for manual verification.
+1. 4.1.2e — Write failing tests for Edge proxy contract in `tests/edge/gemini-proxy.contract.spec.ts`
+2. 4.1.2f — Implement Edge Function to satisfy rate limiting, validation, and forwarding
+3. Manual verification: local serve with mocked Gemini happy/error paths
 
 ## Complexity Warning Signs
 - [ ] More than 5 files need changes
 - [ ] Circular dependencies detected
-- [ ] Test failure cascade
+- [ ] Test failure cascade (one change breaks multiple tests)
 - [ ] Can't predict impact of changes
 
 ## assumptions about the project that changed when new things were learned
-- Prefill must be applied before mount to ensure correct initial select value in tests and runtime.
+- Edge returns sanitized plain text; client owns JSON parsing/validation
 
 ## Human parseable summary of state and insights
-- The failing prefill test was due to applying defaults/prefill in onMounted. Moving them into setup makes the v-model initial values correct at first render. This also simplifies lifecycle and avoids flicker.
+- The client-side generation pipeline (prompt build, request, parse, validate) is complete and tested. Proceed to define and implement the Edge proxy.
 
 Update timestamp: 2025-09-19.
 
@@ -202,4 +202,8 @@ Summary
 - Feature: add a “Revise with AI” action available on any story the current user owns.
 - Flow:
   1. Owner clicks “Revise with AI”.
+  2. a form with the story's body appears in a read only view
+  3. a free-text box exists that the user can write instructions in about how to change the story
+  4. the user presses 'submit' or 'refine story' and it gets sent to gemini as a prompt asking to refine the story according to the instructions found in the free-text box
+  5. the story body populates with the reply, and the user can either save over the old story, or save as a new story, or cancel the changes
 
