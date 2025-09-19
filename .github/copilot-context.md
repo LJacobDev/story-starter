@@ -1,42 +1,42 @@
 # Copilot Working Memory Reference
 
 ## Current Project State
-- **Last Known Good State**: All unit/integration tests passing; vue-tsc errors just fixed.
-- **Currently Working**: 4.1.4d — implement /generate route and wire form→preview→save.
-- **Last Test Results**: Green; mocked E2E happy path passes.
-- **Known Issues**: None blocking; optional server-side idempotency still pending.
+- **Last Known Good State**: All unit/integration tests passing after generation error-mapping fix (2025‑09‑19).
+- **Currently Working**: 4.1.4d — /generate flow; 4.1.4d.2 complete; improved JSON extraction for Edge replies that wrap content under generatedText; next 4.1.4d.3 (Preview wiring + idempotency).
+- **Last Test Results**: 226 passed, 0 failed locally; mocked E2E happy path green.
+- **Known Issues**: None blocking. Live manual test still requires .env (VITE_SUPABASE_URL/KEY) and deployed/running edge function.
 
 ## Key File Relationships
-- `StoryDetails.vue` uses `useStoryImage.upload(file, { userId, storyId })` and `useStory.update/remove`.
-- `StoryGenerateForm.vue` emits normalized payload; validates image via `getImageMetadata`.
-- `useGeneration.ts` returns discriminated union { ok, data|error }.
+- `src/components/generation/StoryGenerateForm.vue` emits normalized payload; shows >800‑char warning; disables submit when invalid.
+- `src/composables/useGeneration.ts` composes prompt → calls edge via `supabase.functions.invoke('gemini-proxy')` with fallback to raw `fetch('/functions/v1/gemini-proxy')`; extracts JSON via fence stripping, envelope unwrapping, double-parse, and brace-scan; validates schema; maps errors incl. 429 with Retry‑After; dev-only fallback synthesizes schema from plain prose in `generatedText`.
+- `src/utils/supabase.ts` provides real client; in test mode, includes a minimal `functions.invoke` stub that proxies to `/functions/v1/<name>` and returns `{ data, error }` like supabase‑js.
+- `tests/integration/generation.e2e.spec.ts` mocks edge and exercises generate → preview data → save → fetch‑mine.
+- `useSaveStory` and `useStories` power save + list flows used by E2E.
 
 ## Recent Changes Made
-- [Today]: Fixed TS build errors:
-  - `StoryDetails.vue`: pass ctx to `uploadImage(file, { userId, storyId })`.
-  - `tests/unit/useGeneration.spec.ts`: respect discriminated union; remove unused import.
-  - `tests/unit/StoryGenerateForm.prefill.spec.ts`: narrow `prefill.story_type` typing to component union.
-  - `src/vite-env.d.ts`: add `declare module '*.vue'` for SFC typing.
-- [Today]: Integration test Supabase mock adjusted to support insert→select→single chain.
+- [2025‑09‑19]: `useGeneration.ts` — Enhanced JSON extraction: added deepUnwrapJson for `{ generatedText: '...json...' }`, double-parse for inner JSON strings, and scanForJsonObject brace-matching fallback; retained error mapping and dev logs.
+- [2025‑09‑19]: `src/utils/supabase.ts` — Augmented test stub with `functions.invoke` that POSTs to `/functions/v1/<name>` and returns `{ data, error }` like supabase‑js.
+- [2025‑09‑19]: Verified `/generate` view renders form and calls `useGeneration.generateStory`; integration and unit tests pass.
 
 ## Next Steps Plan
-1. Start 4.1.4d.1 — add `/generate` route stub and view shell.
-2. Wire form submit → generation; then preview + idempotency; then image handling; then save + redirect; finally nav link.
-3. Re-run vue-tsc and tests after each subtask.
+1. Implement 4.1.4d.3 — Render `StoryGeneratePreview` in `GenerateStory.vue`; wire actions: Retry/Edit/Discard/Undo; persist per‑preview idempotency key until preview changes.
+2. Verification: retry then undo restores previous preview; idempotency key resets on edit/discard; tests green.
+3. If green, proceed to 4.1.4d.4 — image handling (URL/Upload with constraints) and 4.1.4d.5 — save + redirect.
 
 ## Complexity Warning Signs
 - [ ] More than 5 files need changes
 - [ ] Circular dependencies detected
-- [ ] Test failure cascade
+- [ ] Test failure cascade (one change breaks multiple tests)
 - [ ] Can't predict impact of changes
 
 ## Assumptions Updated
-- TS alias `@/*` is active for both src and tests; `.vue` module declaration required for SFC imports.
+- Edge may return an envelope `{ generatedText: string }` or embed JSON inside prose; client now unwraps and scans robustly before validation.
+- Production calls prefer `supabase.functions.invoke`; relative `/functions/v1/*` remains test-only.
 
-## Human-parseable Summary
-- Resolved TypeScript build errors by aligning tests with discriminated union shapes, fixing image upload ctx, and adding SFC typings. Ready to implement `/generate` route in small, verifiable steps.
+## Human parseable summary
+- Client can now parse JSON even when wrapped or embedded in text, reducing friction with diverse Edge/model responses. Ready to wire preview actions and idempotency in the view.
 
-Update timestamp: 2025-09-19.
+Update timestamp: 2025‑09‑19.
 
 
 ## Assessment of repo quality and improvements at end of phase 3 to keep in mind for phase 4 (do not edit this section, just be aware of it)
@@ -101,7 +101,7 @@ User journey
 - Submit:
   - Frontend constructs the full model prompt string (prompt engineering lives entirely in the client).
   - Frontend instructs Gemini to return strict JSON (via prompt content).
-  - Frontend POSTs that final prompt string to the gemini‑proxy Edge Function.
+  - Frontend POSTs that final prompt string to the gemini-proxy Edge Function.
 - Edge Function behavior:
   - Validates request size and rate limits.
   - Sanitizes the incoming prompt (trim/collapse whitespace, strip obvious HTML/scripts/control characters).
@@ -146,7 +146,7 @@ Retry/Undo semantics
 Responsibilities split
 - Frontend:
   - Prompt builder: composes final model prompt, includes strict “respond only with JSON” instructions and the JSON schema description.
-  - Calls gemini‑proxy with the prompt string.
+  - Calls gemini-proxy with the prompt string.
   - Extracts and parses JSON from the sanitized text; validates schema; handles user‑visible errors.
   - Image validation/upload, preview, save flow, idempotency on Save, toasts.
 - Edge function:
@@ -189,7 +189,7 @@ Here’s the append-only update block for the Phase 4 section.
     const RUN_PHASE4 = process.env.RUN_PHASE4 === '1';
     (RUN_PHASE4 ? describe : describe.skip)('Phase 4 — <suite>', () => { /* … */ });
     ````
-  - Option B (single-stream): when Phase 3 wraps or if the same agent continues, place tests in the normal locations immediately (tests/unit, tests/integration, tests/edge) without gating.
+  - Option B (single-stream): when Phase 3 wraps or if the same agent proceeds to Phase 4 next, use Option B and place tests in the standard folders. Local and CI use the default scripts.
 - Branching to avoid collisions with Phase 3: work on a phase4-prep branch; separate VS Code window optional. Do not touch:
   - src/components/stories/*, src/views/Home.vue, src/composables/useStories.ts, or existing Phase 3 tests.
 - Safe, additive deliverables to start now (unreferenced by Phase 3):

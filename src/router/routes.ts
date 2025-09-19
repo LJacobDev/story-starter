@@ -14,6 +14,8 @@ export const appRoutes = [
   { path: '/auth', component: Auth, meta: { guestOnly: true } },
   // Demo route
   { path: '/demo', component: Demo },
+  // Story generation route (Phase 4)
+  { path: '/generate', component: () => import('@/views/GenerateStory.vue') },
   // Story details
   { path: '/stories/:id', name: 'story-details', component: StoryDetails },
   // Protected route example
