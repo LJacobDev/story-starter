@@ -1,42 +1,34 @@
 # Copilot Working Memory Reference
 
 ## Current Project State
-- **Last Known Good State**: All unit tests passing; auth + email verification working on GitHub Pages with hash routing; logout is idempotent and persistent.
-- **Currently Working**: Phase 3 — 3.1.2c.2 Implement StoryFilters and wire into Home/useStories.
-- **Last Test Results**: All unit tests are green.
+- **Last Known Good State**: All unit tests passing. Filters UI implemented and wired; useStories supports date presets and ordering.
+- **Currently Working**: Phase 3 finished for chunk 3.1. Next, prepare Phase 4 tests-first.
+- **Last Test Results**: All unit tests green; types compile cleanly after wiring.
 - **Known Issues**:
-  - Preview modal deferred (3.1.1e).
-  - Some legacy files/tests may be redundant; defer cleanup until after Phase 3 MVP.
+  - Preview modal still deferred (3.1.1e).
 
 ## Key File Relationships
-- `src/components/stories/StoryCard.vue` provides accessible image/fallback.
-- `src/components/stories/StoryGrid.vue` consumes StoryCard.
-- `src/components/stories/StoryFilters.vue` emits model updates; Home consumes and passes to `useStories`.
-- `src/views/Home.vue` renders sections with StoryGrid and hosts StoryFilters.
-- `src/composables/useStories.ts` encapsulates fetching, pagination, filtering, and search.
-- Tests mock Supabase via `@/utils/supabase` — keep imports aligned.
+- `StoryFilters.vue` emits { search, type|null, privacy 'all'|'public', date }.
+- `Home.vue` normalizes filters to StoriesQuery and calls `useStories.fetchPublic/fetchMine`.
+- `useStories.ts` accepts date presets and orders/filters queries accordingly.
 
 ## Recent Changes Made
-- [2025-09-18]: Fixed Supabase query chaining in `useStories` (select before eq), removed inline template component in `StoryGrid` to eliminate runtime-compiler warnings, corrected `Home.vue` to use actual user id for `fetchMine`.
-- [2025-09-18]: Added tests for filters (`tests/unit/StoryFilters.spec.ts`) and implemented a stub `src/components/stories/StoryFilters.vue` with debounced search and immediate emits. Aligned `useStories` to import from `@/utils/supabase` to match test mocks. All unit tests now pass.
+- [2025-09-18]: Extended `useStories` with date presets (newest/oldest/last7/last30) and ordering.
+- [2025-09-18]: Wired `StoryFilters` into `Home.vue` with normalization to avoid TS null vs string issues; used ShadCN Input/Label in filters.
 
-## Assumptions at the start and things that were discovered that required changing things
-
-## Next Steps Plan (Phase 3)
-1. Implement `StoryFilters.vue` with ShadCN UI polish and wire to Home.
-2. Extend `useStories` with date presets: newest/oldest ordering; last7/last30 via created_at gte.
-3. Add integration tests asserting Home triggers `useStories` calls on filter changes.
+## Next Steps Plan
+1. Add/adjust integration tests to assert Home triggers filtered queries (optional if unit coverage is sufficient).
+2. Begin Phase 4 with tests-first for StoryGenerateForm (4.1.1a).
 
 ## Verification Plan
-- Unit: keep StoryFilters spec green; add new specs for date presets in `useStories` if needed.
-- Integration: simulate filter changes in Home and assert updated queries and rendered items.
-- Manual: interact with filters on Home; confirm queries and visible results update; check loading/empty states.
+- Manual: Toggle type/privacy/date; observe updated lists and hasMore; ensure Show more respects filters.
+- Automated: Ensure existing specs remain green; consider adding a Home filters integration spec.
 
 ## Rollback Plan
-- Revert StoryFilters integration and leave Home working with pagination only if issues arise.
+- Revert Home filter wiring and keep pagination-only if unexpected regressions occur.
 
 ## Human-parsable summary
-- Phase 3 grids and fetching are stable. All tests pass. Next: finish and wire filter bar (search/type/date/privacy) with ShadCN components and date presets.
+- Filters bar is fully functional and wired. Date ranges and ordering work; pagination coexists with filters. Phase 3 chunk 3.1 is complete except the optional preview modal.
 
 ---
 
@@ -133,7 +125,33 @@ Key risks and mitigations
 - Duplicate saves → client idempotency key; disable Save while pending.
 - Storage misuse → client/type/size/dimension checks + bucket RLS; signed URLs only.
 
+Here’s the append-only update block for the Phase 4 section.
 
+## Phase 4 Addendum — New Decisions and Execution Details (since last update)
+
+- Model default: gemini-2.5-flash.
+- Edge function request shape confirmed: POST { prompt: string } only; proxy sanitizes input/output and forwards as-is; frontend owns prompt engineering and JSON parsing.
+- Rate-limit/env knobs finalized: RL_BURST, RL_PER_HOUR, RL_PER_DAY, MAX_PROMPT_CHARS (~6000). Moderate defaults; adjustable via env.
+- Storage confirmed: bucket story-covers; path userId/storyId/filename; owner-only RLS; signed-URL viewing.
+- Test strategy (TDD) options:
+  - Option A (parallel-safe): place Phase 4 specs under tests/phase4 and gate them so CI/Phase 3 aren’t affected. Local run:
+    ````bash
+    RUN_PHASE4=1 vitest --include "tests/phase4/**/*.spec.ts" --watch
+    ````
+    Gate each spec:
+    ````ts
+    const RUN_PHASE4 = process.env.RUN_PHASE4 === '1';
+    (RUN_PHASE4 ? describe : describe.skip)('Phase 4 — <suite>', () => { /* … */ });
+    ````
+  - Option B (single-stream): when Phase 3 wraps or if the same agent continues, place tests in the normal locations immediately (tests/unit, tests/integration, tests/edge) without gating.
+- Branching to avoid collisions with Phase 3: work on a phase4-prep branch; separate VS Code window optional. Do not touch:
+  - src/components/stories/*, src/views/Home.vue, src/composables/useStories.ts, or existing Phase 3 tests.
+- Safe, additive deliverables to start now (unreferenced by Phase 3):
+  - docs/phase4/: gemini-proxy contract + runbook, image pipeline guide, prompt-builder notes, a11y/UX checklist.
+  - supabase/functions/gemini-proxy/: sanitize-and-forward scaffold with env-driven limits (not wired to UI).
+  - src/utils/: extractJson, slugify/humanize story type, imageValidation, idempotencyKey (+ gated tests).
+  - src/types/generation.ts; src/composables/useGeneration.ts (stub; not imported yet).
+- Execution note: test gating is optional. If the current Phase 3 agent proceeds to Phase 4 next, use Option B and place tests in the standard folders.
 
 
 

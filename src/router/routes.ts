@@ -3,6 +3,7 @@ import Protected from '@/views/Protected.vue'
 import Auth from '@/views/Auth.vue'
 import Home from '@/views/Home.vue'
 import Demo from '@/views/Demo.vue'
+import StoryDetails from '@/views/StoryDetails.vue'
 
 export const appRoutes = [
   // Home route
@@ -13,6 +14,8 @@ export const appRoutes = [
   { path: '/auth', component: Auth, meta: { guestOnly: true } },
   // Demo route
   { path: '/demo', component: Demo },
+  // Story details
+  { path: '/stories/:id', name: 'story-details', component: StoryDetails },
   // Protected route example
   { path: '/protected', component: Protected, meta: { requireAuth: true, requireEmailVerification: true } },
   // Catch-all -> redirect to home

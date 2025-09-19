@@ -1,14 +1,13 @@
 <template>
   <form class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 items-end" @submit.prevent>
     <div class="flex flex-col">
-      <label for="search" class="text-sm font-medium mb-1">Search</label>
-      <input
+      <Label for="search" class="text-sm font-medium mb-1">Search</Label>
+      <Input
         id="search"
         data-testid="search-input"
         type="text"
-        class="input input-bordered px-3 py-2 rounded border"
-        :value="state.search"
-        @input="onSearchInput"
+        v-model="state.search"
+        class="px-3 py-2"
         placeholder="Title, description, genre..."
         autocomplete="off"
       />
@@ -16,8 +15,8 @@
 
     <div class="flex flex-col">
       <label for="type" class="text-sm font-medium mb-1">Type</label>
-      <select id="type" data-testid="type-select" class="select select-bordered px-3 py-2 rounded border" :value="state.type" @change="onType">
-        <option :value="null">All types</option>
+      <select id="type" data-testid="type-select" class="select select-bordered px-3 py-2 rounded border" :value="state.type ?? ''" @change="onType">
+        <option value="">All types</option>
         <option value="short_story">Short story</option>
         <option value="movie_summary">Movie summary</option>
         <option value="tv_commercial">TV commercial</option>
@@ -46,7 +45,9 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, watch } from 'vue'
+import Input from '@/components/ui/Input.vue'
+import Label from '@/components/ui/Label.vue'
 
 export interface StoryFiltersModel {
   search?: string
@@ -67,18 +68,21 @@ const state = reactive<StoryFiltersModel>({
   date: props.modelValue?.date ?? 'newest'
 })
 
+// Debounce search via watch on state.search
 let timer: number | undefined
-function onSearchInput(e: Event) {
-  const val = (e.target as HTMLInputElement).value
-  state.search = val
-  if (timer) window.clearTimeout(timer)
-  timer = window.setTimeout(() => {
-    emit('update:modelValue', { ...state })
-  }, 300)
-}
+watch(
+  () => state.search,
+  () => {
+    if (timer) window.clearTimeout(timer)
+    timer = window.setTimeout(() => {
+      emit('update:modelValue', { ...state })
+    }, 300)
+  }
+)
 
 function onType(e: Event) {
-  state.type = ((e.target as HTMLSelectElement).value || null) as any
+  const val = (e.target as HTMLSelectElement).value
+  state.type = val === '' ? null : (val as any)
   emit('update:modelValue', { ...state })
 }
 

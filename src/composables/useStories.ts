@@ -8,6 +8,7 @@ export type StoriesQuery = {
   search?: string
   type?: string
   privacy?: 'public' | 'private'
+  date?: 'newest' | 'oldest' | 'last7' | 'last30' | 'all'
 }
 
 export function useStories() {
@@ -41,9 +42,18 @@ export function useStories() {
     error.value = null
 
     // Assume base is already a PostgrestFilterBuilder (i.e., after .select())
+    // Apply ordering based on date preset
+    const ascending = opts.date === 'oldest'
     let q = base
-      .order('created_at', { ascending: false })
-      .order('id', { ascending: false })
+      .order('created_at', { ascending })
+      .order('id', { ascending })
+
+    // Date range presets
+    if (opts.date === 'last7' || opts.date === 'last30') {
+      const days = opts.date === 'last7' ? 7 : 30
+      const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+      q = q.gte('created_at', cutoff)
+    }
 
     if (opts.type) {
       q = q.eq('story_type', opts.type)

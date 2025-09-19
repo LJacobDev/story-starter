@@ -5,9 +5,9 @@ This checklist tracks the development progress of the Story Starter application 
 ---
 
 ## Project Status Overview
-- **Current Phase**: Phase 3 (Core Story Management) — Task 3.1.2 in progress
+- **Current Phase**: Phase 3 (Core Story Management) — Chunk 3.1 complete (preview modal deferred)
 - **Total Phases**: 6
-- **Overall Progress**: On track — Phase 1 and 2 complete; Phase 3 underway (3.1.1 done; 3.1.2a/b/c.1 done)
+- **Overall Progress**: Phase 1 and 2 complete; Phase 3 Chunk 3.1 complete; next Phase 4
 
 ---
 
@@ -221,8 +221,8 @@ Notes
 
 ---
 
-#### [ ] Task 3.1.2: Story Fetching, Pagination, Search and Filters
-**Status**: 🚧 In Progress  
+#### [x] Task 3.1.2: Story Fetching, Pagination, Search and Filters
+**Status**: ✅ **COMPLETED**  
 **Description**: Implement story data operations and user controls
 
 **Requirements Checklist**:
@@ -240,13 +240,13 @@ Notes
 - [x] 3.1.2b.1 Tests — Home integration: guest marketing+grid, auth two grids, Show more appends 12, infinite continuation, loading/empty
 - [x] 3.1.2b.2 Implement — Home wiring with “Show more” and infinite scroll
 - [x] 3.1.2c.1 Tests — StoryFilters: search debounce, type/date/privacy filters
-- [ ] 3.1.2c.2 Implement — StoryFilters component and Home wiring
+- [x] 3.1.2c.2 Implement — StoryFilters component and Home wiring
 
 **Success Criteria**:
-- [ ] Stories load efficiently with pagination
-- [ ] Search and filters work correctly
-- [ ] Performance is optimal with large datasets
-- [ ] Error states are handled gracefully
+- [x] Stories load efficiently with pagination
+- [x] Search and filters work correctly
+- [x] Performance is optimal with large datasets
+- [x] Error states are handled gracefully
 
 ---
 

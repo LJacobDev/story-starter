@@ -418,6 +418,74 @@ Success Criteria:
 - All user interactions are smooth
 ```
 
+3.2.1 — TDD Micro‑Prompts
+
+3.2.1a — Tests first: Route + fetch-by-id
+- Goals:
+  - Route /stories/:id renders StoryDetails view
+  - Loads story by id; guest sees public only; owner sees private+public
+- Files:
+  - tests/unit/StoryDetails.route.spec.ts
+  - src/views/StoryDetails.vue (stub)
+  - src/composables/useStory.ts (stub: getById)
+- Success: tests fail initially
+
+3.2.1b — Implement: getById + initial view
+- Implement useStory.getById(id) with select('*') and RLS-safe behavior
+- Render title, badges, type, genre, description, image, content, created_at
+- Make tests pass
+
+3.2.1c — Tests first: Edit permissions + form contract
+- Only owner sees Edit button
+- Entering edit mode shows fields: title, story_type, genre, description, image_url, is_private, content
+- Validation mirrors StoryCard constraints (lengths)
+- Files: tests/unit/StoryDetails.edit.spec.ts
+- Success: tests fail initially
+
+3.2.1d — Implement: Edit mode
+- Implement edit toggle, form with ShadCN inputs, client validation, Cancel/Save
+- useStory.update(id, patch) → updates allowed fields; disabled while pending; error messaging
+- Make tests pass
+
+3.2.1e — Tests first: Delete with confirmation
+- Only owner sees Delete; opens confirm dialog; on confirm → calls useStory.remove(id); navigates back to Home
+- Files: tests/unit/StoryDetails.delete.spec.ts
+- Success: tests fail initially
+
+3.2.1f — Implement: Delete
+- Implement confirm dialog; useStory.remove; route push to Home on success; toasts
+- Make tests pass
+
+3.2.1g — Tests first: Share link behavior
+- Copy link button: uses navigator.share if available; falls back to clipboard
+- Private story warning when attempting to share; suggest toggling privacy
+- Files: tests/unit/StoryDetails.share.spec.ts
+- Success: tests fail initially
+
+3.2.1h — Implement: Share
+- Implement share/copy with graceful fallback; user feedback toasts
+- Make tests pass
+
+3.2.1i — Tests first: Image handling (URL and upload)
+- URL validation (http/https); preview; replace/remove
+- Upload flow via useStoryImage: validates type/size/dimensions; returns signed URL
+- Files: tests/unit/StoryDetails.image.spec.ts (mocks Storage); src/composables/useStoryImage.ts (reuse/extend)
+- Success: tests fail initially
+
+3.2.1j — Implement: Image pipeline integration
+- Wire URL/upload modes into edit form; persist image_url on save
+- Make tests pass
+
+3.2.1k — Tests first: A11y + keyboard flows
+- Heading hierarchy, labeled controls, focus on entering/leaving dialogs, Esc closes confirm
+- Files: tests/unit/StoryDetails.a11y.spec.ts
+- Success: tests fail initially
+
+3.2.1l — Implement: A11y polish
+- Ensure labels/aria, focus management, Esc handling; pass axe rules
+- Make tests pass
+
+
 Prompt 3.2.2.1 — Tests first: Preview modal (optional; can defer)
 - Tests for ShadCN Dialog: open/close, focus trap, Esc to close, focus return.
 - Files: `tests/unit/StoryPreviewModal.spec.ts`, `src/components/stories/StoryPreviewModal.vue` (stub).
@@ -425,7 +493,28 @@ Prompt 3.2.2.1 — Tests first: Preview modal (optional; can defer)
 Prompt 3.2.2.2 — Implement Preview modal (optional)
 - Implement dialog consuming card props; aria-labelledby.
 - Make tests pass.
+```
 
+3.2.2 — TDD Micro‑Prompts (optional)
+
+3.2.2a — Tests first: Open/close + focus management
+- Open from StoryCard action; focus moves to dialog; Esc and overlay click close; focus returns to trigger
+- Files: tests/unit/StoryPreviewModal.spec.ts
+- Success: tests fail initially
+
+3.2.2b — Implement: StoryPreviewModal
+- ShadCN Dialog; props: title, story_type, genre, description, image_url, content, is_private, created_at
+- aria-labelledby ties heading to dialog; trap focus; keyboard accessible actions
+- Make tests pass
+
+3.2.2c — Tests first: Content rendering + a11y
+- Renders text safely; shows SVG fallback when no image_url (type-specific); axe has no critical violations
+- Files: tests/unit/StoryPreviewModal.content.spec.ts
+- Success: tests fail initially
+
+3.2.2d — Implement: Content + fallback SVGs
+- Implement type-based monochrome SVGs; ensure alt/aria; pass a11y tests
+- Make tests pass
 
 ---
 

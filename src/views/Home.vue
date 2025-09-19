@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, reactive, watch } from 'vue'
 import { useAuth } from '@/composables/useAuth'
 import { useStories } from '@/composables/useStories'
 import StoryGrid from '@/components/stories/StoryGrid.vue'
+import StoryFilters, { type StoryFiltersModel } from '@/components/stories/StoryFilters.vue'
 
 const { isAuthenticated, user } = useAuth()
 
@@ -35,9 +36,18 @@ const yourItems = computed<StoryCardProps[]>(() => (yourStories.items.value || [
 const publicItems = computed<StoryCardProps[]>(() => (publicStories.items.value || []).map(toCard))
 
 const canShowMorePublic = computed(() => publicStories.hasMore.value)
+function normalizeFiltersForQuery(src: StoryFiltersModel) {
+  const f: any = { ...src }
+  // type: null should be undefined for StoriesQuery
+  if (f.type == null || f.type === '') delete f.type
+  // privacy: UI uses 'all'|'public'; StoriesQuery uses 'public'|'private' for mine; for public fetch, ignore privacy
+  if (f.privacy === 'all') delete f.privacy
+  return f
+}
 function showMorePublic() {
   const next = (publicStories.page.value || 1) + 1
-  publicStories.fetchPublic({ page: next })
+  const f = normalizeFiltersForQuery(filters)
+  publicStories.fetchPublic({ ...f, page: next })
 }
 
 const canShowMoreMine = computed(() => yourStories.hasMore.value)
@@ -45,14 +55,34 @@ function showMoreMine() {
   const next = (yourStories.page.value || 1) + 1
   const uid = (user as any).value?.id
   if (!uid) return
-  yourStories.fetchMine(uid, { page: next })
+  const f = normalizeFiltersForQuery(filters)
+  yourStories.fetchMine(uid, { ...f, page: next })
 }
 
+// Filters state shared by both sections; UI default: privacy 'all', date 'newest'
+const filters = reactive<StoryFiltersModel>({ search: '', type: null, privacy: 'all', date: 'newest' })
+
+watch(
+  () => ({ ...filters }),
+  () => {
+    const f = normalizeFiltersForQuery(filters)
+    publicStories.fetchPublic({ ...f, page: 1 })
+    if ((isAuthenticated as any).value) {
+      const uid = (user as any).value?.id
+      if (uid) {
+        yourStories.fetchMine(uid, { ...f, page: 1 })
+      }
+    }
+  },
+  { deep: true }
+)
+
 onMounted(() => {
-  publicStories.fetchPublic({ page: 1 })
+  const f = normalizeFiltersForQuery(filters)
+  publicStories.fetchPublic({ ...f, page: 1 })
   if ((isAuthenticated as any).value) {
     const uid = (user as any).value?.id
-    if (uid) yourStories.fetchMine(uid, { page: 1 })
+    if (uid) yourStories.fetchMine(uid, { ...f, page: 1 })
   }
 })
 </script>
@@ -60,6 +90,10 @@ onMounted(() => {
 <template>
   <div class="container mx-auto px-4 py-8">
     <h1 class="text-3xl font-bold mb-6">Stories</h1>
+
+    <div class="mb-6">
+      <StoryFilters v-model="filters" />
+    </div>
 
     <!-- Authenticated: Your Stories then All Public Stories -->
     <section v-if="isAuthenticated" data-testid="section-your" class="mb-10">
