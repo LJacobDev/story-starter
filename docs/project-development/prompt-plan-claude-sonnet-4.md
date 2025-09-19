@@ -782,6 +782,27 @@ General notes
   - Upload constraints enforced; URL mode accepts https and rejects data:.
   - After Save, story is visible in “Your Stories.”
 
+Proposed Sub-Prompts You Can Paste Into Your Plan
+
+4.1.4d.1 — Implement route stub
+Add route '/generate' with lazy-loaded GenerateStory.vue view (stub content).
+Verify route resolves and page shell renders.
+4.1.4d.2 — View shell + form submit
+Render StoryGenerateForm; on submit, call useGeneration.generateStory; store preview state; show warning >800 chars.
+Verify: valid form produces preview; invalid shows disabled submit.
+4.1.4d.3 — Preview wiring + idempotency
+Render StoryGeneratePreview; implement Retry/Edit/Discard/Undo; persist per-preview idempotency key until preview changes.
+Verify: retry then undo restores previous preview; idempotency key resets on edit/discard.
+4.1.4d.4 — Image handling
+URL mode via validateUrl; upload mode via upload(); display signed URL; allow replace/remove.
+Verify: accepts https URL; rejects data:; enforces upload constraints.
+4.1.4d.5 — Save + redirect
+Call useSaveStory.save with idempotency key; on success, navigate to “Your Stories”.
+Verify: only one record saved even with delayed second click.
+4.1.4d.6 — Navigation link
+Add “Generate New Story” to nav.
+Verify link goes to /generate.
+
 Exit criteria for Phase 4
 - All unit/integration tests pass locally and in CI.
 - Manual verification checklist complete.

@@ -1,32 +1,40 @@
 # Copilot Working Memory Reference
 
 ## Current Project State
-- **Last Known Good State**: Uncommitted working tree; tests green through 4.1.3c; DevSandbox uses per-preview idempotency key for Save.
-- **Currently Working**: 4.1.4a — Tests first for `useStoryImage` composable (Storage pipeline).
-- **Last Test Results**: New tests added for 4.1.4a expected to fail until implementation.
-- **Known Issues**: Storage composable not implemented yet; /generate route still pending.
+- **Last Known Good State**: [no commit hash available in this workspace snapshot] — Unit tests for generation, save (idempotent), and story image all passing.
+- **Currently Working**: 4.1.4c — mocked end-to-end test covering form → generate (edge) → preview → image URL validation → save → fetch mine.
+- **Last Test Results**: All unit tests green before adding 4.1.4c; after adding integration spec, pending run.
+- **Known Issues**: None open. Optional server-side idempotency still not implemented.
 
 ## Key File Relationships
-- `src/composables/useStoryImage.ts` will depend on `@/utils/supabase` Storage API.
-- Tests mock `@/utils/supabase` to avoid network and drive expectations for upload/remove/signed URL.
+- `src/composables/useGeneration.ts` calls: fetch(`/functions/v1/gemini-proxy`) and parses fenced JSON.
+- `src/composables/useSaveStory.ts` depends on: Supabase client; returns id on success; client-side idempotency via in-memory map.
+- `src/composables/useStoryImage.ts` depends on: Supabase storage (bucket `story-covers`); exposes validate/upload/replace/remove.
+- `src/composables/useStories.ts` depends on: Supabase client; populates `items` and supports filters/paging.
+- `src/views/DevSandbox.vue` wires: form → preview (with saving prop) → save using a persistent per-preview idempotency key.
 
 ## Recent Changes Made
-- 2025-09-19: Added failing tests `tests/unit/useStoryImage.spec.ts` covering validation, upload pathing, signed URL, URL mode validation, replace/remove helpers.
-- 2025-09-19: Expanded `src/composables/useStoryImage.ts` to expose API (constraints, upload, replace, remove, validateUrl) with Not implemented stubs (TDD).
+- [Today]: Added `tests/integration/generation.e2e.spec.ts` to validate mocked happy path across generation → preview → URL image → save → fetch mine. Included lightweight Supabase from() mock.
+- [Today]: Fixed TypeScript issues in the integration test (unused parameter, nullable image_url).
+- [Earlier]: Implemented `useStoryImage` to satisfy unit tests for validation, upload, signed URLs, replace/remove.
 
 ## Next Steps Plan
-1. Implement 4.1.4b: validate mime/size/dimensions, upload to `story-covers/{userId}/{storyId}/{filename}`, create signed URL, implement replace/remove, and URL validation. Make tests pass.
-2. Manual verify with real Supabase: accept ~800×500 JPEG ~500KB; reject 3MB PNG or 150×150 PNG.
-3. Wire into Preview UI after tests: allow URL mode or upload mode.
+1. Run tests in watch mode and ensure new integration spec fails if contracts diverge; then ensure it passes.
+2. If integration spec passes reliably, proceed to 4.1.4d: implement `/generate` route wiring UI to these composables with the same idempotency pattern.
+3. Manual verification in DevSandbox: generate, preview, set image URL, save, ensure single row with delayed second click.
 
 ## Complexity Warning Signs
 - [ ] More than 5 files need changes
 - [ ] Circular dependencies detected
-- [ ] Test failure cascade (none)
-- [ ] Can't predict impact (low)
+- [ ] Test failure cascade
+- [ ] Can't predict impact of changes
 
-## Human parseable summary
-- TDD in place for image pipeline. Composable interface is defined; implementation next to satisfy tests and then integrate into the /generate flow.
+## Assumptions Updated
+- Assumption: Integration can mock Supabase `from().insert().select().single()` minimal chain — Confirmed via local test helper.
+- Assumption: Image handling in this e2e uses URL mode only — Confirmed; storage not required for this test.
+
+## Human-parseable Summary
+- We added a concise integration spec that mocks the edge function and a minimal Supabase data layer to validate the core end-to-end happy path: generation produces fenced JSON, client parses it, image URL validated, save succeeds with idempotency key, and fetchMine returns the saved item. This positions us to wire the real `/generate` route next.
 
 Update timestamp: 2025-09-19.
 
