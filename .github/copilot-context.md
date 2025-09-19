@@ -1,9 +1,9 @@
 # Copilot Working Memory Reference
 
 ## Current Project State
-- **Last Known Good State**: All unit tests passing. StoryDetails edit and delete implemented with confirmation; App.vue demo fallback fixed; Home grid and filters stable.
-- **Currently Working**: Phase 3.2.1g — Tests-first: Share link behavior (navigator.share with clipboard fallback, private-story warning).
-- **Last Test Results**: 100% pass locally. Delete spec passes after stubbing Home on redirect to avoid unintended data fetching.
+- **Last Known Good State**: All unit tests passing prior to adding Share tests. StoryDetails edit and delete implemented with confirmation; App.vue demo fallback fixed; Home grid and filters stable.
+- **Currently Working**: Phase 3.2.1h — Implement Share behavior to satisfy the newly added Share tests (navigator.share with clipboard fallback, private warning).
+- **Last Test Results**: Share spec added and expected to fail initially (TDD). Existing suites remain green.
 - **Known Issues**:
   - Real toasts not yet integrated (placeholders only); plan to add shadcn toast after 3.2.1l.
   - Image pipeline (upload/URL) and A11y polish for StoryDetails pending (3.2.1i–l).
@@ -16,6 +16,7 @@
 - `src/App.vue` includes a no-router fallback handling `/demo` for unit tests.
 
 ## Recent Changes Made
+- [2025-09-19]: Tests — Added `tests/unit/StoryDetails.share.spec.ts` covering Share button visibility, navigator.share usage, clipboard fallback, and private-story warning (expected failing tests).
 - [2025-09-18]: StoryDetails — Added owner-only Edit with form (title, story_type, genre, description, image_url, is_private, content), validation caps (title ≤120, genre ≤60), Cancel/Save with pending; wired to `useStory.update`.
 - [2025-09-18]: StoryDetails — Added Delete with confirm dialog and pending; on confirm calls `useStory.remove` then navigates to Home.
 - [2025-09-18]: Tests — Added `tests/unit/StoryDetails.edit.spec.ts` and `tests/unit/StoryDetails.delete.spec.ts`; delete spec stubs Home to prevent Supabase fetch side-effects; both suites passing.
@@ -23,27 +24,21 @@
 - [2025-09-18]: App — Updated no-router fallback in `App.vue` to handle `/demo`, restoring passing demo/logo test.
 
 ## Next Steps Plan
-1. 3.2.1g — Write `tests/unit/StoryDetails.share.spec.ts` for Share behavior (navigator.share, clipboard fallback, private warning).
-2. 3.2.1h — Implement Share button/logic with graceful fallback; keep temporary console/toast placeholders.
-3. 3.2.1i/j — Image handling tests then implementation (URL validation and upload flow).
-4. 3.2.1k/l — A11y tests then polish (focus, labels, Esc closes confirm; axe clean).
-5. After 3.2.1l — Integrate shadcn toast system and replace placeholders.
+1. 3.2.1h — Implement Share button/logic in `StoryDetails.vue` to satisfy `StoryDetails.share.spec.ts` (navigator.share, clipboard fallback, private warning UI + placeholder toasts).
+2. 3.2.1i/j — Image handling tests then implementation (URL validation and upload flow).
+3. 3.2.1k/l — A11y tests then polish (focus, labels, Esc closes confirm; axe clean).
+4. After 3.2.1l — Integrate shadcn toast system and replace placeholders.
 
 ## Verification Plan
-- Automated: `vitest` unit suites for StoryDetails edit/delete continue to pass; add new Share tests and run.
-- Manual checks:
-  - Open a story you own → Edit, Save persists; Cancel restores.
-  - Delete → confirm dialog → on confirm, story removed and redirected Home without console errors.
-  - Share (after implementation): navigator.share when available; otherwise URL copied to clipboard; private-story warning shown.
+- Automated: run the targeted suite:
+  - npx vitest run tests/unit/StoryDetails.share.spec.ts
+- Success: Share tests pass; no regressions in existing StoryDetails edit/delete tests.
 
 ## Rollback Plan
-- If regressions: revert `StoryDetails.vue` changes and corresponding `useStory` methods; re-run tests.
-- If Share introduces instability: feature-guard Share UI and keep tests skipped until fixed.
+- If Share implementation causes regressions, revert the `StoryDetails.vue` changes and iterate while keeping the tests as the source of truth.
 
 ## Human-parsable summary
-- StoryDetails now supports Edit (with validation and pending states) and Delete (confirm + redirect). Supporting APIs `update` and `remove` live in `useStory`.
-- Navigation to Home during unit tests can trigger data fetching; tests that validate post-delete navigation stub Home to avoid side-effects.
-- Next up: add Share tests, then implement Share with clipboard fallback and private warning; defer real toasts until end of 3.2.1.
+- Added Share tests that define expected behavior (navigator.share preferred, clipboard fallback, private-warning UX). Implementation is next to make these pass.
 
 Update timestamp: 2025-09-19.
 

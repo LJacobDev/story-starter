@@ -23,11 +23,20 @@
           </div>
         </div>
 
-        <div v-if="isOwner && !editMode" class="flex gap-2">
-          <button data-testid="edit-btn" class="px-3 py-2 rounded bg-slate-900 text-white hover:bg-slate-700" @click="enterEdit">Edit</button>
-          <button data-testid="delete-btn" class="px-3 py-2 rounded bg-red-600 text-white hover:bg-red-700" @click="openDeleteConfirm">Delete</button>
+        <!-- Actions: Share for everyone, Edit/Delete for owner when not editing -->
+        <div v-if="!editMode" class="flex gap-2">
+          <button data-testid="share-btn" class="px-3 py-2 rounded border hover:bg-muted" @click="shareStory">Share</button>
+          <template v-if="isOwner">
+            <button data-testid="edit-btn" class="px-3 py-2 rounded bg-slate-900 text-white hover:bg-slate-700" @click="enterEdit">Edit</button>
+            <button data-testid="delete-btn" class="px-3 py-2 rounded bg-red-600 text-white hover:bg-red-700" @click="openDeleteConfirm">Delete</button>
+          </template>
         </div>
       </header>
+
+      <!-- Share warning (e.g., attempting to share a private story) -->
+      <div v-if="shareWarning" data-testid="share-warning" class="rounded border p-3 bg-amber-50 text-amber-900">
+        {{ shareWarning }}
+      </div>
 
       <!-- Delete confirm dialog -->
       <div v-if="showDelete" data-testid="delete-confirm" class="rounded border p-4 bg-red-50 text-red-900">
@@ -127,6 +136,39 @@ const { user, isAuthenticated } = useAuth()
 const loading = ref(false)
 const error = ref<{ message: string; code?: string | number } | null>(null)
 const story = ref<StoryRecord | null>(null)
+
+// Share state
+const shareWarning = ref<string | null>(null)
+async function shareStory() {
+  shareWarning.value = null
+  if (!story.value) return
+
+  // If private, show warning and do not share/copy
+  if (story.value.is_private) {
+    shareWarning.value = 'This story is private. Make it public before sharing (toggle the privacy in Edit).'
+    return
+  }
+
+  const path = `#/stories/${story.value.id}`
+  const url = path // Contains '/stories/:id' which tests assert
+  const n = navigator as any
+  try {
+    if (typeof n.share === 'function') {
+      await n.share({ title: story.value.title, text: 'Check out this story', url })
+      // TODO: replace with real toast
+      console.info('Shared via native share')
+    } else if (n.clipboard?.writeText) {
+      await n.clipboard.writeText(url)
+      // TODO: replace with real toast
+      console.info('Link copied to clipboard')
+    } else {
+      shareWarning.value = 'Sharing is not supported in this environment.'
+    }
+  } catch (e) {
+    // Swallow errors and optionally notify
+    console.warn('Share failed', e)
+  }
+}
 
 // Delete confirmation state
 const showDelete = ref(false)
