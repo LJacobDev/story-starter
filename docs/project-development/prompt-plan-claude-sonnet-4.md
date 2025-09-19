@@ -830,13 +830,18 @@ This is a list of things noticed while using the app that stand out and need to 
 
 stories aren't clickable to view details
 
-### things to still fix
-
 images not showing up when uploaded
 
 images not showing up when linked
 
+### things to still fix
+
 removing demo view from non dev environment, make sure tests about that are removed
+remove 'demo' route and view or more likely change it to dev only route and decide if changing
+
+'your stories' appears empty when refreshing page, but clicking to 'generate new story' and then back to 'home' makes them reappear
+
+buttons are not well explained or obvious, some buttons missing, some keypresses behave unintuitively
 
 had issue signing in on mobile, check that
 
@@ -844,11 +849,8 @@ had issue signing in on mobile, check that
 
 make 'generating story' more visible and say to expect a few seconds waiting
 
-remove 'demo' route and view or more likely change it to dev only route and decide if changing
 
 add 'about' section that explains the app, its purpose, scope and current state
-
-
 
 add a reset password link to signin
 
