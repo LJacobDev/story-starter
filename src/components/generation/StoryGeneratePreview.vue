@@ -29,7 +29,17 @@
     <article data-testid="preview-content" class="prose max-w-none whitespace-pre-wrap">{{ currentPreview.content }}</article>
 
     <footer class="flex flex-wrap gap-2 pt-2">
-      <button data-testid="save-btn" type="button" class="btn btn-primary" @click="onSave">Save</button>
+      <button
+        data-testid="save-btn"
+        type="button"
+        class="btn btn-primary"
+        :disabled="!!props.saving"
+        :aria-busy="props.saving ? 'true' : 'false'"
+        @click="onSave"
+      >
+        <span v-if="props.saving">Saving…</span>
+        <span v-else>Save</span>
+      </button>
       <button data-testid="discard-btn" type="button" class="btn" @click="emit('discard')">Discard</button>
       <button data-testid="retry-btn" type="button" class="btn" @click="emit('retry')">Retry</button>
       <button data-testid="edit-btn" type="button" class="btn" @click="emit('edit')">Edit Prompts</button>
@@ -59,7 +69,7 @@ interface PreviewDraft {
   image_url?: string
 }
 
-const props = defineProps<{ preview: PreviewDraft }>();
+const props = defineProps<{ preview: PreviewDraft; saving?: boolean }>();
 const emit = defineEmits<{
   (e: 'save', draft: PreviewDraft): void
   (e: 'discard'): void
