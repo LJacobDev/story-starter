@@ -121,6 +121,16 @@
       <div class="mt-2" v-if="imageMode === 'url'">
         <input data-testid="image-url-input" v-model="imageUrl" type="url" class="w-full rounded border p-2" placeholder="https://..." />
       </div>
+      <div class="mt-2" v-else>
+        <input
+          data-testid="image-file-input"
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          class="block w-full text-sm"
+          @change="onFileChange"
+        />
+      </div>
+      <p v-if="imageError" data-testid="image-error" class="text-red-600 text-sm mt-1">{{ imageError }}</p>
     </div>
 
     <!-- Privacy -->
@@ -137,7 +147,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { getImageMetadata } from '@/utils/imageMeta'
 
 const emit = defineEmits<{
   (e: 'submit', payload: any): void
@@ -167,6 +178,9 @@ const charactersError = ref(false)
 
 const imageMode = ref<'url' | 'upload'>('url')
 const imageUrl = ref('')
+const imageFile = ref<File | null>(null)
+const imageMeta = ref<{ width: number; height: number; type: string; size: number } | null>(null)
+const imageError = ref('')
 
 const isPrivate = ref(true)
 
@@ -238,12 +252,86 @@ function removeAt<T>(arr: T[], index: number) {
   arr.splice(index, 1)
 }
 
+function validateImageUrl(url: string) {
+  // empty allowed (no image)
+  if (!url) {
+    imageError.value = ''
+    return true
+  }
+  const ok = /^https?:\/\//i.test(url)
+  imageError.value = ok ? '' : 'Image URL must start with http(s)'
+  return ok
+}
+
+function validateImageFile() {
+  const f = imageFile.value
+  if (!f) {
+    imageError.value = ''
+    return true
+  }
+  const allowed = ['image/png', 'image/jpeg', 'image/webp']
+  if (!allowed.includes(f.type)) {
+    imageError.value = 'Only PNG, JPEG, or WEBP images are allowed'
+    return false
+  }
+  if (f.size > 2_000_000) {
+    imageError.value = 'Image must be ≤ 2 MB'
+    return false
+  }
+  const m = imageMeta.value
+  if (!m) {
+    // metadata not loaded yet; temporarily block submit
+    imageError.value = 'Reading image metadata...'
+    return false
+  }
+  if (m.width < 200 || m.height < 200 || m.width > 4000 || m.height > 4000) {
+    imageError.value = 'Image dimensions must be within 200–4000 px'
+    return false
+  }
+  imageError.value = ''
+  return true
+}
+
+async function onFileChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files && input.files[0] ? input.files[0] : null
+  imageFile.value = file
+  imageMeta.value = null
+  imageError.value = ''
+  if (file) {
+    try {
+      const meta = await getImageMetadata(file)
+      imageMeta.value = meta
+    } catch (err) {
+      imageError.value = 'Failed to read image metadata'
+      return
+    }
+    // run validations after meta
+    validateImageFile()
+  }
+}
+
+watch(imageUrl, (val) => {
+  if (imageMode.value === 'url') validateImageUrl(val)
+})
+watch(imageMode, () => {
+  // reset error on mode switch and validate current mode
+  imageError.value = ''
+  if (imageMode.value === 'url') validateImageUrl(imageUrl.value)
+  else validateImageFile()
+})
+
 const canSubmit = computed(() => {
   if (!title.value || titleTooLong.value) return false
   if (creativityInvalid.value) return false
   if (instructionsTooLong.value) return false
   if (themesError.value || charactersError.value) return false
-  return true
+
+  // image validation
+  if (imageMode.value === 'url') {
+    return validateImageUrl(imageUrl.value)
+  }
+  return validateImageFile()
 })
 
 function onSubmit() {
@@ -258,7 +346,11 @@ function onSubmit() {
     themes: themes.value.slice(),
     plot_points: plotPoints.value.slice(),
     characters: characters.value.map(c => ({ ...c })),
-    image: imageMode.value === 'url' ? { mode: 'url', url: imageUrl.value || undefined } : { mode: 'upload' },
+    image: imageMode.value === 'url'
+      ? { mode: 'url', url: imageUrl.value || undefined }
+      : imageFile.value && imageMeta.value
+        ? { mode: 'upload', file: imageFile.value, meta: imageMeta.value }
+        : { mode: 'upload' },
     is_private: isPrivate.value,
   })
 }

@@ -1,28 +1,27 @@
 # Copilot Working Memory Reference
 
 ## Current Project State
-- **Last Known Good State**: vitest run after 4.1.1d edits — all tests green
-- **Currently Working**: 4.1.1d implemented; preparing for 4.1.1e (image validation)
-- **Last Test Results**: 36 files, 187 tests passed (vitest run)
-- **Known Issues**: none blocking; dev-only routes present (/dev, /dev/details)
+- **Last Known Good State**: vitest run after 4.1.1f — all tests green (37 files, 193 tests)
+- **Currently Working**: Completed 4.1.1e (tests) and 4.1.1f (implementation) for image validation
+- **Last Test Results**: All suites passed locally
+- **Known Issues**: none blocking
 
 ## Key File Relationships
-- `src/components/generation/StoryGenerateForm.vue` uses: Vue 3 Composition API refs and emits; provides data-testids for unit tests.
-- `tests/unit/StoryGenerateForm.lists.spec.ts` drives: add/remove/reorder and Enter-to-add behaviors for themes/plot points/characters.
-- `src/composables/useStory.ts` provides getById/update/remove; DEV branch returns mock for `mock-1`.
-- `src/router/index.ts` (or routes file) conditionally registers `/dev` and `/dev/details` when `import.meta.env.DEV`.
+- `src/components/generation/StoryGenerateForm.vue` now validates image URL/upload and emits normalized descriptor.
+- `tests/unit/StoryGenerateForm.image.spec.ts` covers URL scheme, file type/size/dimensions, and payload shape.
+- `src/utils/imageMeta.ts` provides `getImageMetadata(file)` used by the form; tests mock it.
 
 ## Recent Changes Made
-- [Today]: Modified `src/components/generation/StoryGenerateForm.vue` to:
-  - Add Enter-to-add for themes, trimming, dedupe, max caps.
-  - Add remove and reorder (up/down) controls with data-testids for themes, plot points, characters.
-  - Implement generic moveUp/moveDown/removeAt helpers (array-based) and fixed type issues.
-  - Kept validation and submit payload normalization intact.
+- [Today]: Added `tests/unit/StoryGenerateForm.image.spec.ts` (failing first), then:
+  - Implemented URL mode validation (http/https only; empty allowed) and error messaging.
+  - Implemented upload mode validation: png/jpeg/webp, ≤ 2 MB, dimensions 200–4000 (via `getImageMetadata`).
+  - Added data-testids: `image-file-input`, `image-error`; kept `image-mode-*` and `image-url-input`.
+  - Emission: `{ image: { mode: 'url', url } }` or `{ image: { mode: 'upload', file, meta } }`.
 
 ## Next Steps Plan
-1. 4.1.1e — Image client validation (URL format, upload placeholder), tests first.
-2. Re-run tests and confirm coverage thresholds.
-3. Manual verify keyboard flow on `/dev` page.
+1. 4.1.1g — Tests first: Prefill/Reset and “Edit prompts”.
+2. 4.1.1h — Implement: Prefill/Reset behavior.
+3. Manual: verify on `/dev` playground; try invalid/valid images and check submit gating.
 
 ## Complexity Warning Signs
 - [ ] More than 5 files need changes
@@ -31,10 +30,10 @@
 - [ ] Can't predict impact of changes
 
 ## assumptions about the project that changed when new things were learned
-- Assumed lists needed only add: tests clarified need for remove/reorder and Enter-to-add for themes.
+- Image validation must not involve Storage; pure client checks only at this phase.
 
 ## Human parseable summary of state and insights derived from recent work
-- Generation form supports robust list UX matching tests: themes (≤10, ≤30 chars, unique), plot points (≤10, ≤200 chars), characters (≤6; role enum; name/desc caps). Buttons expose deterministic data-testids (e.g., `theme-up-0`, `plot-remove-2`, `char-down-1`). Submit remains disabled until valid and emits normalized payload.
+- Image validation is client-side with clear errors and submit gating. Tests mock metadata; browser implementation in `imageMeta.ts` reads natural dimensions via Image for real use.
 
 Update timestamp: 2025-09-19.
 
