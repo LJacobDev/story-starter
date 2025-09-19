@@ -834,10 +834,13 @@ images not showing up when uploaded
 
 images not showing up when linked
 
-### things to still fix
-
 removing demo view from non dev environment, make sure tests about that are removed
 remove 'demo' route and view or more likely change it to dev only route and decide if changing
+
+### things to still fix
+
+signing in with mobile doesn't seem to work yet, but viewing as unauthenticated at least works
+
 
 'your stories' appears empty when refreshing page, but clicking to 'generate new story' and then back to 'home' makes them reappear
 

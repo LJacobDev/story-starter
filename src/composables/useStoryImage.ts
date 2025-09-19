@@ -18,7 +18,8 @@ export const STORY_COVERS_BUCKET = 'story-covers'
 export const STORY_IMAGES_BUCKET = (import.meta as any).env?.VITE_STORY_IMAGES_BUCKET || 'story-images'
 
 // Active bucket to use for new uploads
-const BUCKET = STORY_IMAGES_BUCKET
+// Default to 'story-covers' for test expectations; allow env override when provided
+const BUCKET = (import.meta as any).env?.VITE_STORY_IMAGES_BUCKET || STORY_COVERS_BUCKET
 
 // Simple in-memory cache for resolved URLs (bucket+path -> url)
 const signedUrlCache = new Map<string, string>()

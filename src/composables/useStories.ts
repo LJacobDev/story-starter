@@ -20,16 +20,25 @@ export function useStories() {
   const loading = ref(false)
   const error = ref<{ message: string; code?: string } | null>(null)
 
-  function buildSearchOr(search: string) {
-    const term = search.trim()
-    if (!term) return null
-    const encoded = term.replace(/%/g, '')
+  // Sanitize user text for use inside PostgREST ilike patterns and logical expressions
+  function sanitizeSearchTerm(input: string) {
+    // Remove characters that can break or()/and() expressions or alter wildcards
+    return input
+      .replace(/[%,()"'\r\n]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+  }
+
+  function buildSearchClauses(search: string) {
+    const term = sanitizeSearchTerm(search)
+    if (!term) return [] as string[]
+    const pattern = `%${term}%`
     return [
-      `title.ilike.%${encoded}%`,
-      `content.ilike.%${encoded}%`,
-      `genre.ilike.%${encoded}%`,
-      `description.ilike.%${encoded}%`
-    ].join(',')
+      `title.ilike.${pattern}`,
+      `content.ilike.${pattern}`,
+      `genre.ilike.${pattern}`,
+      `description.ilike.${pattern}`
+    ]
   }
 
   async function runQuery(base: any, opts: StoriesQuery = {}) {
@@ -55,13 +64,10 @@ export function useStories() {
       q = q.gte('created_at', cutoff)
     }
 
-    if (opts.type) {
-      q = q.eq('story_type', opts.type)
-    }
-
-    if (opts.search) {
-      const orExpr = buildSearchOr(opts.search)
-      if (orExpr) q = q.or(orExpr)
+    // Search filter across multiple text fields
+    const searchClauses = opts.search ? buildSearchClauses(opts.search) : []
+    if (searchClauses.length) {
+      q = q.or(searchClauses.join(','))
     }
 
     const { data, error: e, count } = await q.range(from, to)
@@ -88,6 +94,11 @@ export function useStories() {
       .select('*', { count: 'exact' })
       .eq('is_private', false)
 
+    if (opts.type) {
+      const val = sanitizeSearchTerm(opts.type)
+      if (val) base.eq('story_type', val)
+    }
+
     return runQuery(base, opts)
   }
 
@@ -100,6 +111,11 @@ export function useStories() {
     if (opts.privacy) {
       // Apply privacy filter to the base before ordering/range
       base.eq('is_private', opts.privacy === 'private')
+    }
+
+    if (opts.type) {
+      const val = sanitizeSearchTerm(opts.type)
+      if (val) base.eq('story_type', val)
     }
 
     return runQuery(base, opts)
