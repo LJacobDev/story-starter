@@ -818,7 +818,19 @@ Exit criteria for Phase 4
 
 PHASE 4 IS KIND OF DONE, BASIC FEATURES ARE WORKING, BUT LOTS OF UX THINGS NEED CORRECTING
 
-GENERATE NEW STORY shouldn't appear for unauthenticated people on the navbar, nor should they be able to see that route
+
+stories aren't clickable to view details
+
+images aren't being saved and it's using the fallback SVGs - I'd rather at least have the fallbacks be stock images like pexels stuff
+
+refreshing the page makes story grid look empty, but then clicking on demo then home again makes them appear
+
+
+
+the search and filter doesn't really seem to work either
+
+
+seeding the database with stories so I could test filters and pagination during implementation would have been good, want to do that next time
 
 
 

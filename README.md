@@ -23,24 +23,17 @@ This workflow is attempting to rely mainly on prompts to get the work done, with
 
 ## Current state
 
-Wrapping up phase 2 of the prompt plan, where basic UI and authentication are now working.
+Phase 4 is complete, which means that stories can be generated and saved
 
-The story generation UI and functionality are being implemented now.
-
-Email verification redirect successfully redirects verified user to page as authenticated.
-
-Redirect page no longer shows the authorization token in the url
-
+There are many parts of the app that are implemented but not working correctly yet
 
 ### Things to fix or polish
 
-#### Resend verification email error message
-
-Clicking 'resend verification email' right after having performed a signup will show a countdown wait message in black text but then will also show a duplicate red error text beneath it.  Remove the red text but make sure it doesn't break something else while doing that.
-
 #### Making sure all UI components are smooth and fully functional
 
-Getting core functionality is being prioritized, and things that need improvements in UI / UX will be looked at after that.
+Getting core functionality was being prioritized, and things that need improvements in UI / UX will be looked at after that.
+
+Examples of pending issues:  story cards can't be clicked on or viewed like they're meant to be, many of the buttons need styling, form fields need keyboard navigation improvements, image upload and storage and display needs to be made to work, and more.
 
 
 
