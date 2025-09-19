@@ -44,12 +44,19 @@
     <div>
       <label class="block text-sm font-medium">Themes</label>
       <div class="flex gap-2 mt-1">
-        <input data-testid="themes-input" v-model="themeInput" type="text" class="flex-1 rounded border p-2" />
+        <input data-testid="themes-input" v-model="themeInput" type="text" class="flex-1 rounded border p-2" @keyup.enter.prevent="addTheme" />
         <button type="button" data-testid="add-theme" class="rounded bg-gray-100 px-3 py-2" @click="addTheme">Add</button>
       </div>
       <p v-if="themesError" data-testid="error-themes" class="text-red-600 text-sm">Each theme must be 1–30 chars, max 10 themes, unique.</p>
-      <div class="flex flex-wrap gap-2 mt-2">
-        <span v-for="t in themes" :key="t" class="text-xs bg-gray-200 rounded px-2 py-1">{{ t }}</span>
+      <div class="flex flex-col gap-2 mt-2">
+        <div v-for="(t, i) in themes" :key="t" class="flex items-center gap-2">
+          <span data-testid="theme-item" class="text-sm">{{ t }}</span>
+          <div class="ml-auto flex items-center gap-1">
+            <button type="button" :data-testid="`theme-up-${i}`" class="h-6 w-6 rounded border" aria-label="Move up" @click="moveUp(themes, i)"></button>
+            <button type="button" :data-testid="`theme-down-${i}`" class="h-6 w-6 rounded border" aria-label="Move down" @click="moveDown(themes, i)"></button>
+            <button type="button" :data-testid="`theme-remove-${i}`" class="h-6 w-6 rounded border" aria-label="Remove" @click="removeAt(themes, i)"></button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -62,7 +69,14 @@
       </div>
       <div class="text-xs text-gray-500 mt-1">Up to 10, each ≤ 200 chars.</div>
       <div class="flex flex-col gap-1 mt-2">
-        <span v-for="(p, i) in plotPoints" :key="i" class="text-sm bg-gray-50 rounded px-2 py-1">• {{ p }}</span>
+        <div v-for="(p, i) in plotPoints" :key="i" class="flex items-center gap-2">
+          <span data-testid="plot-item" class="text-sm">{{ p }}</span>
+          <div class="ml-auto flex items-center gap-1">
+            <button type="button" :data-testid="`plot-up-${i}`" class="h-6 w-6 rounded border" aria-label="Move up" @click="moveUp(plotPoints, i)"></button>
+            <button type="button" :data-testid="`plot-down-${i}`" class="h-6 w-6 rounded border" aria-label="Move down" @click="moveDown(plotPoints, i)"></button>
+            <button type="button" :data-testid="`plot-remove-${i}`" class="h-6 w-6 rounded border" aria-label="Remove" @click="removeAt(plotPoints, i)"></button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -79,9 +93,16 @@
         <button type="button" data-testid="add-character" class="rounded bg-gray-100 px-3 py-2" @click="addCharacter">Add character</button>
       </div>
       <p v-if="charactersError" data-testid="error-characters" class="text-red-600 text-sm">Name ≤ 60, role must be one of {{ allowedRoles.join(', ') }}, description ≤ 400, max 6.</p>
-      <ul class="mt-2 space-y-1 text-sm">
-        <li v-for="(c, i) in characters" :key="i">{{ c.name }} — {{ c.role }} — {{ c.description }}</li>
-      </ul>
+      <div class="mt-2 space-y-1 text-sm">
+        <div v-for="(c, i) in characters" :key="i" class="flex items-center gap-2">
+          <span data-testid="character-item">{{ c.name }} — {{ c.role }} — {{ c.description }}</span>
+          <div class="ml-auto flex items-center gap-1">
+            <button type="button" :data-testid="`char-up-${i}`" class="h-6 w-6 rounded border" aria-label="Move up" @click="moveUp(characters, i)"></button>
+            <button type="button" :data-testid="`char-down-${i}`" class="h-6 w-6 rounded border" aria-label="Move down" @click="moveDown(characters, i)"></button>
+            <button type="button" :data-testid="`char-remove-${i}`" class="h-6 w-6 rounded border" aria-label="Remove" @click="removeAt(characters, i)"></button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Image input mode -->
@@ -196,6 +217,25 @@ function addCharacter() {
   charName.value = ''
   charRole.value = ''
   charDesc.value = ''
+}
+
+function moveUp<T>(arr: T[], index: number) {
+  if (index <= 0 || index >= arr.length) return
+  const tmp = arr[index - 1]
+  arr[index - 1] = arr[index]
+  arr[index] = tmp
+}
+
+function moveDown<T>(arr: T[], index: number) {
+  if (index < 0 || index >= arr.length - 1) return
+  const tmp = arr[index + 1]
+  arr[index + 1] = arr[index]
+  arr[index] = tmp
+}
+
+function removeAt<T>(arr: T[], index: number) {
+  if (index < 0 || index >= arr.length) return
+  arr.splice(index, 1)
 }
 
 const canSubmit = computed(() => {

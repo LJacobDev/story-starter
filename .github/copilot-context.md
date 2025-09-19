@@ -1,34 +1,40 @@
 # Copilot Working Memory Reference
 
 ## Current Project State
-- **Last Known Good State**: Phase 3 complete — all StoryDetails suites (route, edit, delete, share, image, a11y) passing; grids and filters stable.
-- **Currently Working**: Preparing Phase 4 (generation) per micro-prompts; minor UX: prevent Home hero flicker on refresh.
-- **Last Test Results**: 166/166 tests passing locally; axe checks clean on StoryCard/StoryDetails a11y specs.
-- **Known Issues**:
-  - None blocking. Minor: jsdom canvas warning from vitest-axe (safe to ignore), Home hero flashes briefly when auth is already signed-in on refresh.
+- **Last Known Good State**: vitest run after 4.1.1d edits — all tests green
+- **Currently Working**: 4.1.1d implemented; preparing for 4.1.1e (image validation)
+- **Last Test Results**: 36 files, 187 tests passed (vitest run)
+- **Known Issues**: none blocking; dev-only routes present (/dev, /dev/details)
 
 ## Key File Relationships
-- `src/views/Home.vue` uses `useAuth.isAuthenticated`, `useStories.fetchPublic/fetchMine`, `StoryFilters` model to build queries.
-- `src/views/StoryDetails.vue` depends on `useStory` (getById/update/remove), `useAuth` (owner checks), `useStoryImage` (upload). Now includes focus management and Esc handling for the confirm dialog.
-- `src/composables/useAuth.ts` exposes `user`, `session`, `isAuthenticated`, `isReady` (new) to gate UI until initial auth hydration.
+- `src/components/generation/StoryGenerateForm.vue` uses: Vue 3 Composition API refs and emits; provides data-testids for unit tests.
+- `tests/unit/StoryGenerateForm.lists.spec.ts` drives: add/remove/reorder and Enter-to-add behaviors for themes/plot points/characters.
+- `src/composables/useStory.ts` provides getById/update/remove; DEV branch returns mock for `mock-1`.
+- `src/router/index.ts` (or routes file) conditionally registers `/dev` and `/dev/details` when `import.meta.env.DEV`.
 
 ## Recent Changes Made
-- [2025-09-19]: Added tests `tests/unit/StoryDetails.a11y.spec.ts` and implemented a11y polish in `StoryDetails.vue` (focus to title on edit; focus to Cancel on confirm open; focus return to Delete on close; Esc closes confirm; dialog aria attributes).
-- [2025-09-19]: Added `.vscode/tasks.json` default build task mapping to `npm run test` (watch) for Ctrl+Shift+B.
-- [2025-09-19]: Updated `useAuth.ts` to hydrate initial session via `getSession()` and added `isReady` to prevent refresh flicker.
-- Earlier: Completed 3.2.1 a–j (route, edit, delete, share, image), with tests.
+- [Today]: Modified `src/components/generation/StoryGenerateForm.vue` to:
+  - Add Enter-to-add for themes, trimming, dedupe, max caps.
+  - Add remove and reorder (up/down) controls with data-testids for themes, plot points, characters.
+  - Implement generic moveUp/moveDown/removeAt helpers (array-based) and fixed type issues.
+  - Kept validation and submit payload normalization intact.
 
 ## Next Steps Plan
-1. Home hero flicker: Gate guest hero with `isReady` and render only after initial auth state resolves. Verify no flash when authenticated on refresh.
-2. Phase 4 kickoff: 4.1.1a tests-first (StoryGeneration form skeleton + validation caps) under tests/unit.
-3. Add CI note: run `npm run type-check` and `npm run test:coverage`; track coverage trend.
+1. 4.1.1e — Image client validation (URL format, upload placeholder), tests first.
+2. Re-run tests and confirm coverage thresholds.
+3. Manual verify keyboard flow on `/dev` page.
 
-## Verification Plan
-- Automated: run full unit suite; ensure StoryDetails a11y tests remain green.
-- Manual: reload Home while authenticated; hero should not flash before Your/Public sections render.
+## Complexity Warning Signs
+- [ ] More than 5 files need changes
+- [ ] Circular dependencies detected
+- [ ] Test failure cascade
+- [ ] Can't predict impact of changes
 
-## Human-parsable summary
-- Phase 3 finished via TDD with a11y polish. Added VS Code test task. Auth composable now hydrates on load and exposes `isReady`; we’ll use it to prevent Home hero flicker on refresh. Phase 4 can start (form tests-first).
+## assumptions about the project that changed when new things were learned
+- Assumed lists needed only add: tests clarified need for remove/reorder and Enter-to-add for themes.
+
+## Human parseable summary of state and insights derived from recent work
+- Generation form supports robust list UX matching tests: themes (≤10, ≤30 chars, unique), plot points (≤10, ≤200 chars), characters (≤6; role enum; name/desc caps). Buttons expose deterministic data-testids (e.g., `theme-up-0`, `plot-remove-2`, `char-down-1`). Submit remains disabled until valid and emits normalized payload.
 
 Update timestamp: 2025-09-19.
 
