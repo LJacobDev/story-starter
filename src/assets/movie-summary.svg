@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+  <!-- Filmstrip outline icon (indigo #4f46e5) -->
+  <g fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="8" y="12" width="48" height="40" rx="4" />
+    <path d="M8 20h48" />
+    <path d="M8 28h48" />
+    <circle cx="18" cy="18" r="1.5" fill="#4f46e5" stroke="none" />
+    <circle cx="18" cy="46" r="1.5" fill="#4f46e5" stroke="none" />
+    <circle cx="46" cy="18" r="1.5" fill="#4f46e5" stroke="none" />
+    <circle cx="46" cy="46" r="1.5" fill="#4f46e5" stroke="none" />
+    <path d="M22 26l8-6 8 6-8 6z" />
+  </g>
+</svg>

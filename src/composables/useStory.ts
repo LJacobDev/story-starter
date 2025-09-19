@@ -58,5 +58,26 @@ export function useStory() {
     }
   }
 
-  return { getById, remove }
+  async function update(
+    id: string,
+    patch: Partial<Pick<StoryRecord, 'title' | 'story_type' | 'genre' | 'description' | 'image_url' | 'is_private' | 'content'>>
+  ): Promise<{ success: boolean; data?: StoryRecord; error?: { message: string; code?: string | number } }> {
+    try {
+      const { data, error } = await (supabase as any)
+        .from('story_starter_stories')
+        .update(patch)
+        .eq('id', id)
+        .select('*')
+        .single()
+
+      if (error) {
+        return { success: false, error: { message: error.message || 'Update failed', code: (error as any).code } }
+      }
+      return { success: true, data }
+    } catch (e: any) {
+      return { success: false, error: { message: e?.message || String(e) } }
+    }
+  }
+
+  return { getById, remove, update }
 }

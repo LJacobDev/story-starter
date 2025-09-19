@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+  <!-- Filmstrip (refined outline) — indigo #4f46e5 -->
+  <g fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer frame -->
+    <rect x="8" y="12" width="48" height="40" rx="6"/>
+    <!-- Sprocket holes (top/bottom) -->
+    <path d="M12 18h6 M22 18h6 M32 18h6 M42 18h6"/>
+    <path d="M12 46h6 M22 46h6 M32 46h6 M42 46h6"/>
+    <!-- Inner picture frame with play glyph -->
+    <rect x="16" y="22" width="32" height="20" rx="3"/>
+    <path d="M28 26l12 6l-12 6z"/>
+  </g>
+</svg>

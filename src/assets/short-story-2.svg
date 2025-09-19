@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+  <!-- Open book (refined outline) — slate gray #475569 -->
+  <g fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Curved cover/pages silhouette -->
+    <path d="M8 18 c 6 -2 12 -2 24 4 c 12 -6 18 -6 24 -4 v28 c -6 -2 -12 -2 -24 4 c -12 -6 -18 -6 -24 -4 z"/>
+    <!-- Center spine -->
+    <path d="M32 22v28"/>
+    <!-- Left page text lines -->
+    <path d="M12 28h12"/>
+    <path d="M12 32h12"/>
+    <path d="M12 36h12"/>
+    <path d="M12 40h10"/>
+    <!-- Right page text lines -->
+    <path d="M40 28h12"/>
+    <path d="M40 32h12"/>
+    <path d="M40 36h12"/>
+    <path d="M42 40h10"/>
+  </g>
+</svg>

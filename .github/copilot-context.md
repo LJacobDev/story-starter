@@ -1,43 +1,51 @@
 # Copilot Working Memory Reference
 
 ## Current Project State
-- **Last Known Good State**: All unit tests passing (154/154). StoryDetails route and view implemented; filters working; date presets in useStories.
-- **Currently Working**: Phase 3.2.1b completed. UX improvements on guest hero and header nav.
-- **Last Test Results**: 100% pass. Prior unhandled promise rejections in StoryDetails resolved.
+- **Last Known Good State**: All unit tests passing. StoryDetails edit and delete implemented with confirmation; App.vue demo fallback fixed; Home grid and filters stable.
+- **Currently Working**: Phase 3.2.1g — Tests-first: Share link behavior (navigator.share with clipboard fallback, private-story warning).
+- **Last Test Results**: 100% pass locally. Delete spec passes after stubbing Home on redirect to avoid unintended data fetching.
 - **Known Issues**:
-  - Preview modal still deferred (3.1.1e).
+  - Real toasts not yet integrated (placeholders only); plan to add shadcn toast after 3.2.1l.
+  - Image pipeline (upload/URL) and A11y polish for StoryDetails pending (3.2.1i–l).
+  - Preview modal remains deferred (3.2.2 optional).
 
 ## Key File Relationships
-- `StoryDetails.vue` uses: `useStory.getById`, `vue-router useRoute` (watches `params.id`).
-- `useStory.ts` depends on: `utils/supabase` client; table `story_starter_stories`.
-- `Home.vue` uses: `StoryFilters`, `useStories.fetchPublic/fetchMine` with normalized filters.
-- `App.vue` header now clickable to home; Demo nav removed.
+- `src/views/StoryDetails.vue` uses: `useStory.getById`, `useStory.update`, `useStory.remove`, `vue-router` (watches `route.params.id`), and `useAuth` for `isOwner` (compares `user.id` to `story.user_id`).
+- `src/composables/useStory.ts` depends on: `utils/supabase` client; table `story_starter_stories` with RLS.
+- `src/views/Home.vue` uses: `useStories.fetchPublic/fetchMine`. Note: when tests navigate Home, these calls can run; unit tests that redirect to Home should stub the view to avoid external fetches.
+- `src/App.vue` includes a no-router fallback handling `/demo` for unit tests.
 
 ## Recent Changes Made
-- [2025-09-18]: Implemented `useStory.getById` with Supabase select('*').
-- [2025-09-18]: Refactored `StoryDetails.vue` to watch route param and harden load() against undefined/throw; fixed flaky tests; eliminated unhandled errors.
-- [2025-09-18]: Revamped guest marketing hero in `Home.vue` (centered, gradient, improved copy, CTA).
-- [2025-09-18]: Made “Story Starter” header clickable to Home; removed Demo tab and demo fallback section in `App.vue`.
+- [2025-09-18]: StoryDetails — Added owner-only Edit with form (title, story_type, genre, description, image_url, is_private, content), validation caps (title ≤120, genre ≤60), Cancel/Save with pending; wired to `useStory.update`.
+- [2025-09-18]: StoryDetails — Added Delete with confirm dialog and pending; on confirm calls `useStory.remove` then navigates to Home.
+- [2025-09-18]: Tests — Added `tests/unit/StoryDetails.edit.spec.ts` and `tests/unit/StoryDetails.delete.spec.ts`; delete spec stubs Home to prevent Supabase fetch side-effects; both suites passing.
+- [2025-09-18]: Composables — Implemented `useStory.update(id, patch)` and `useStory.remove(id)` with error mapping.
+- [2025-09-18]: App — Updated no-router fallback in `App.vue` to handle `/demo`, restoring passing demo/logo test.
 
 ## Next Steps Plan
-1. 3.2.2 (Edit/Delete scaffolding): tests-first for permissions and UI affordances.
-2. Later: revisit hero copy/styles per user feedback; add responsive tweaks if desired.
-3. Prepare Phase 4 tests-first (generation form, prompt builder, edge proxy contract).
+1. 3.2.1g — Write `tests/unit/StoryDetails.share.spec.ts` for Share behavior (navigator.share, clipboard fallback, private warning).
+2. 3.2.1h — Implement Share button/logic with graceful fallback; keep temporary console/toast placeholders.
+3. 3.2.1i/j — Image handling tests then implementation (URL validation and upload flow).
+4. 3.2.1k/l — A11y tests then polish (focus, labels, Esc closes confirm; axe clean).
+5. After 3.2.1l — Integrate shadcn toast system and replace placeholders.
 
 ## Verification Plan
-- Automated: `npx vitest run` should remain green.
-- Manual: Navigate as guest to Home → see new hero; click header logo/title → goes Home; no Demo tab visible.
+- Automated: `vitest` unit suites for StoryDetails edit/delete continue to pass; add new Share tests and run.
+- Manual checks:
+  - Open a story you own → Edit, Save persists; Cancel restores.
+  - Delete → confirm dialog → on confirm, story removed and redirected Home without console errors.
+  - Share (after implementation): navigator.share when available; otherwise URL copied to clipboard; private-story warning shown.
 
 ## Rollback Plan
-- Revert `StoryDetails.vue` changes if any regressions in detail loading.
-- Revert `Home.vue` hero edits if copy/layout not desired.
-- Re-add Demo nav if needed; tests will still pass without it.
+- If regressions: revert `StoryDetails.vue` changes and corresponding `useStory` methods; re-run tests.
+- If Share introduces instability: feature-guard Share UI and keep tests skipped until fixed.
 
 ## Human-parsable summary
-- 3.2.1b is functionally complete: route exists, view fetches by id, tests pass, and the view is resilient.
-- UX: guest hero is now a centered, colorful gradient panel with clearer messaging and a CTA; header logo/title is a Home button; Demo tab removed.
+- StoryDetails now supports Edit (with validation and pending states) and Delete (confirm + redirect). Supporting APIs `update` and `remove` live in `useStory`.
+- Navigation to Home during unit tests can trigger data fetching; tests that validate post-delete navigation stub Home to avoid side-effects.
+- Next up: add Share tests, then implement Share with clipboard fallback and private warning; defer real toasts until end of 3.2.1.
 
-Update timestamp: 2025-09-18.
+Update timestamp: 2025-09-19.
 
 
 
@@ -202,38 +210,19 @@ Suggested quick checklist to append to Phase 4 notes
 (Keep this feature flagged as post‑Phase‑4 optional until core generation/preview/save flows are stable.)
 
 
-#### Copilot Working Memory Reference
+# note added by developer
 
-###### Current Project State
-- Last Known Good State: prompt-plan-claude-sonnet-4 branch after 3.2.1c edit mode scaffolding; all tests were reported passing before adding delete tests
-- Currently Working: 3.2.1e — add failing tests for Delete with confirmation on StoryDetails
-- Last Test Results: Prior run passed; new spec StoryDetails.delete.spec.ts expected to fail initially
-- Known Issues: Edit persistence (useStory.update) not yet wired; Delete flow not implemented
+I will want to take all the tests and code in this repo and put it in a repomix set to make sure that they're sensible and covering things well
 
-###### Key File Relationships
-- `src/views/StoryDetails.vue` depends on: `useStory` (getById, update/remove), `useAuth`, `vue-router`
-- `tests/unit/StoryDetails.delete.spec.ts` uses: router navigation to /stories/:id, mocks `useStory` and `useAuth`
-- Authentication flow: `useAuth().user.value?.id` compared to `story.user_id` to determine ownership
+Claude Sonnet 4 had huge problems at around task 2.1.1, 2.1.2, where it couldn't solve an authentication / validation glitch where the sign in fields kept showing 'field required' and disabling the 'sign in' button, even when filled properly.  It took Claude lots of effort and the use of a repomix file set to try to debug this and it still failed to solve it.
 
-###### Recent Changes Made
-- 2025-09-18: Added `tests/unit/StoryDetails.delete.spec.ts` to define Delete UI/behavior contract (owner-only, confirm dialog, calls remove, navigates home)
-- 2025-09-18: Updated working memory for next steps
+It kept saying confidently that it could definitely see the problem, and then it proceeded to apply extensive and various code changes that would have no effect on the problematic UI behaviour.  Claude sonnet 4 was not able to get the true sign in form to work, but it was able to make a 'test authentication' component that was able to sign in.  When asked to make the sign in form work using the same logic as the working test authentication form, it could not achieve this even though it said that they were matching exactly.
 
-###### Next Steps Plan
-1. Run tests to observe new failures from StoryDetails.delete.spec.ts
-2. Implement 3.2.1f: Delete UI — owner-only Delete button, confirm dialog with data-testids, call useStory.remove(id), navigate to Home on success; add toasts
-3. Verify by running tests again; also manual check via router to /stories/:id
+I was about to roll back the repo to a prior checkpoint or try deleting all the related files and building them again, but somehow just switching to GPT-5 mini was enough for it to read the repomix and look at the problem, and understand that there was an issue with v-model not connecting the fields to the validator logic properly and the authentication issue was solved.
 
-###### Complexity Warning Signs
-- [ ] More than 5 files need changes
-- [ ] Circular dependencies detected
-- [ ] Test failure cascade
-- [ ] Can't predict impact of changes
+GPT-5 mini was then far more helpful for being able to troubleshoot further errors with supabase authentication tokens, vite environment variables, and detecting whether github environment secrets were successfully being injected in github action workflows. GPT-5 mini was also able to make the true sign in form work with the same logic as the test authentication component and get the project back on track.
 
-###### assumptions about the project that changed when new things were learned
-- Initial assumption: StoryDetails lacked edit/delete; Now: Edit mode exists; Delete pending
-- New information: Router fallback in App.vue handles '/demo' for tests
+So at this point, the project is switching from having claude Sonnet 4 be the coding agent to having GPT-5 mini be the coding agent for a (currently) much more effective, informative, and time-saving experience.
 
-###### Human parseable summary of state and insights derived from reading most recent repomix files
-- StoryDetails already has owner check and edit scaffolding; adding delete should follow same ownership pattern and use consistent data-testids: delete-btn, delete-confirm, confirm-delete-confirm.
+Claude in agent mode would go ahead and make speculative changes in hopes of them working, and so there are a lot of strange files left over like old .ts files left in place just so that tests that used to expect them can still pass.  Soon, it will be important to look for and clean up such unneeded files and tests.
 

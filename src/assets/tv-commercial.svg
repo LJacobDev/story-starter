@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+  <!-- Clapperboard + megaphone outline icon (emerald #10b981) -->
+  <g fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="8" y="18" width="36" height="26" rx="3" />
+    <path d="M8 18l8-8 12 8" />
+    <path d="M20 10l8 6" />
+    <path d="M44 26h8l6 4v8l-6 4h-8" />
+    <path d="M48 30l8 6" />
+    <path d="M48 38l8 6" />
+  </g>
+</svg>

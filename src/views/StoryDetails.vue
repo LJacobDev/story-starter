@@ -34,7 +34,10 @@
         <p class="mb-3 font-medium">Delete this story permanently?</p>
         <div class="flex gap-2">
           <button data-testid="confirm-delete-cancel" class="px-3 py-2 rounded border" @click="closeDeleteConfirm">Cancel</button>
-          <button data-testid="confirm-delete-confirm" class="px-3 py-2 rounded bg-red-600 text-white" @click="confirmDelete">Yes, delete</button>
+          <button data-testid="confirm-delete-confirm" class="px-3 py-2 rounded bg-red-600 text-white" :disabled="pendingDelete" @click="confirmDelete">
+            <span v-if="pendingDelete">Deleting…</span>
+            <span v-else>Yes, delete</span>
+          </button>
         </div>
       </div>
 
@@ -85,7 +88,10 @@
 
         <div class="flex gap-2">
           <button type="button" data-testid="edit-cancel" class="px-3 py-2 rounded border" @click="cancelEdit">Cancel</button>
-          <button type="button" data-testid="edit-save" class="px-3 py-2 rounded bg-blue-600 text-white disabled:opacity-50" :disabled="!canSave" @click="saveEdit">Save</button>
+          <button type="button" data-testid="edit-save" class="px-3 py-2 rounded bg-blue-600 text-white disabled:opacity-50" :disabled="!canSave || pendingSave" @click="saveEdit">
+            <span v-if="pendingSave">Saving…</span>
+            <span v-else>Save</span>
+          </button>
         </div>
       </form>
 
@@ -115,7 +121,7 @@ import { useAuth } from '@/composables/useAuth'
 
 const route = useRoute()
 const router = useRouter()
-const { getById, remove } = useStory()
+const { getById, remove, update } = useStory()
 const { user, isAuthenticated } = useAuth()
 
 const loading = ref(false)
@@ -124,35 +130,35 @@ const story = ref<StoryRecord | null>(null)
 
 // Delete confirmation state
 const showDelete = ref(false)
+const pendingDelete = ref(false)
 function openDeleteConfirm() {
   showDelete.value = true
 }
 function closeDeleteConfirm() {
+  if (pendingDelete.value) return
   showDelete.value = false
 }
 async function confirmDelete() {
-  if (!story.value) return
+  if (!story.value || pendingDelete.value) return
+  pendingDelete.value = true
   const id = story.value.id
   const res = await remove(id)
   if (res.success) {
+    // TODO: replace with real toast
+    console.info('Story deleted')
     await router.push('/')
   } else {
-    // simple inline error; could be replaced with toast later
     error.value = res.error || { message: 'Delete failed' }
   }
+  pendingDelete.value = false
 }
 
 // Edit mode state
 const editMode = ref(false)
-const form = reactive<{ title: string; story_type: string; genre: string | null; description: string | null; image_url: string | null; is_private: boolean; content: string | undefined }>({
-  title: '',
-  story_type: 'short_story',
-  genre: '',
-  description: '',
-  image_url: '',
-  is_private: true,
-  content: ''
-})
+const pendingSave = ref(false)
+const form = reactive<{ title: string; story_type: string; genre: string | null; description: string | null; image_url: string | null; is_private: boolean; content: string | undefined }>(
+  { title: '', story_type: 'short_story', genre: '', description: '', image_url: '', is_private: true, content: '' }
+)
 
 const isOwner = computed(() => {
   return !!(isAuthenticated?.value && user?.value && story.value && story.value.user_id && story.value.user_id === (user.value as any).id)
@@ -176,11 +182,32 @@ function enterEdit() {
 }
 
 function cancelEdit() {
+  if (pendingSave.value) return
   editMode.value = false
 }
 
-function saveEdit() {
-  // Implementation of persistence will be done in 3.2.1d; for now this is a noop to satisfy UI contract
+async function saveEdit() {
+  if (!story.value || !canSave.value || pendingSave.value) return
+  pendingSave.value = true
+  const id = story.value.id
+  const res = await update(id, {
+    title: form.title,
+    story_type: form.story_type,
+    genre: form.genre || null,
+    description: form.description || null,
+    image_url: form.image_url || null,
+    is_private: !!form.is_private,
+    content: form.content
+  })
+  if (res.success && res.data) {
+    story.value = res.data
+    editMode.value = false
+    // TODO: replace with real toast
+    console.info('Story updated')
+  } else if (res.error) {
+    error.value = res.error
+  }
+  pendingSave.value = false
 }
 
 const titleError = computed(() => (form.title?.length ?? 0) > 120 ? 'Max 120 characters' : null)
