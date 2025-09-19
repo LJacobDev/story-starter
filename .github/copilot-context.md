@@ -1,13 +1,12 @@
 # Copilot Working Memory Reference
 
 ## Current Project State
-- **Last Known Good State**: All unit tests passing prior to adding Share tests. StoryDetails edit and delete implemented with confirmation; App.vue demo fallback fixed; Home grid and filters stable.
-- **Currently Working**: Phase 3.2.1h — Implement Share behavior to satisfy the newly added Share tests (navigator.share with clipboard fallback, private warning).
-- **Last Test Results**: Share spec added and expected to fail initially (TDD). Existing suites remain green.
+- **Last Known Good State**: StoryDetails share implemented; prior suites green before adding image tests.
+- **Currently Working**: Phase 3.2.1i/j — Fix image spec interactions (radio selection + file input) so tests pass; then finalize implementation.
+- **Last Test Results**: Targeted run requested for StoryDetails.image.spec.ts; awaiting fresh results after radio interaction fix.
 - **Known Issues**:
   - Real toasts not yet integrated (placeholders only); plan to add shadcn toast after 3.2.1l.
-  - Image pipeline (upload/URL) and A11y polish for StoryDetails pending (3.2.1i–l).
-  - Preview modal remains deferred (3.2.2 optional).
+  - Image pipeline implementation pending (useStoryImage validations + integration in StoryDetails edit form).
 
 ## Key File Relationships
 - `src/views/StoryDetails.vue` uses: `useStory.getById`, `useStory.update`, `useStory.remove`, `vue-router` (watches `route.params.id`), and `useAuth` for `isOwner` (compares `user.id` to `story.user_id`).
@@ -16,29 +15,30 @@
 - `src/App.vue` includes a no-router fallback handling `/demo` for unit tests.
 
 ## Recent Changes Made
-- [2025-09-19]: Tests — Added `tests/unit/StoryDetails.share.spec.ts` covering Share button visibility, navigator.share usage, clipboard fallback, and private-story warning (expected failing tests).
+- [2025-09-19]: Tests — Updated `tests/unit/StoryDetails.image.spec.ts` to use `setValue(true)` for radio inputs and kept the corrected file input change pattern (assign files property, then trigger change).
+- [2025-09-19]: Tests — Added `tests/unit/StoryDetails.share.spec.ts` covering Share button visibility, navigator.share usage, clipboard fallback, and private-story warning (expected failing tests initially; now passing with implementation).
 - [2025-09-18]: StoryDetails — Added owner-only Edit with form (title, story_type, genre, description, image_url, is_private, content), validation caps (title ≤120, genre ≤60), Cancel/Save with pending; wired to `useStory.update`.
 - [2025-09-18]: StoryDetails — Added Delete with confirm dialog and pending; on confirm calls `useStory.remove` then navigates to Home.
 - [2025-09-18]: Tests — Added `tests/unit/StoryDetails.edit.spec.ts` and `tests/unit/StoryDetails.delete.spec.ts`; delete spec stubs Home to prevent Supabase fetch side-effects; both suites passing.
 - [2025-09-18]: Composables — Implemented `useStory.update(id, patch)` and `useStory.remove(id)` with error mapping.
 - [2025-09-18]: App — Updated no-router fallback in `App.vue` to handle `/demo`, restoring passing demo/logo test.
+- [2025-09-19]: Tests — Added `tests/unit/StoryDetails.image.spec.ts` covering URL mode validation/preview/remove and upload mode via composable returning signed URL.
+- [2025-09-19]: Composables — Added stub `src/composables/useStoryImage.ts` with `upload(file)` placeholder (tests mock behavior).
+- [2025-09-19]: Views — Implemented Share in `StoryDetails.vue` with navigator.share/clipboard fallback and private warning.
 
 ## Next Steps Plan
-1. 3.2.1h — Implement Share button/logic in `StoryDetails.vue` to satisfy `StoryDetails.share.spec.ts` (navigator.share, clipboard fallback, private warning UI + placeholder toasts).
-2. 3.2.1i/j — Image handling tests then implementation (URL validation and upload flow).
-3. 3.2.1k/l — A11y tests then polish (focus, labels, Esc closes confirm; axe clean).
-4. After 3.2.1l — Integrate shadcn toast system and replace placeholders.
+1. Run the targeted image suite to confirm the radio fix: StoryDetails.image.spec.ts.
+2. If radios still fail on this VTU version, switch to setting `input.element.checked = true` and `await input.trigger('change')` as an alternative.
+3. Ensure upload mode test path continues to set `files` on the input element and trigger change without passing `target` payload.
+4. Re-run the full StoryDetails suites (edit/delete/share/image) to guard against regressions.
 
 ## Verification Plan
-- Automated: run the targeted suite:
-  - npx vitest run tests/unit/StoryDetails.share.spec.ts
-- Success: Share tests pass; no regressions in existing StoryDetails edit/delete tests.
-
-## Rollback Plan
-- If Share implementation causes regressions, revert the `StoryDetails.vue` changes and iterate while keeping the tests as the source of truth.
+- Automated: run the targeted suite for image handling; then full StoryDetails suites.
+- Success criteria: All StoryDetails specs pass; no TypeScript errors in tests; preview/remove behaviors verified via data-testid hooks.
+- Rollback: Revert the latest test changes if failures persist; fall back to the explicit `checked` assignment approach for radios.
 
 ## Human-parsable summary
-- Added Share tests that define expected behavior (navigator.share preferred, clipboard fallback, private-warning UX). Implementation is next to make these pass.
+- Adjusted image tests to use VTU-supported radio interaction (`setValue(true)`), retained correct file input event pattern. Next, run the suite and, if necessary, switch to explicit `checked` assignment for stability on this VTU version.
 
 Update timestamp: 2025-09-19.
 
@@ -168,56 +168,4 @@ Summary
 - Feature: add a “Revise with AI” action available on any story the current user owns.
 - Flow:
   1. Owner clicks “Revise with AI”.
-  2. Modal shows the existing story text (read‑only) and a free‑text instructions box where the user writes revision goals (≤ 2000 chars; warn if > 800).
-  3. Frontend composes the prompt (story text + user instructions) and POSTs { prompt: string } to gemini‑proxy.
-  4. gemini‑proxy sanitizes and forwards; frontend receives sanitized text, extracts JSON or content, validates it, and shows a preview of the revised text.
-  5. User chooses: Save as New Story OR Overwrite Existing Story. If overwrite, show confirmation (irreversible) and require an explicit confirm.
-  6. Save uses owner RLS; idempotency key prevents double writes. If overwriting, preserve user_id and ensure update policy WITH CHECK prevents ownership changes.
-- Implementation timing: deferred until Phase 4 core generation/save/preview/image flows are complete.
-
-Important implementation/UX considerations
-- Prompt limits & token budget: raw story text can be large. Enforce client truncation or summarize long stories before sending; warn user about cost/latency when large.
-- Response shape: decide expected response (full JSON with title/description/content/image_url or plain revised content). Document schema the frontend will validate.
-- Overwrite safety: require explicit confirmation and surface a clear rollback plan (encourage “Save as New” by default). Consider auto‑creating a backup copy before overwrite (Phase 6 enhancement).
-- Permissions: only story owners may use this; enforce via UI and server RLS.
-- Rate limits & quotas: revisions count against generation quota; ensure gemini‑proxy rate limits and UX reflect 429/retry guidance.
-- Idempotency & dedupe: include idempotencyKey to avoid duplicate saves when users retry.
-- Metadata & audit: kept out of Phase 4 per earlier decision. If you want traceability later, plan to add generation metadata storage in Phase 6.
-- Images: if the revised output may include image_url, decide whether to accept and persist it; validate URL or offer upload instead.
-- Undo/history: Phase 4 offers single confirmation. Phase 6 can add multi‑version history and multi‑level undo.
-- Edge function budget: consider a slightly higher MAX_PROMPT_CHARS for revision flows or add a summarization step to reduce prompt size.
-
-Questions to clarify (for inclusion in the plan)
-- Default save behavior: prefer “Save as New” by default, or present both options equally?
-- Expected response schema for revisions (full JSON with metadata, or just content string)?
-- Will we allow the revision to change story_type/genre/title, or only content?
-- Should overwrites automatically update the existing story_count/profile triggers, or should we treat overwrites as distinct for analytics?
-- Any special rules for images in revised responses (auto‑download/upload to storage vs accept URL)?
-- Do you want an automatic backup (DB copy) before overwriting in Phase 4, or defer backups to Phase 6?
-
-Suggested quick checklist to append to Phase 4 notes
-- Add Revise UI only after 4.1.1–4.1.4 are complete.
-- Define revision response schema and client validation rules before coding.
-- Enforce prompt size guarding (truncate or summarize large source stories).
-- Make “Save as New” the safer default; require explicit confirmation for overwrite.
-- Ensure idempotencyKey and RLS safety for all save/update operations.
-
-(Keep this feature flagged as post‑Phase‑4 optional until core generation/preview/save flows are stable.)
-
-
-# note added by developer
-
-I will want to take all the tests and code in this repo and put it in a repomix set to make sure that they're sensible and covering things well
-
-Claude Sonnet 4 had huge problems at around task 2.1.1, 2.1.2, where it couldn't solve an authentication / validation glitch where the sign in fields kept showing 'field required' and disabling the 'sign in' button, even when filled properly.  It took Claude lots of effort and the use of a repomix file set to try to debug this and it still failed to solve it.
-
-It kept saying confidently that it could definitely see the problem, and then it proceeded to apply extensive and various code changes that would have no effect on the problematic UI behaviour.  Claude sonnet 4 was not able to get the true sign in form to work, but it was able to make a 'test authentication' component that was able to sign in.  When asked to make the sign in form work using the same logic as the working test authentication form, it could not achieve this even though it said that they were matching exactly.
-
-I was about to roll back the repo to a prior checkpoint or try deleting all the related files and building them again, but somehow just switching to GPT-5 mini was enough for it to read the repomix and look at the problem, and understand that there was an issue with v-model not connecting the fields to the validator logic properly and the authentication issue was solved.
-
-GPT-5 mini was then far more helpful for being able to troubleshoot further errors with supabase authentication tokens, vite environment variables, and detecting whether github environment secrets were successfully being injected in github action workflows. GPT-5 mini was also able to make the true sign in form work with the same logic as the test authentication component and get the project back on track.
-
-So at this point, the project is switching from having claude Sonnet 4 be the coding agent to having GPT-5 mini be the coding agent for a (currently) much more effective, informative, and time-saving experience.
-
-Claude in agent mode would go ahead and make speculative changes in hopes of them working, and so there are a lot of strange files left over like old .ts files left in place just so that tests that used to expect them can still pass.  Soon, it will be important to look for and clean up such unneeded files and tests.
 

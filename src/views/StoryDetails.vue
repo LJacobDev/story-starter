@@ -74,9 +74,36 @@
             <p v-if="genreError" data-testid="error-genre" class="text-sm text-red-600 mt-1">{{ genreError }}</p>
           </div>
 
+          <!-- Image controls: mode (URL/upload), validators, preview, remove -->
           <div>
-            <label class="block text-sm font-medium mb-1" for="image_url">Image URL</label>
-            <input name="image_url" id="image_url" type="url" class="w-full rounded border px-3 py-2" v-model="form.image_url" />
+            <label class="block text-sm font-medium mb-2">Image</label>
+            <div class="flex items-center gap-4 mb-2">
+              <label class="inline-flex items-center gap-2 text-sm">
+                <input type="radio" name="image_mode" value="url" data-testid="image-mode-url" v-model="imageMode" />
+                URL
+              </label>
+              <label class="inline-flex items-center gap-2 text-sm">
+                <input type="radio" name="image_mode" value="upload" data-testid="image-mode-upload" v-model="imageMode" />
+                Upload
+              </label>
+            </div>
+
+            <div v-if="imageMode === 'url'" class="space-y-1">
+              <label class="block text-sm" for="image_url">Image URL</label>
+              <input name="image_url" id="image_url" type="url" class="w-full rounded border px-3 py-2" v-model="form.image_url" />
+              <p v-if="imageUrlError" data-testid="error-image-url" class="text-sm text-red-600">{{ imageUrlError }}</p>
+            </div>
+
+            <div v-else class="space-y-1">
+              <input type="file" accept="image/png, image/jpeg, image/webp" data-testid="image-file" @change="onFileChange" />
+            </div>
+
+            <div v-if="previewUrl" data-testid="image-preview" class="mt-2">
+              <img :src="previewUrl" :alt="`Cover image for ${form.title || 'story'}`" class="max-h-48 rounded border object-cover" />
+            </div>
+            <div class="mt-2">
+              <button type="button" data-testid="image-remove" class="px-2 py-1 text-sm rounded border" @click="removeImage">Remove image</button>
+            </div>
           </div>
         </div>
 
@@ -127,11 +154,13 @@ import { ref, computed, watch, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useStory, type StoryRecord, type StoryResult } from '@/composables/useStory'
 import { useAuth } from '@/composables/useAuth'
+import { useStoryImage } from '@/composables/useStoryImage'
 
 const route = useRoute()
 const router = useRouter()
 const { getById, remove, update } = useStory()
 const { user, isAuthenticated } = useAuth()
+const { upload: uploadImage } = useStoryImage()
 
 const loading = ref(false)
 const error = ref<{ message: string; code?: string | number } | null>(null)
@@ -216,45 +245,48 @@ function hydrateForm(s: StoryRecord) {
   form.content = s.content
 }
 
-function enterEdit() {
-  if (story.value) {
-    hydrateForm(story.value)
-    editMode.value = true
-  }
-}
-
-function cancelEdit() {
-  if (pendingSave.value) return
-  editMode.value = false
-}
-
-async function saveEdit() {
-  if (!story.value || !canSave.value || pendingSave.value) return
-  pendingSave.value = true
-  const id = story.value.id
-  const res = await update(id, {
-    title: form.title,
-    story_type: form.story_type,
-    genre: form.genre || null,
-    description: form.description || null,
-    image_url: form.image_url || null,
-    is_private: !!form.is_private,
-    content: form.content
-  })
-  if (res.success && res.data) {
-    story.value = res.data
-    editMode.value = false
-    // TODO: replace with real toast
-    console.info('Story updated')
-  } else if (res.error) {
-    error.value = res.error
-  }
-  pendingSave.value = false
-}
-
 const titleError = computed(() => (form.title?.length ?? 0) > 120 ? 'Max 120 characters' : null)
 const genreError = computed(() => (form.genre?.length ?? 0) > 60 ? 'Max 60 characters' : null)
 const canSave = computed(() => !titleError.value && !genreError.value)
+
+// Image edit state
+const imageMode = ref<'url' | 'upload'>('url')
+const previewUrl = ref<string | null>(null)
+const imageUrlError = computed(() => {
+  if (imageMode.value !== 'url') return null
+  const val = (form.image_url || '').trim()
+  if (!val) return null
+  const ok = /^https?:\/\//i.test(val)
+  return ok ? null : 'Enter a valid http/https URL'
+})
+
+function removeImage() {
+  form.image_url = ''
+  previewUrl.value = null
+}
+
+async function onFileChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  const res = await uploadImage(file)
+  if (res && (res as any).ok) {
+    const url = (res as any).url as string
+    form.image_url = url
+    previewUrl.value = url
+  }
+}
+
+watch(
+  () => ({ mode: imageMode.value, url: form.image_url }),
+  ({ mode, url }) => {
+    if (mode === 'url') {
+      const u = (url || '').trim()
+      previewUrl.value = /^https?:\/\//i.test(u) ? u : null
+    }
+  },
+  { immediate: true, deep: true }
+)
 
 async function load(id: string) {
   if (!id) return
@@ -305,4 +337,44 @@ const formattedDate = computed(() => {
     return String(d)
   }
 })
+
+function enterEdit() {
+  if (story.value) {
+    hydrateForm(story.value)
+    // Initialize image mode/preview from current data
+    imageMode.value = 'url'
+    const u = (form.image_url || '').trim()
+    previewUrl.value = /^https?:\/\//i.test(u) ? u : null
+    editMode.value = true
+  }
+}
+
+function cancelEdit() {
+  if (pendingSave.value) return
+  editMode.value = false
+}
+
+async function saveEdit() {
+  if (!story.value || !canSave.value || pendingSave.value) return
+  pendingSave.value = true
+  const id = story.value.id
+  const res = await update(id, {
+    title: form.title,
+    story_type: form.story_type,
+    genre: form.genre || null,
+    description: form.description || null,
+    image_url: form.image_url || null,
+    is_private: !!form.is_private,
+    content: form.content
+  })
+  if (res.success && res.data) {
+    story.value = res.data
+    editMode.value = false
+    // TODO: replace with real toast
+    console.info('Story updated')
+  } else if (res.error) {
+    error.value = res.error
+  }
+  pendingSave.value = false
+}
 </script>
