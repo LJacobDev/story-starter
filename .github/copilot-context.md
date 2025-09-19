@@ -1,38 +1,32 @@
 # Copilot Working Memory Reference
 
 ## Current Project State
-- **Last Known Good State**: Uncommitted working tree; all tests green through 4.1.3c (form, prompt, edge proxy, client, preview + Undo, save composable w/ idempotency)
-- **Currently Working**: Preparing 4.1.3d — Wire save into UI (disable Save while pending; basic toasts)
-- **Last Test Results**: All unit/edge tests passing locally, including `useSaveStory` specs (idempotency, privacy default, error mapping)
-- **Known Issues**: None pending
+- **Last Known Good State**: Uncommitted working tree; tests green through 4.1.3c; DevSandbox uses per-preview idempotency key for Save.
+- **Currently Working**: 4.1.4a — Tests first for `useStoryImage` composable (Storage pipeline).
+- **Last Test Results**: New tests added for 4.1.4a expected to fail until implementation.
+- **Known Issues**: Storage composable not implemented yet; /generate route still pending.
 
 ## Key File Relationships
-- `src/components/generation/StoryGeneratePreview.vue` emits `save(draft)` → parent will call `useSaveStory().save(draft, { idempotencyKey })`
-- `src/composables/useSaveStory.ts` depends on `@/utils/supabase`; maintains in-memory idempotency Map per session
-- Edge flow unchanged: `composePrompt` → `useGeneration` → `gemini-proxy` → preview JSON → `StoryGeneratePreview`
+- `src/composables/useStoryImage.ts` will depend on `@/utils/supabase` Storage API.
+- Tests mock `@/utils/supabase` to avoid network and drive expectations for upload/remove/signed URL.
 
 ## Recent Changes Made
-- 2025-09-19: One-level Undo implemented in `StoryGeneratePreview.vue` (focus returns to title); tests added and passing.
-- 2025-09-19: `useSaveStory.spec.ts` authored (privacy default, override, idempotency, retry, error mapping) and Supabase mock refactored to be hoist-safe; `useSaveStory.ts` implemented; all tests now pass.
-- 2025-09-19: `src/views/DevSandbox.vue` now persists a per-preview `previewKey` (idempotency key). Reuses it across Save clicks; resets it on submit/retry/discard/edit/undo so new previews get new keys.
+- 2025-09-19: Added failing tests `tests/unit/useStoryImage.spec.ts` covering validation, upload pathing, signed URL, URL mode validation, replace/remove helpers.
+- 2025-09-19: Expanded `src/composables/useStoryImage.ts` to expose API (constraints, upload, replace, remove, validateUrl) with Not implemented stubs (TDD).
 
 ## Next Steps Plan
-1. Verify: Save twice (with delay) on the same preview returns the same id and no extra DB rows.
-2. Wire identical behavior into the final /generate route (4.1.4d): hold a per-preview key in view state; reuse for Save; reset on preview change.
-3. Consider server-side idempotency hardening: add `idempotency_key` column with UNIQUE index; pass this key from client and upsert to guarantee de-dup across sessions/tabs.
+1. Implement 4.1.4b: validate mime/size/dimensions, upload to `story-covers/{userId}/{storyId}/{filename}`, create signed URL, implement replace/remove, and URL validation. Make tests pass.
+2. Manual verify with real Supabase: accept ~800×500 JPEG ~500KB; reject 3MB PNG or 150×150 PNG.
+3. Wire into Preview UI after tests: allow URL mode or upload mode.
 
 ## Complexity Warning Signs
 - [ ] More than 5 files need changes
 - [ ] Circular dependencies detected
-- [ ] Test failure cascade (none observed)
-- [ ] Can't predict impact of changes (low)
+- [ ] Test failure cascade (none)
+- [ ] Can't predict impact (low)
 
-## assumptions about the project that changed when new things were learned
-- Undo in Preview: implemented via internal previous state with DOM `disabled` reflection to satisfy tests while allowing click handlers.
-- Save idempotency: client must reuse the same idempotency key for the same preview; previously we generated a fresh key per click, which allowed duplicates separated by time.
-
-## Human parseable summary of state and insights
-- Client now reuses a per-preview idempotency key in DevSandbox, preventing duplicate inserts when Save is clicked again later for the same preview. Next, propagate to the real /generate flow and optionally add a DB-level unique `idempotency_key` for cross-session enforcement.
+## Human parseable summary
+- TDD in place for image pipeline. Composable interface is defined; implementation next to satisfy tests and then integrate into the /generate flow.
 
 Update timestamp: 2025-09-19.
 
