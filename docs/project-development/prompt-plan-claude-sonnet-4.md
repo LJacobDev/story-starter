@@ -821,6 +821,8 @@ sometimes the json reply from gemini is completely empty, not sure why that is. 
 
 check if there are any tests that should be added to anything
 
+do verifications that were skipped, like manual verification that images over 2mb aren't accepted etc - ask model to try to detect what has not been verified yet, or to create a comprehensive list of what to check from top to bottom just to be sure
+
 do accessibility audit
 
 do keyboard navigation audit
