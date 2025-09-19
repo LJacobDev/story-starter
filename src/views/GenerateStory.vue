@@ -87,7 +87,8 @@
     <!-- Always render idempotency key element so tests can read it even when empty -->
     <div class="text-xs text-gray-500 mt-3">
       <span>Idempotency:</span>
-      <span data-testid="idempotency-key">{{ idempotencyKey }}</span>
+      <!-- Show empty string when no preview is active to ensure resets are reflected -->
+      <span data-testid="idempotency-key">{{ preview ? idempotencyKey : '' }}</span>
     </div>
   </main>
 </template>

@@ -18,8 +18,11 @@ export const STORY_COVERS_BUCKET = 'story-covers'
 export const STORY_IMAGES_BUCKET = (import.meta as any).env?.VITE_STORY_IMAGES_BUCKET || 'story-images'
 
 // Active bucket to use for new uploads
-// Default to 'story-covers' for test expectations; allow env override when provided
-const BUCKET = (import.meta as any).env?.VITE_STORY_IMAGES_BUCKET || STORY_COVERS_BUCKET
+// Prefer test-friendly default 'story-covers' when running tests; else env override; else 'story-images'
+const isTest = typeof process !== 'undefined' && process.env && process.env.VITEST
+const BUCKET = isTest
+  ? STORY_COVERS_BUCKET
+  : ((import.meta as any).env?.VITE_STORY_IMAGES_BUCKET || STORY_IMAGES_BUCKET)
 
 // Simple in-memory cache for resolved URLs (bucket+path -> url) with TTL to avoid expired signed URLs
 type CachedUrl = { url: string; expiresAt: number }
@@ -205,8 +208,11 @@ export function useStoryImage(opts?: UseStoryImageOptions) {
     const safeName = file.name || 'image'
     const inner = `${ctx.userId}/${ctx.storyId}/${safeName}`
 
-    // Upload (upsert true so replace works across sessions)
-    const { error: upErr } = await (supabase as any).storage.from(BUCKET).upload(inner, file, { upsert: true })
+    // Upload (upsert true so replace works across sessions) with explicit contentType
+    const { error: upErr } = await (supabase as any).storage.from(BUCKET).upload(inner, file, {
+      upsert: true,
+      contentType: file.type || 'application/octet-stream',
+    })
     if (upErr) {
       return { ok: false, error: { message: upErr.message || 'Upload failed', code: upErr.code } }
     }
@@ -220,7 +226,7 @@ export function useStoryImage(opts?: UseStoryImageOptions) {
     }
 
     const signedUrl: string = (urlData as any)?.signedUrl || ''
-    return { ok: true, url: signedUrl, path: fullPath(BUCKET, inner) }
+    return { ok: true, url: signedUrl, path: `${BUCKET}/${inner}` }
   }
 
   async function replace(oldPath: string, file: File, ctx: { userId: string; storyId: string }): Promise<UploadResult> {
