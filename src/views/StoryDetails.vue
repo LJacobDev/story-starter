@@ -295,7 +295,9 @@ async function onFileChange(e: Event) {
   const input = e.target as HTMLInputElement
   const file = input.files?.[0]
   if (!file) return
-  const res = await uploadImage(file)
+  const uid = (story.value?.user_id as any) || (user?.value as any)?.id || 'unknown-user'
+  const sid = (story.value?.id as any) || 'unknown-story'
+  const res = await uploadImage(file, { userId: String(uid), storyId: String(sid) })
   if (res && (res as any).ok) {
     const url = (res as any).url as string
     form.image_url = url

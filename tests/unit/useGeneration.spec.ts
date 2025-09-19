@@ -1,9 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { useGeneration } from '@/composables/useGeneration'
-import { composePrompt } from '@/utils/composePrompt'
 
 vi.mock('@/utils/composePrompt', () => ({
-  composePrompt: vi.fn((p: any) => `INSTRUCTIONS...\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nPAYLOAD: ${JSON.stringify(p)}`),
+  composePrompt: vi.fn((p: any) => `INSTRUCTIONS...\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nPAYLOAD: ${JSON.stringify(p)}`),
 }))
 
 declare const global: any
@@ -74,9 +73,10 @@ describe('useGeneration.generateStory', () => {
 
     // success shape
     expect(res.ok).toBe(true)
-    expect(res.data?.story_type).toBe('short-story')
-    expect(res.data?.title).toBe('Test Title')
-    expect(res.error).toBeUndefined()
+    if (res.ok) {
+      expect(res.data.story_type).toBe('short-story')
+      expect(res.data.title).toBe('Test Title')
+    }
   })
 
   it('maps 400 validation error to structured error', async () => {
@@ -91,13 +91,15 @@ describe('useGeneration.generateStory', () => {
     const res = await generateStory(payload)
 
     expect(res.ok).toBe(false)
-    expect(res.error).toEqual(
-      expect.objectContaining({
-        code: 400,
-        message: expect.stringContaining('prompt too long'),
-      }),
-    )
-    expect((res as any).error.retryAfter).toBeUndefined()
+    if (!res.ok) {
+      expect(res.error).toEqual(
+        expect.objectContaining({
+          code: 400,
+          message: expect.stringContaining('prompt too long'),
+        }),
+      )
+      expect(res.error.retryAfter).toBeUndefined()
+    }
   })
 
   it('maps 429 rate limit with Retry-After and suggests backoff', async () => {
@@ -115,13 +117,15 @@ describe('useGeneration.generateStory', () => {
     const res = await generateStory(payload)
 
     expect(res.ok).toBe(false)
-    expect(res.error).toEqual(
-      expect.objectContaining({
-        code: 429,
-        retryAfter: 30,
-        message: expect.stringMatching(/try again/i),
-      }),
-    )
+    if (!res.ok) {
+      expect(res.error).toEqual(
+        expect.objectContaining({
+          code: 429,
+          retryAfter: 30,
+          message: expect.stringMatching(/try again/i),
+        }),
+      )
+    }
   })
 
   it('maps 5xx to structured upstream error', async () => {
@@ -136,8 +140,10 @@ describe('useGeneration.generateStory', () => {
     const res = await generateStory(payload)
 
     expect(res.ok).toBe(false)
-    expect(res.error?.code).toBe(503)
-    expect(res.error?.message).toMatch(/service unavailable/i)
+    if (!res.ok) {
+      expect(res.error.code).toBe(503)
+      expect(res.error.message).toMatch(/service unavailable/i)
+    }
   })
 
   it('returns parse error when text does not contain valid JSON', async () => {
@@ -150,10 +156,12 @@ describe('useGeneration.generateStory', () => {
     global.fetch = fetchMock
 
     const { generateStory } = useGeneration()
-    const res = await generateStory(payload)
+    const res = await generateStory(bad)
 
     expect(res.ok).toBe(false)
-    expect(res.error?.code).toBe('PARSE_ERROR')
-    expect(res.error?.message).toMatch(/could not parse json/i)
+    if (!res.ok) {
+      expect(res.error.code).toBe('PARSE_ERROR')
+      expect(res.error.message).toMatch(/could not parse json/i)
+    }
   })
 })

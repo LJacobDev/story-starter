@@ -1,27 +1,28 @@
 # Copilot Working Memory Reference
 
 ## Current Project State
-- **Last Known Good State**: [no commit hash available in this workspace snapshot] — Unit tests for generation, save (idempotent), and story image all passing.
-- **Currently Working**: 4.1.4c — mocked end-to-end test covering form → generate (edge) → preview → image URL validation → save → fetch mine.
-- **Last Test Results**: All unit tests green before adding 4.1.4c; after adding integration spec, pending run.
-- **Known Issues**: None open. Optional server-side idempotency still not implemented.
+- **Last Known Good State**: All unit/integration tests passing; vue-tsc errors just fixed.
+- **Currently Working**: 4.1.4d — implement /generate route and wire form→preview→save.
+- **Last Test Results**: Green; mocked E2E happy path passes.
+- **Known Issues**: None blocking; optional server-side idempotency still pending.
 
 ## Key File Relationships
-- `src/composables/useGeneration.ts` calls: fetch(`/functions/v1/gemini-proxy`) and parses fenced JSON.
-- `src/composables/useSaveStory.ts` depends on: Supabase client; returns id on success; client-side idempotency via in-memory map.
-- `src/composables/useStoryImage.ts` depends on: Supabase storage (bucket `story-covers`); exposes validate/upload/replace/remove.
-- `src/composables/useStories.ts` depends on: Supabase client; populates `items` and supports filters/paging.
-- `src/views/DevSandbox.vue` wires: form → preview (with saving prop) → save using a persistent per-preview idempotency key.
+- `StoryDetails.vue` uses `useStoryImage.upload(file, { userId, storyId })` and `useStory.update/remove`.
+- `StoryGenerateForm.vue` emits normalized payload; validates image via `getImageMetadata`.
+- `useGeneration.ts` returns discriminated union { ok, data|error }.
 
 ## Recent Changes Made
-- [Today]: Added `tests/integration/generation.e2e.spec.ts` to validate mocked happy path across generation → preview → URL image → save → fetch mine. Included lightweight Supabase from() mock.
-- [Today]: Fixed TypeScript issues in the integration test (unused parameter, nullable image_url).
-- [Earlier]: Implemented `useStoryImage` to satisfy unit tests for validation, upload, signed URLs, replace/remove.
+- [Today]: Fixed TS build errors:
+  - `StoryDetails.vue`: pass ctx to `uploadImage(file, { userId, storyId })`.
+  - `tests/unit/useGeneration.spec.ts`: respect discriminated union; remove unused import.
+  - `tests/unit/StoryGenerateForm.prefill.spec.ts`: narrow `prefill.story_type` typing to component union.
+  - `src/vite-env.d.ts`: add `declare module '*.vue'` for SFC typing.
+- [Today]: Integration test Supabase mock adjusted to support insert→select→single chain.
 
 ## Next Steps Plan
-1. Run tests in watch mode and ensure new integration spec fails if contracts diverge; then ensure it passes.
-2. If integration spec passes reliably, proceed to 4.1.4d: implement `/generate` route wiring UI to these composables with the same idempotency pattern.
-3. Manual verification in DevSandbox: generate, preview, set image URL, save, ensure single row with delayed second click.
+1. Start 4.1.4d.1 — add `/generate` route stub and view shell.
+2. Wire form submit → generation; then preview + idempotency; then image handling; then save + redirect; finally nav link.
+3. Re-run vue-tsc and tests after each subtask.
 
 ## Complexity Warning Signs
 - [ ] More than 5 files need changes
@@ -30,11 +31,10 @@
 - [ ] Can't predict impact of changes
 
 ## Assumptions Updated
-- Assumption: Integration can mock Supabase `from().insert().select().single()` minimal chain — Confirmed via local test helper.
-- Assumption: Image handling in this e2e uses URL mode only — Confirmed; storage not required for this test.
+- TS alias `@/*` is active for both src and tests; `.vue` module declaration required for SFC imports.
 
 ## Human-parseable Summary
-- We added a concise integration spec that mocks the edge function and a minimal Supabase data layer to validate the core end-to-end happy path: generation produces fenced JSON, client parses it, image URL validated, save succeeds with idempotency key, and fetchMine returns the saved item. This positions us to wire the real `/generate` route next.
+- Resolved TypeScript build errors by aligning tests with discriminated union shapes, fixing image upload ctx, and adding SFC typings. Ready to implement `/generate` route in small, verifiable steps.
 
 Update timestamp: 2025-09-19.
 

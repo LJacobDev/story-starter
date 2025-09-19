@@ -26,7 +26,7 @@ const S = {
 }
 
 describe('StoryGenerateForm — Prefill/Reset & Edit Prompts (4.1.1g)', () => {
-  const prefill = {
+  const prefill: Required<NonNullable<InstanceType<typeof StoryGenerateForm>['$props']['prefill']>> = {
     story_type: 'movie-summary',
     title: 'Seeded Title',
     genre: 'Adventure',
