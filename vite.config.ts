@@ -18,6 +18,21 @@ export default defineConfig(({ command }) => ({
     env: {
       VITE_SUPABASE_URL: 'http://localhost:3000',
       VITE_SUPABASE_KEY: 'test-key'
+    },
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html', 'lcov'],
+      reportsDirectory: 'coverage',
+      include: ['src/**/*.{ts,vue}'],
+      exclude: [
+        'postcss.config.js',
+        'tailwind.config.js',
+        'src/main.ts',
+        'src/vite-env.d.ts',
+        'src/types/**',
+        'src/components/HelloWorld.vue'
+      ],
+      thresholds: { statements: 80, branches: 70, functions: 75, lines: 80 }
     }
   }
 }))
