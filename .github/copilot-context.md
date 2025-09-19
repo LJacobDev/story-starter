@@ -15,25 +15,23 @@
 - `src/composables/useSaveStory.ts`: Persist story with idempotency guard.
 - `src/utils/idempotency.ts`: Deterministic key generator with webcrypto + fallback.
 - `src/App.vue`: Header nav; now includes “Generate New Story”. No‑router fallback preserves Demo as 3rd button for tests.
+- `src/components/stories/StoryCard.vue` → wrapped in `<router-link>` to navigate to `name: 'story-details'`.
+- `src/views/StoryDetails.vue` → detail view with Read, Share, Edit, Delete flows.
 
 ## Recent Changes Made
 - [2025‑09‑19]: `App.vue` — Added “Generate New Story” nav link (router and no‑router). Reordered buttons so Demo remains 3rd in fallback to satisfy `tests/unit/App.test.ts`.
 - [2025‑09‑19]: `GenerateStory.vue` — Image handling (URL/upload), save + redirect, idempotency per preview; always render key element.
 - [2025‑09‑19]: `idempotency.ts` — Guarded webcrypto/TextEncoder; JS hash fallback.
+- [2025‑09‑19]: `StoryCard.vue` — Card is now clickable; wrapped content in `<router-link :to="{ name: 'story-details', params: { id } }">` with a11y focus ring. Clicking a card loads Story Details.
 
 ## Next Steps Plan
-1. Re‑run tests (Ctrl+Shift+B or npm run test). Ensure App.vue Demo test passes after button order fix.
-2. Manual verification checklist (Phase 4 exit):
-   - Nav link “Generate New Story” routes to `/generate`.
-   - Default privacy is private; toggle works.
-   - Additional instructions warning at >800 chars.
-   - Retry replaces preview; Undo restores; idempotency key swaps accordingly.
-   - URL image accepts https, rejects data:.
-   - Upload rejects >2MB or <200px images; accepts valid png/jpeg/webp.
-   - Save is idempotent (double‑click doesn’t duplicate); redirects to Home/Your Stories.
-   - Edge 429 surfaces retry‑after guidance (mock).
-   - Basic a11y/keyboard flows in form and preview.
-3. Defer: Remove Demo view only after updating/removing tests that rely on it.
+1. Re‑run tests (Ctrl+Shift+B or npm run test). Ensure App.vue Demo test passes after button order fix; verify StoryDetails route tests still pass.
+2. Manual verification checklist (Phase 4 exit + details):
+   - Click a card in Home → navigates to `#/stories/:id` and renders details.
+   - Detail view: Share works (public only warning), Edit/Delete visible only to owner; delete returns to Home.
+   - Image edit: URL validation + upload via `useStoryImage` updates preview and persists on save.
+3. Optional follow‑up: Add overflow menu on cards (View/Edit/Delete/Share) for quick actions.
+4. Defer: Remove Demo view only after updating/removing tests that rely on it.
 
 ## Complexity Warning Signs
 - [ ] More than 5 files need changes
@@ -46,7 +44,7 @@
 - Idempotency key is visible and stable per preview; Undo swaps keys.
 
 ## Human‑parseable Summary
-- Generation flow is end‑to‑end: form → edge → parse → preview → image → save (idempotent) → redirect. The nav link is present. One unit test briefly failed due to button order; fixed by keeping Demo as the 3rd button in no‑router mode. Re‑run tests to confirm green. After manual checks, Phase 4 can be considered complete and shippable (private by default).
+- Generation flow is end‑to‑end and discoverable. Story cards now navigate to a fully implemented Story Details view that supports reading, sharing (with private warning), editing, and deletion. Next, verify tests and consider adding a card overflow menu for convenience.
 
 
 ## Assessment of repo quality and improvements at end of phase 3 to keep in mind for phase 4 (do not edit this section, just be aware of it)

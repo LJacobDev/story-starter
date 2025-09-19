@@ -816,15 +816,42 @@ Exit criteria for Phase 4
 
 
 
-PHASE 4 IS KIND OF DONE, BASIC FEATURES ARE WORKING, BUT LOTS OF UX THINGS NEED CORRECTING
+Phase 4 is done in that its tests pass and some of the functionality works to the extend that now everything is visible and able to be manually tested for features, user experience and flows.
 
+
+Basic features are working,
+But lots of UX and other things need correcting
+
+## POST PHASE 4 CLEANUP
+
+This is a list of things noticed while using the app that stand out and need to be fixed before continuing the rest of the prompt plan.
+
+### things that have been solved
+
+### things to still fix
 
 stories aren't clickable to view details
+
+add a reset password link to signin
+
+password reset 'works' in that you get a link that takes you to the site as authenticated, but functionality to also set new password needs to be added
+
+start a new chat history and see if it's quicker than running on a long one
+
+there is git history version control but I want to use semgrep version codes
 
 images aren't being saved and it's using the fallback SVGs - I'd rather at least have the fallbacks be stock images like pexels stuff
 
 refreshing the page makes story grid look empty, but then clicking on demo then home again makes them appear
 
+
+it seemed to make json parsing fail when I included image url, but when I emptied that and did generate again, it worked that time 
+
+
+MAKE THE GENERATE BUTTON SHOW A RESPONSIVE LOADING STATE / SPINNER AT THE BOTTOM
+
+
+MOVE THE SIGN UP FORM OFF THE BOTTOM
 
 
 the search and filter doesn't really seem to work either
