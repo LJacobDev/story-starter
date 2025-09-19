@@ -42,5 +42,21 @@ export function useStory() {
     }
   }
 
-  return { getById }
+  async function remove(id: string): Promise<{ success: boolean; error?: { message: string; code?: string | number } }> {
+    try {
+      const { error } = await (supabase as any)
+        .from('story_starter_stories')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        return { success: false, error: { message: error.message || 'Delete failed', code: (error as any).code } }
+      }
+      return { success: true }
+    } catch (e: any) {
+      return { success: false, error: { message: e?.message || String(e) } }
+    }
+  }
+
+  return { getById, remove }
 }

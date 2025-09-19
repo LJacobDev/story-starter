@@ -159,20 +159,81 @@ Here’s the append-only update block for the Phase 4 section.
 - Execution note: test gating is optional. If the current Phase 3 agent proceeds to Phase 4 next, use Option B and place tests in the standard folders.
 
 
+## Phase 4 Addendum — Optional “Revise with AI” for Existing Stories (post‑Phase‑4)
 
-# note added by developer
+Summary
+- Feature: add a “Revise with AI” action available on any story the current user owns.
+- Flow:
+  1. Owner clicks “Revise with AI”.
+  2. Modal shows the existing story text (read‑only) and a free‑text instructions box where the user writes revision goals (≤ 2000 chars; warn if > 800).
+  3. Frontend composes the prompt (story text + user instructions) and POSTs { prompt: string } to gemini‑proxy.
+  4. gemini‑proxy sanitizes and forwards; frontend receives sanitized text, extracts JSON or content, validates it, and shows a preview of the revised text.
+  5. User chooses: Save as New Story OR Overwrite Existing Story. If overwrite, show confirmation (irreversible) and require an explicit confirm.
+  6. Save uses owner RLS; idempotency key prevents double writes. If overwriting, preserve user_id and ensure update policy WITH CHECK prevents ownership changes.
+- Implementation timing: deferred until Phase 4 core generation/save/preview/image flows are complete.
 
-I will want to take all the tests and code in this repo and put it in a repomix set to make sure that they're sensible and covering things well
+Important implementation/UX considerations
+- Prompt limits & token budget: raw story text can be large. Enforce client truncation or summarize long stories before sending; warn user about cost/latency when large.
+- Response shape: decide expected response (full JSON with title/description/content/image_url or plain revised content). Document schema the frontend will validate.
+- Overwrite safety: require explicit confirmation and surface a clear rollback plan (encourage “Save as New” by default). Consider auto‑creating a backup copy before overwrite (Phase 6 enhancement).
+- Permissions: only story owners may use this; enforce via UI and server RLS.
+- Rate limits & quotas: revisions count against generation quota; ensure gemini‑proxy rate limits and UX reflect 429/retry guidance.
+- Idempotency & dedupe: include idempotencyKey to avoid duplicate saves when users retry.
+- Metadata & audit: kept out of Phase 4 per earlier decision. If you want traceability later, plan to add generation metadata storage in Phase 6.
+- Images: if the revised output may include image_url, decide whether to accept and persist it; validate URL or offer upload instead.
+- Undo/history: Phase 4 offers single confirmation. Phase 6 can add multi‑version history and multi‑level undo.
+- Edge function budget: consider a slightly higher MAX_PROMPT_CHARS for revision flows or add a summarization step to reduce prompt size.
 
-Claude Sonnet 4 had huge problems at around task 2.1.1, 2.1.2, where it couldn't solve an authentication / validation glitch where the sign in fields kept showing 'field required' and disabling the 'sign in' button, even when filled properly.  It took Claude lots of effort and the use of a repomix file set to try to debug this and it still failed to solve it.
+Questions to clarify (for inclusion in the plan)
+- Default save behavior: prefer “Save as New” by default, or present both options equally?
+- Expected response schema for revisions (full JSON with metadata, or just content string)?
+- Will we allow the revision to change story_type/genre/title, or only content?
+- Should overwrites automatically update the existing story_count/profile triggers, or should we treat overwrites as distinct for analytics?
+- Any special rules for images in revised responses (auto‑download/upload to storage vs accept URL)?
+- Do you want an automatic backup (DB copy) before overwriting in Phase 4, or defer backups to Phase 6?
 
-It kept saying confidently that it could definitely see the problem, and then it proceeded to apply extensive and various code changes that would have no effect on the problematic UI behaviour.  Claude sonnet 4 was not able to get the true sign in form to work, but it was able to make a 'test authentication' component that was able to sign in.  When asked to make the sign in form work using the same logic as the working test authentication form, it could not achieve this even though it said that they were matching exactly.
+Suggested quick checklist to append to Phase 4 notes
+- Add Revise UI only after 4.1.1–4.1.4 are complete.
+- Define revision response schema and client validation rules before coding.
+- Enforce prompt size guarding (truncate or summarize large source stories).
+- Make “Save as New” the safer default; require explicit confirmation for overwrite.
+- Ensure idempotencyKey and RLS safety for all save/update operations.
 
-I was about to roll back the repo to a prior checkpoint or try deleting all the related files and building them again, but somehow just switching to GPT-5 mini was enough for it to read the repomix and look at the problem, and understand that there was an issue with v-model not connecting the fields to the validator logic properly and the authentication issue was solved.
+(Keep this feature flagged as post‑Phase‑4 optional until core generation/preview/save flows are stable.)
 
-GPT-5 mini was then far more helpful for being able to troubleshoot further errors with supabase authentication tokens, vite environment variables, and detecting whether github environment secrets were successfully being injected in github action workflows. GPT-5 mini was also able to make the true sign in form work with the same logic as the test authentication component and get the project back on track.
 
-So at this point, the project is switching from having claude Sonnet 4 be the coding agent to having GPT-5 mini be the coding agent for a (currently) much more effective, informative, and time-saving experience.
+#### Copilot Working Memory Reference
 
-Claude in agent mode would go ahead and make speculative changes in hopes of them working, and so there are a lot of strange files left over like old .ts files left in place just so that tests that used to expect them can still pass.  Soon, it will be important to look for and clean up such unneeded files and tests.
+###### Current Project State
+- Last Known Good State: prompt-plan-claude-sonnet-4 branch after 3.2.1c edit mode scaffolding; all tests were reported passing before adding delete tests
+- Currently Working: 3.2.1e — add failing tests for Delete with confirmation on StoryDetails
+- Last Test Results: Prior run passed; new spec StoryDetails.delete.spec.ts expected to fail initially
+- Known Issues: Edit persistence (useStory.update) not yet wired; Delete flow not implemented
+
+###### Key File Relationships
+- `src/views/StoryDetails.vue` depends on: `useStory` (getById, update/remove), `useAuth`, `vue-router`
+- `tests/unit/StoryDetails.delete.spec.ts` uses: router navigation to /stories/:id, mocks `useStory` and `useAuth`
+- Authentication flow: `useAuth().user.value?.id` compared to `story.user_id` to determine ownership
+
+###### Recent Changes Made
+- 2025-09-18: Added `tests/unit/StoryDetails.delete.spec.ts` to define Delete UI/behavior contract (owner-only, confirm dialog, calls remove, navigates home)
+- 2025-09-18: Updated working memory for next steps
+
+###### Next Steps Plan
+1. Run tests to observe new failures from StoryDetails.delete.spec.ts
+2. Implement 3.2.1f: Delete UI — owner-only Delete button, confirm dialog with data-testids, call useStory.remove(id), navigate to Home on success; add toasts
+3. Verify by running tests again; also manual check via router to /stories/:id
+
+###### Complexity Warning Signs
+- [ ] More than 5 files need changes
+- [ ] Circular dependencies detected
+- [ ] Test failure cascade
+- [ ] Can't predict impact of changes
+
+###### assumptions about the project that changed when new things were learned
+- Initial assumption: StoryDetails lacked edit/delete; Now: Edit mode exists; Delete pending
+- New information: Router fallback in App.vue handles '/demo' for tests
+
+###### Human parseable summary of state and insights derived from reading most recent repomix files
+- StoryDetails already has owner check and edit scaffolding; adding delete should follow same ownership pattern and use consistent data-testids: delete-btn, delete-confirm, confirm-delete-confirm.
 

@@ -23,10 +23,20 @@
           </div>
         </div>
 
-        <div v-if="isOwner && !editMode">
+        <div v-if="isOwner && !editMode" class="flex gap-2">
           <button data-testid="edit-btn" class="px-3 py-2 rounded bg-slate-900 text-white hover:bg-slate-700" @click="enterEdit">Edit</button>
+          <button data-testid="delete-btn" class="px-3 py-2 rounded bg-red-600 text-white hover:bg-red-700" @click="openDeleteConfirm">Delete</button>
         </div>
       </header>
+
+      <!-- Delete confirm dialog -->
+      <div v-if="showDelete" data-testid="delete-confirm" class="rounded border p-4 bg-red-50 text-red-900">
+        <p class="mb-3 font-medium">Delete this story permanently?</p>
+        <div class="flex gap-2">
+          <button data-testid="confirm-delete-cancel" class="px-3 py-2 rounded border" @click="closeDeleteConfirm">Cancel</button>
+          <button data-testid="confirm-delete-confirm" class="px-3 py-2 rounded bg-red-600 text-white" @click="confirmDelete">Yes, delete</button>
+        </div>
+      </div>
 
       <!-- Edit form -->
       <form v-if="editMode" data-testid="edit-form" class="space-y-4" @submit.prevent>
@@ -99,17 +109,38 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, reactive } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useStory, type StoryRecord, type StoryResult } from '@/composables/useStory'
 import { useAuth } from '@/composables/useAuth'
 
 const route = useRoute()
-const { getById } = useStory()
+const router = useRouter()
+const { getById, remove } = useStory()
 const { user, isAuthenticated } = useAuth()
 
 const loading = ref(false)
 const error = ref<{ message: string; code?: string | number } | null>(null)
 const story = ref<StoryRecord | null>(null)
+
+// Delete confirmation state
+const showDelete = ref(false)
+function openDeleteConfirm() {
+  showDelete.value = true
+}
+function closeDeleteConfirm() {
+  showDelete.value = false
+}
+async function confirmDelete() {
+  if (!story.value) return
+  const id = story.value.id
+  const res = await remove(id)
+  if (res.success) {
+    await router.push('/')
+  } else {
+    // simple inline error; could be replaced with toast later
+    error.value = res.error || { message: 'Delete failed' }
+  }
+}
 
 // Edit mode state
 const editMode = ref(false)
