@@ -818,6 +818,9 @@ Exit criteria for Phase 4
 
 PHASE 4 IS KIND OF DONE, BASIC FEATURES ARE WORKING, BUT LOTS OF UX THINGS NEED CORRECTING
 
+GENERATE NEW STORY shouldn't appear for unauthenticated people on the navbar, nor should they be able to see that route
+
+
 
 NOTE:  using the dev sandbox to preview unhooked up UI earlier was very helpful - do it sooner to do more manual testing of things so less has to get fixed at the end next time
 

@@ -78,8 +78,9 @@ const handleSignOut = async () => {
                 class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
               >Demo</router-link>
 
-              <!-- Generate New Story placed after Demo for consistency -->
+              <!-- Show Generate only when authenticated -->
               <router-link 
+                v-if="isAuthenticated"
                 to="/generate"
                 class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
               >Generate New Story</router-link>
@@ -128,8 +129,9 @@ const handleSignOut = async () => {
                 class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
               >Demo</button>
 
-              <!-- Generate New Story as the next button (4th when unauthenticated) -->
+              <!-- Show Generate only when authenticated (4th when unauthenticated, but hidden) -->
               <button 
+                v-if="isAuthenticated"
                 @click="() => navigateTo('/generate')"
                 class="px-3 py-2 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
               >Generate New Story</button>
