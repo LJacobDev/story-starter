@@ -24,7 +24,9 @@
     </template>
 
     <template v-else>
-      <StoryCard v-for="item in items" :key="item.id" v-bind="item" />
+      <div v-for="item in items" :key="item.id" class="h-full">
+        <StoryCard v-bind="item" />
+      </div>
     </template>
   </div>
 </template>

@@ -7,7 +7,7 @@
         :aria-label="`View ${title}`"
         data-testid="story-card-link"
       >
-        <Card class="overflow-hidden shadow-sm hover:shadow transition-shadow bg-white dark:bg-gray-900">
+        <Card class="overflow-hidden shadow-sm hover:shadow transition-shadow bg-white dark:bg-gray-900 h-full flex flex-col">
           <div class="aspect-[16/9] w-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
             <img
               v-if="resolvedSrc"
@@ -60,7 +60,8 @@
             </div>
           </div>
 
-          <CardContent class="p-4 space-y-2">
+          <!-- Lock the body height so total card height is uniform across rows -->
+          <CardContent class="p-4 space-y-2 flex flex-col min-h-[7.5rem] max-h-[7.5rem] overflow-hidden">
             <div class="flex items-center gap-2 flex-wrap">
               <CardTitle class="text-base font-semibold truncate">{{ title }}</CardTitle>
               <!-- Badge replacement: type label -->
@@ -77,8 +78,12 @@
                 Private
               </span>
             </div>
-            <p v-if="description" class="text-sm text-gray-600 dark:text-gray-300 truncate">
-              {{ description }}
+            <!-- Always render description; reserve two lines height; custom clamp to avoid plugin dependency -->
+            <p
+              class="text-sm text-gray-600 dark:text-gray-300 leading-5 clamp-2 min-h-[2.5rem]"
+              :aria-hidden="!description"
+            >
+              {{ description || '\u00A0' }}
             </p>
           </CardContent>
         </Card>
@@ -186,3 +191,14 @@ const typeLabel = computed(() => {
   }
 })
 </script>
+
+<style scoped>
+/* Two-line clamp without requiring Tailwind line-clamp plugin */
+.clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2; /* standard property for compatibility */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+</style>
