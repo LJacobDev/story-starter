@@ -2,13 +2,20 @@
   <main class="container mx-auto px-4 py-8">
     <h1 class="text-2xl font-semibold">Generate a Story</h1>
 
-    <div v-if="error" data-testid="gen-error" class="mt-3 rounded border border-red-200 bg-red-50 p-3 text-red-700">
-      {{ error }}
-    </div>
+    <!-- Removed top-of-page error; we'll show errors near action buttons instead -->
     <div v-if="pending" data-testid="gen-loading" class="mt-3 text-sm text-muted-foreground">Generating…</div>
 
     <section v-if="!preview" class="mt-6">
       <StoryGenerateForm :loading="pending" @submit="handleSubmit" @edit-prompts="onEdit" @cancel="onCancel" />
+
+      <!-- Error directly below the Generate button -->
+      <div v-if="error" data-testid="gen-error" class="mt-3 rounded border border-red-200 bg-red-50 p-3 text-red-700">
+        <p>{{ error }}</p>
+        <p class="mt-1 text-sm">
+          Try again — if your story idea has too few details, try adding a few more, especially in the 'additional instructions' section.
+        </p>
+      </div>
+
       <p class="text-xs text-muted-foreground mt-2">
         Note: The form shows a warning when additional instructions exceed 800 characters.
       </p>
@@ -24,6 +31,14 @@
         @save="onSave"
         @undo="onUndo"
       />
+
+      <!-- Error below Preview action buttons (Save/Retry/Edit/etc.) -->
+      <div v-if="error" data-testid="gen-error" class="rounded border border-red-200 bg-red-50 p-3 text-red-700">
+        <p>{{ error }}</p>
+        <p class="mt-1 text-sm">
+          Try again — if your story idea has too few details, try adding a few more, especially in the 'additional instructions' section.
+        </p>
+      </div>
 
       <!-- Image handling controls (URL / Upload) -->
       <div class="rounded border p-3 space-y-2">
