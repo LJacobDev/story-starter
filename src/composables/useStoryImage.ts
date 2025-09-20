@@ -171,10 +171,6 @@ export function useStoryImage(opts?: UseStoryImageOptions) {
 
   const getDimensions = opts?.getDimensions ?? defaultGetDimensions
 
-  function fullPath(bucket: string, innerPath: string) {
-    return `${bucket}/${innerPath}`
-  }
-
   function toInner(path: string): { bucket: string; inner: string } {
     return detectBucketAndInner(path)
   }
