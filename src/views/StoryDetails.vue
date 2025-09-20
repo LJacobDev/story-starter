@@ -135,9 +135,13 @@
 
       <!-- Read-only content when not editing -->
       <template v-else>
-        <figure v-if="story.image_url" class="mt-2">
-          <img :src="story.image_url" :alt="`Cover image for ${story.title}`" class="max-h-72 rounded border object-cover" />
+        <!-- Read-only figure uses resolved URL (public or signed) -->
+        <figure v-if="resolvedViewSrc" class="mt-2">
+          <img :src="resolvedViewSrc" :alt="`Cover image for ${story.title}`" class="max-h-72 rounded border object-cover" />
         </figure>
+        <div v-else-if="story?.image_url" class="mt-2 flex h-36 items-center justify-center rounded border bg-muted text-muted-foreground" data-testid="image-fallback">
+          <span class="text-sm">Image unavailable</span>
+        </div>
 
         <p v-if="story.description" class="text-muted-foreground">{{ story.description }}</p>
 
@@ -156,7 +160,7 @@ import { ref, computed, watch, reactive, nextTick, onMounted, onBeforeUnmount } 
 import { useRoute, useRouter } from 'vue-router'
 import { useStory, type StoryRecord, type StoryResult } from '@/composables/useStory'
 import { useAuth } from '@/composables/useAuth'
-import { useStoryImage } from '@/composables/useStoryImage'
+import { useStoryImage, resolveImageUrl } from '@/composables/useStoryImage'
 
 const route = useRoute()
 const router = useRouter()
@@ -281,6 +285,9 @@ const canSave = computed(() => !titleError.value && !genreError.value)
 // Image edit state
 const imageMode = ref<'url' | 'upload'>('url')
 const previewUrl = ref<string | null>(null)
+// Resolved URL for read-only view
+const resolvedViewSrc = ref<string | null>(null)
+
 const imageUrlError = computed(() => {
   if (imageMode.value !== 'url') return null
   const val = (form.image_url || '').trim()
@@ -302,21 +309,55 @@ async function onFileChange(e: Event) {
   const sid = (story.value?.id as any) || 'unknown-story'
   const res = await uploadImage(file, { userId: String(uid), storyId: String(sid) })
   if (res && (res as any).ok) {
-    const url = (res as any).url as string
-    form.image_url = url
-    previewUrl.value = url
+    // Persist durable storage path; preview uses signed/public URL
+    form.image_url = (res as any).path as string
+    previewUrl.value = (res as any).url as string
+    // Update read-only resolved too (in case we immediately exit edit)
+    resolvedViewSrc.value = (res as any).url as string
+  }
+}
+
+async function updateResolvedView() {
+  const raw = story.value?.image_url
+  if (!raw) { resolvedViewSrc.value = null; return }
+  // If already a direct URL, keep; else resolve storage path
+  if (/^https?:\/\//i.test(String(raw))) {
+    // If it is a Supabase Storage URL, re-resolve to refresh token; else use as-is
+    const refreshed = await resolveImageUrl(String(raw))
+    resolvedViewSrc.value = refreshed || String(raw)
+  } else {
+    resolvedViewSrc.value = await resolveImageUrl(String(raw))
+  }
+}
+
+async function updatePreviewFromForm() {
+  const mode = imageMode.value
+  const val = (form.image_url || '').trim()
+  if (!val) { previewUrl.value = null; return }
+  if (mode === 'url') {
+    if (/^https?:\/\//i.test(val)) {
+      // If it’s a Supabase Storage URL, derive a fresh view URL; else use as-is
+      const maybe = await resolveImageUrl(val)
+      previewUrl.value = maybe || val
+    } else {
+      // Treat as storage path; resolve to display URL
+      previewUrl.value = await resolveImageUrl(val)
+    }
+  } else {
+    // Upload mode sets previewUrl on upload; no-op here
   }
 }
 
 watch(
   () => ({ mode: imageMode.value, url: form.image_url }),
-  ({ mode, url }) => {
-    if (mode === 'url') {
-      const u = (url || '').trim()
-      previewUrl.value = /^https?:\/\//i.test(u) ? u : null
-    }
-  },
+  () => { void updatePreviewFromForm() },
   { immediate: true, deep: true }
+)
+
+watch(
+  () => story.value?.image_url,
+  () => { void updateResolvedView() },
+  { immediate: true }
 )
 
 async function load(id: string) {
