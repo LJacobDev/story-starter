@@ -106,7 +106,6 @@ function handleSubmit(payload: any) {
     content: 'This is a mock generated story preview based on your inputs.',
     story_type: payload.story_type || 'short-story',
     genre: payload.genre || undefined,
-    image_url: payload.image?.mode === 'url' ? (payload.image.url || undefined) : undefined,
   }
   // New preview → reset idempotency key so first Save establishes it
   previewKey.value = null

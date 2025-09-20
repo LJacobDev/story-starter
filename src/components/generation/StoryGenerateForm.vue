@@ -105,34 +105,6 @@
       </div>
     </div>
 
-    <!-- Image input mode -->
-    <div>
-      <label class="block text-sm font-medium">Image</label>
-      <div class="flex items-center gap-4 mt-1">
-        <label class="inline-flex items-center gap-2">
-          <input type="radio" name="image-mode" value="url" data-testid="image-mode-url" v-model="imageMode" />
-          <span>URL</span>
-        </label>
-        <label class="inline-flex items-center gap-2">
-          <input type="radio" name="image-mode" value="upload" data-testid="image-mode-upload" v-model="imageMode" />
-          <span>Upload</span>
-        </label>
-      </div>
-      <div class="mt-2" v-if="imageMode === 'url'">
-        <input data-testid="image-url-input" v-model="imageUrl" type="url" class="w-full rounded border p-2" placeholder="https://..." />
-      </div>
-      <div class="mt-2" v-else>
-        <input
-          data-testid="image-file-input"
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          class="block w-full text-sm"
-          @change="onFileChange"
-        />
-      </div>
-      <p v-if="imageError" data-testid="image-error" class="text-red-600 text-sm mt-1">{{ imageError }}</p>
-    </div>
-
     <!-- Privacy -->
     <div class="flex items-center gap-2">
       <input data-testid="privacy-toggle" id="privacy" type="checkbox" v-model="isPrivate" class="rounded border p-2" />
@@ -173,8 +145,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { getImageMetadata } from '@/utils/imageMeta'
+import { computed, ref } from 'vue'
 
 const props = defineProps<{
   prefill?: {
@@ -187,7 +158,6 @@ const props = defineProps<{
     themes?: string[]
     plot_points?: string[]
     characters?: Array<{ name: string; role: string; description: string }>
-    image?: { mode: 'url'; url?: string } | { mode: 'upload'; file?: File; meta?: { width: number; height: number; type: string; size: number } }
     is_private?: boolean
   }
   loading?: boolean
@@ -210,11 +180,6 @@ function applyDefaults() {
   themes.value = []
   plotPoints.value = []
   characters.value = []
-  imageMode.value = 'url'
-  imageUrl.value = ''
-  imageFile.value = null
-  imageMeta.value = null
-  imageError.value = ''
   isPrivate.value = true
 }
 
@@ -229,16 +194,6 @@ function applyPrefill() {
   if (props.prefill.themes) themes.value = [...props.prefill.themes]
   if (props.prefill.plot_points) plotPoints.value = [...props.prefill.plot_points]
   if (props.prefill.characters) characters.value = props.prefill.characters.map(c => ({ ...c }))
-  if (props.prefill.image) {
-    if (props.prefill.image.mode === 'url') {
-      imageMode.value = 'url'
-      imageUrl.value = props.prefill.image.url || ''
-    } else {
-      imageMode.value = 'upload'
-      imageFile.value = props.prefill.image.file ?? null
-      imageMeta.value = props.prefill.image.meta ?? null
-    }
-  }
   if (typeof props.prefill.is_private === 'boolean') isPrivate.value = props.prefill.is_private
 }
 
@@ -267,12 +222,6 @@ const charDesc = ref('')
 const allowedRoles = ['protagonist', 'antagonist', 'ally', 'other'] as const
 const characters = ref<Array<{ name: string; role: string; description: string }>>([])
 const charactersError = ref(false)
-
-const imageMode = ref<'url' | 'upload'>('url')
-const imageUrl = ref('')
-const imageFile = ref<File | null>(null)
-const imageMeta = ref<{ width: number; height: number; type: string; size: number } | null>(null)
-const imageError = ref('')
 
 const isPrivate = ref(true)
 
@@ -348,86 +297,12 @@ function removeAt<T>(arr: T[], index: number) {
   arr.splice(index, 1)
 }
 
-function validateImageUrl(url: string) {
-  // empty allowed (no image)
-  if (!url) {
-    imageError.value = ''
-    return true
-  }
-  const ok = /^https?:\/\//i.test(url)
-  imageError.value = ok ? '' : 'Image URL must start with http(s)'
-  return ok
-}
-
-function validateImageFile() {
-  const f = imageFile.value
-  if (!f) {
-    imageError.value = ''
-    return true
-  }
-  const allowed = ['image/png', 'image/jpeg', 'image/webp']
-  if (!allowed.includes(f.type)) {
-    imageError.value = 'Only PNG, JPEG, or WEBP images are allowed'
-    return false
-  }
-  if (f.size > 2_000_000) {
-    imageError.value = 'Image must be ≤ 2 MB'
-    return false
-  }
-  const m = imageMeta.value
-  if (!m) {
-    // metadata not loaded yet; temporarily block submit
-    imageError.value = 'Reading image metadata...'
-    return false
-  }
-  if (m.width < 200 || m.height < 200 || m.width > 4000 || m.height > 4000) {
-    imageError.value = 'Image dimensions must be within 200–4000 px'
-    return false
-  }
-  imageError.value = ''
-  return true
-}
-
-async function onFileChange(e: Event) {
-  const input = e.target as HTMLInputElement
-  const file = input.files && input.files[0] ? input.files[0] : null
-  imageFile.value = file
-  imageMeta.value = null
-  imageError.value = ''
-  if (file) {
-    try {
-      const meta = await getImageMetadata(file)
-      imageMeta.value = meta
-    } catch (err) {
-      imageError.value = 'Failed to read image metadata'
-      return
-    }
-    // run validations after meta
-    validateImageFile()
-  }
-}
-
-watch(imageUrl, (val) => {
-  if (imageMode.value === 'url') validateImageUrl(val)
-})
-watch(imageMode, () => {
-  // reset error on mode switch and validate current mode
-  imageError.value = ''
-  if (imageMode.value === 'url') validateImageUrl(imageUrl.value)
-  else validateImageFile()
-})
-
 const canSubmit = computed(() => {
   if (!title.value || titleTooLong.value) return false
   if (creativityInvalid.value) return false
   if (instructionsTooLong.value) return false
   if (themesError.value || charactersError.value) return false
-
-  // image validation
-  if (imageMode.value === 'url') {
-    return validateImageUrl(imageUrl.value)
-  }
-  return validateImageFile()
+  return true
 })
 
 function onSubmit() {
@@ -442,11 +317,6 @@ function onSubmit() {
     themes: themes.value.slice(),
     plot_points: plotPoints.value.slice(),
     characters: characters.value.map(c => ({ ...c })),
-    image: imageMode.value === 'url'
-      ? { mode: 'url', url: imageUrl.value || undefined }
-      : imageFile.value && imageMeta.value
-        ? { mode: 'upload', file: imageFile.value, meta: imageMeta.value }
-        : { mode: 'upload' },
     is_private: isPrivate.value,
   })
 }

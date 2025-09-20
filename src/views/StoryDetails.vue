@@ -309,9 +309,11 @@ async function onFileChange(e: Event) {
   const sid = (story.value?.id as any) || 'unknown-story'
   const res = await uploadImage(file, { userId: String(uid), storyId: String(sid) })
   if (res && (res as any).ok) {
-    // Persist durable storage path; preview uses signed/public URL
-    form.image_url = (res as any).path as string
+    // Set preview first so DOM updates immediately
     previewUrl.value = (res as any).url as string
+    // Persist durable path if provided; otherwise persist URL (external link case)
+    const durable = (res as any).path || (res as any).url
+    form.image_url = durable as string
     // Update read-only resolved too (in case we immediately exit edit)
     resolvedViewSrc.value = (res as any).url as string
   }

@@ -37,10 +37,10 @@ describe('StoryGenerateForm — Form skeleton + validation contracts (4.1.1a)', 
     expect(wrapper.find('[data-testid="character-desc-input"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="add-character"]').exists()).toBe(true)
 
-    // Image mode switch
-    expect(wrapper.find('[data-testid="image-mode-url"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="image-mode-upload"]').exists()).toBe(true)
-    expect(wrapper.find('[data-testid="image-url-input"]').exists()).toBe(true)
+    // No image controls on the Generate form anymore
+    expect(wrapper.find('[data-testid="image-mode-url"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="image-mode-upload"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="image-url-input"]').exists()).toBe(false)
 
     // Privacy toggle defaults to private
     const privacyToggle = wrapper.get<HTMLInputElement>('[data-testid="privacy-toggle"]')
@@ -103,11 +103,7 @@ describe('StoryGenerateForm — Form skeleton + validation contracts (4.1.1a)', 
     await wrapper.get('[data-testid="character-desc-input"]').setValue('An idealistic engineer.')
     await wrapper.get('[data-testid="add-character"]').trigger('click')
 
-    // Image: URL mode + url
-    await wrapper.get('[data-testid="image-mode-url"]').setValue('url')
-    await wrapper.get('[data-testid="image-url-input"]').setValue('https://example.com/cover.jpg')
-
-    // Ensure submit is enabled now
+    // Ensure submit is enabled now (no image controls)
     const submitBtn = wrapper.get<HTMLButtonElement>('[data-testid="submit-btn"]')
     expect(submitBtn.element.disabled).toBe(false)
 
@@ -129,9 +125,10 @@ describe('StoryGenerateForm — Form skeleton + validation contracts (4.1.1a)', 
       characters: [
         { name: 'Avery', role: 'protagonist', description: 'An idealistic engineer.' },
       ],
-      image: { mode: 'url', url: 'https://example.com/cover.jpg' },
       is_private: true,
     })
+    // no image field
+    expect('image' in payload).toBe(false)
   })
 
   it('validates character role enum and length caps', async () => {

@@ -17,8 +17,6 @@ const S = {
   charRole: '[data-testid="character-role-select"]',
   charDesc: '[data-testid="character-desc-input"]',
   charItem: '[data-testid="character-item"]',
-  imageModeUrl: '[data-testid="image-mode-url"]',
-  imageUrlInput: '[data-testid="image-url-input"]',
   privacy: '[data-testid="privacy-toggle"]',
   resetBtn: '[data-testid="reset-btn"]',
   editPromptsBtn: '[data-testid="edit-prompts-btn"]',
@@ -39,9 +37,8 @@ describe('StoryGenerateForm — Prefill/Reset & Edit Prompts (4.1.1g)', () => {
       { name: 'Ava', role: 'protagonist', description: 'Explorer' },
       { name: 'Rex', role: 'ally', description: 'Guide' },
     ],
-    image: { mode: 'url', url: 'https://example.com/cover.jpg' },
     is_private: false,
-  }
+  } as any
 
   test('prefill props populate all fields and lists', async () => {
     const wrapper = mount(StoryGenerateForm, { props: { prefill } })
@@ -56,10 +53,6 @@ describe('StoryGenerateForm — Prefill/Reset & Edit Prompts (4.1.1g)', () => {
     expect(wrapper.findAll(S.themeItem)).toHaveLength(2)
     expect(wrapper.findAll(S.plotItem)).toHaveLength(2)
     expect(wrapper.findAll(S.charItem)).toHaveLength(2)
-
-    // URL mode and value
-    expect((wrapper.find(S.imageModeUrl).element as HTMLInputElement).checked).toBe(true)
-    expect((wrapper.find(S.imageUrlInput).element as HTMLInputElement).value).toBe('https://example.com/cover.jpg')
 
     // privacy off
     expect((wrapper.find(S.privacy).element as HTMLInputElement).checked).toBe(false)
@@ -81,7 +74,6 @@ describe('StoryGenerateForm — Prefill/Reset & Edit Prompts (4.1.1g)', () => {
     expect(wrapper.findAll(S.themeItem)).toHaveLength(0)
     expect(wrapper.findAll(S.plotItem)).toHaveLength(0)
     expect(wrapper.findAll(S.charItem)).toHaveLength(0)
-    expect((wrapper.find(S.imageUrlInput).element as HTMLInputElement).value).toBe('')
     expect((wrapper.find(S.privacy).element as HTMLInputElement).checked).toBe(true)
   })
 

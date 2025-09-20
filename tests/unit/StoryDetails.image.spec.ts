@@ -16,9 +16,10 @@ vi.mock('@/composables/useAuth', () => ({
   useAuth: () => ({ isAuthenticated: { value: mockAuth.isAuthenticated }, user: { value: mockAuth.user } })
 }))
 
-// This module will be used once implementation imports it; tests define its behavior
+// Provide both useStoryImage and resolveImageUrl since StoryDetails imports both.
 vi.mock('@/composables/useStoryImage', () => ({
-  useStoryImage: () => ({ upload: mockUpload })
+  useStoryImage: () => ({ upload: mockUpload }),
+  resolveImageUrl: vi.fn(async (input?: string | null) => (input ? String(input) : null)),
 }))
 
 async function mountAt(path: string) {

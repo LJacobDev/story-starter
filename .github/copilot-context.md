@@ -1,50 +1,47 @@
 # Copilot Working Memory Reference
 
 ## Current Project State
-- **Last Known Good State**: Phase 4 flow implemented; images/StoryCard clickable; tests all green locally (2025‑09‑19).
-- **Currently Working**: Fixing Storage image display regressions by adding TTL-aware caching to resolveImageUrl; investigating bucket/URL handling.
-- **Last Test Results**: All tests green previously; composable change is internal and should not affect unit tests.
-- **Known Issues**: Mobile sign‑in intermittent; occasional empty JSON from Gemini; UX polish for buttons/spinners.
+- **Last Known Good State**: All unit/integration tests pass after removing image inputs from Generate form and fixing StoryDetails image preview (2025-09-20).
+- **Currently Working**: Post‑Phase‑4 cleanup items (loading indicators, mobile sign‑in UX) and minor polish.
+- **Last Test Results**: npm run test → green across suite.
+- **Known Issues**: Mobile sign‑in intermittent on Pages; occasional empty JSON from Gemini; some UX polish (buttons/spinners) still pending.
 
 ## Key File Relationships
 - `src/views/Home.vue` depends on `useAuth` (isReady/isAuthenticated/user.id) and `useStories` composable for queries.
-- `src/components/stories/StoryFilters.vue` emits `update:modelValue` with a new object; parent must mutate existing reactive state to trigger watchers.
-- `useStories.fetchMine(userId, filters)` requires a valid user id; should be called only after auth is ready.
-- `src/components/stories/StoryCard.vue` uses `resolveImageUrl` to display Storage-backed images and falls back to inline SVGs when null.
-- `src/composables/useStoryImage.ts` uploads into `${BUCKET}/${userId}/${storyId}/filename` and returns `{ url (signed), path (bucket/path) }`.
-- `src/utils/supabase.ts` provides the client using `VITE_SUPABASE_URL` and `VITE_SUPABASE_KEY`.
+- `src/components/stories/StoryFilters.vue` emits `update:modelValue`; parent merges into same reactive object to trigger watchers.
+- `useStories.fetchMine(userId, filters)` requires a valid user id; call after auth ready.
+- `src/components/stories/StoryCard.vue` uses `resolveImageUrl` and falls back to SVGs.
+- `src/composables/useStoryImage.ts` uploads to `${BUCKET}/${userId}/${storyId}/filename` and returns `{ url (signed), path (bucket/path) }`.
+- `src/views/GenerateStory.vue` hosts the generation flow; consumes `StoryGenerateForm` (now without image inputs) and `StoryGeneratePreview` for preview/save.
+- `src/components/generation/StoryGenerateForm.vue` emits normalized payload without `image`; images are handled only in Preview and StoryDetails Edit via `useStoryImage`.
 
 ## Recent Changes Made
-- [2025‑09‑19]: Modified `src/views/Home.vue` to:
-  - Replace `v-model` with `:model-value` + `@update:modelValue` and mutate the same reactive `filters` via `Object.assign`.
-  - Add a watcher on `isReady`, `isAuthenticated`, and `user.id` to refetch public and mine once auth hydrates (with `immediate: true`).
-- [2025‑09‑19]: Updated `src/composables/useStoryImage.ts` to make the URL cache TTL-aware. Cached signed URLs now expire and refresh instead of being reused indefinitely, preventing 400s from stale tokens.
+- [2025‑09‑20]: Generation flow and tests
+  - Removed image inputs from `StoryGenerateForm.vue`; simplified validation; emit no `image` field.
+  - Updated tests for form, prefill/reset, and image behavior to match new contract (no image controls on Generate).
+  - Adjusted `StoryDetails.vue` upload handler to set preview immediately and persist durable path; tests mock `resolveImageUrl` to avoid watcher errors.
+  - All tests now pass via `npm run test`.
+- [2025‑09‑19]: Home/filters/auth hydration
+  - Rewired `Home.vue` filters binding to merge reactive state; added auth hydration watcher for “Your Stories”.
+  - `useStoryImage` cache made TTL‑aware to avoid stale signed URLs.
 
 ## Next Steps Plan
-1. Manual verify: sign in, hard refresh Home; confirm “Your Stories” populates automatically; change filters and see both grids refetch.
-2. If double fetch observed, add minimal diffing or throttle to auth-state watcher.
-3. Investigate mobile sign‑in redirects (`redirectTo`) for Pages; ensure hash routing works with recovery/confirm links.
-4. Manual verify: reload Home; confirm images load. In DevTools, confirm image src is either public URL or a fresh signed URL (no immediate 400).
-5. If failures remain, double-check that stored `image_url` values are in the form `bucket/path/to/file.ext` or `https://...`. The resolver supports both.
-6. If Firefox shows OpaqueResponseBlocking warnings, test in Chrome/Edge and verify bucket public vs private policy. If private, rely on signed URLs; public buckets can use public URLs.
+1. Add visible loading state for Generate flow: disable button + spinner and bottom progress hint while generation pending.
+2. Verify mobile sign‑in and email recovery redirects on Pages; adjust `redirectTo`/hash routing if needed.
+3. Minor UX polish: promote Sign Up form visibility; style Save/Retry/Undo as buttons (ShadCN).
+4. Manual image QA: enforce >2MB rejection and URL validation; ensure signed URL refreshes work in all browsers.
 
 ## Complexity Warning Signs
-- [ ] Multiple refetch triggers (filters watcher + auth watcher) could cause redundant calls; monitor network.
-- [ ] Ensure `useStories` cancels/guards overlapping requests.
-- [ ] Multiple old signed URLs in cache causing mixed results across cards — mitigated by TTL.
-- [ ] Bucket mis-match between env `VITE_STORY_IMAGES_BUCKET` and persisted `bucket` segments in DB.
+- [ ] Overlapping fetches (filters + auth watcher); guard against duplicates.
+- [ ] Signed URL cache edge cases across cards.
+- [ ] Bucket/env mismatch for image paths.
 
 ## Assumptions Updated
-- Filters component emits a fresh object; parent must not rely on `v-model` reassigning a `reactive const`.
-- Auth hydration may complete after mount; refetch should run once ready.
-- Persisted values may be either full `bucket/path` or inner path; resolver normalizes via detectBucketAndInner.
-- Public URLs are preferred when available; otherwise a 1h signed URL is generated and cached with TTL.
+- Generate form no longer includes image inputs; image selection happens in Preview and StoryDetails Edit only.
+- Persisted `image_url` may be a full URL or `bucket/path`; resolver normalizes.
 
 ## Human‑parseable Summary
-We fixed the inert search/filter behavior by binding `StoryFilters` explicitly and merging into the same reactive `filters` object, ensuring the existing watcher fires. Added an auth‑state watcher so “Your Stories” refetches after session hydration, resolving the empty-on-refresh issue without requiring navigation.
-
-We also observed 400 errors on signed URLs in Firefox after a refactor. The root cause is commonly stale signed URLs or path handling. We improved `resolveImageUrl` to cache with expiry and prefer public URLs when allowed. Next, we’ll validate bucket naming and policies and ensure DB‑persisted paths are normalized.
-
+UI contract change: image attachment was removed from the Generate form and centralized in Preview/Edit. StoryDetails upload now shows immediate preview and saves a durable path. Tests were updated accordingly and the full test suite passes. Next we’ll tighten UX with clear loading indicators during generation and revisit mobile sign‑in flows.
 
 ## Assessment of repo quality and improvements at end of phase 3 to keep in mind for phase 4 (do not edit this section, just be aware of it)
 
